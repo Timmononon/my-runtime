@@ -54,7 +54,7 @@ def _strip_private_memory(text):
 
 def _safe_text(text):
     result = _DATA_URL.sub(SNAPSHOT_BINARY_MARKER, _strip_private_memory(text))
-    # Some tool results duplicate structured payloads in a JSON text field.
+    # JSON-encoded tool results need the same recursive redaction as object payloads.
     # Preserve ordinary text and provider reasoning byte-for-byte when unchanged.
     if result.lstrip().startswith(("{", "[")):
         try:
