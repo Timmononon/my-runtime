@@ -1,0 +1,6 @@
+# Isolated wheel backend only; runtime requirements.lock is unchanged.
+hatchling==1.27.0
+packaging==26.3
+pathspec==0.12.1
+pluggy==1.6.0
+trove-classifiers==2026.9.21.13

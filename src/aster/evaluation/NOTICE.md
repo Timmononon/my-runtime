@@ -1,0 +1,1 @@
+Adapted from Kocoro test/e2e/testdata/general_agent_outcomes.json and its outcome-contract harness. Copyright (c) 2025-2026 Kocoro, Inc. MIT; license included. Aster changes: tool names, scoped Windows fixture files, durable Runtime observations, explicit offline-protocol versus live-model classification.

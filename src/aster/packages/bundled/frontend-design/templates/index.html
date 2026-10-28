@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project workspace</title>
+  <style>
+    :root { --ink:#172e31; --paper:#f5f2e9; --accent:#00766c; --line:#bac9c5; --space:clamp(1rem,3vw,3rem); }
+    * { box-sizing:border-box; } body { margin:0; font-family:"Segoe UI",Arial,sans-serif; color:var(--ink); background:var(--paper); line-height:1.55; }
+    a { color:var(--accent); } a:focus-visible,button:focus-visible { outline:3px solid #ba450b; outline-offset:4px; }
+    .skip { position:absolute; top:-5rem; } .skip:focus { top:1rem; left:1rem; background:white; padding:1rem; }
+    header,main,footer { width:min(74rem,100%); margin:auto; padding:var(--space); } header { border-bottom:1px solid var(--line); }
+    h1 { max-width:16ch; font-size:clamp(2.2rem,6vw,5rem); line-height:1.05; letter-spacing:-.04em; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.16em; font-size:.8rem; font-weight:700; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); gap:1.4rem; }
+    article { border-top:3px solid var(--accent); padding:1rem 0; } button { font:inherit; border:1px solid var(--accent); background:var(--accent); color:white; padding:.7rem 1.2rem; cursor:pointer; }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><p class="eyebrow">Working notes / 01</p><h1>A clear place to start.</h1><p>Replace this introduction with the audience's actual purpose.</p></header>
+  <main id="main"><h2>Next steps</h2><div class="grid"><article><h3>Understand</h3><p>Describe the real need and the evidence behind it.</p></article><article><h3>Make</h3><p>Implement a useful action, then check its result.</p></article></div><button id="complete" type="button">Mark review complete</button><p id="status" role="status" aria-live="polite">Review pending.</p></main>
+  <footer><small>Local prototype. No information is submitted.</small></footer>
+  <script>document.getElementById('complete').addEventListener('click',()=>{document.getElementById('status').textContent='Review complete for this page view.';});</script>
+</body>
+</html>

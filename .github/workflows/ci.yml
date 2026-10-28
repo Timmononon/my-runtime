@@ -1,0 +1,81 @@
+name: Windows verification
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.lock
+      # v6 runs on Node 24 and needs runner >= 2.327.1; hosted windows-latest
+      # supplies that runtime. The frontend itself uses supported Node 22 LTS.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked dependencies and package
+        run: |
+          python -m pip install --index-url https://pypi.org/simple -r requirements.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --index-url https://pypi.org/simple --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip check
+      - name: Install test browser
+        run: python -m playwright install chromium
+      - name: Build and test this checkout's frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Select only this build's static files
+        run: |
+          $asterStatic = (Resolve-Path -LiteralPath 'src/aster/web/static').Path
+          "ASTER_WEB_STATIC_ROOT=$asterStatic" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Lint
+        run: python -m ruff check src tests scripts
+      - name: Offline and local Windows scenarios
+        run: python -m pytest -m "not live" --tb=short -q --junitxml=artifacts/validation/ci-offline.xml
+      - name: Verify the eight installed Skill packages and real helper outputs
+        run: python scripts/validate_bundled_skills.py --browser --report artifacts/validation/ci-skills.json
+      - name: Build with an isolated pinned backend
+        run: |
+          python -m venv artifacts/build-venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          artifacts/build-venv/Scripts/python.exe -m pip install --index-url https://pypi.org/simple -r build-requirements.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/build_delivery.py --build-python artifacts/build-venv/Scripts/python.exe --static-root $env:ASTER_WEB_STATIC_ROOT --output artifacts/packages
+      - name: Verify source bytes, independent installation, routes and upgrade
+        run: |
+          $asterWheel = Get-ChildItem -LiteralPath artifacts/packages -Filter 'aster_runtime-*.whl' -File
+          if ($asterWheel.Count -ne 1) { throw 'Expected exactly one newly built wheel' }
+          python -m venv artifacts/install-venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          artifacts/install-venv/Scripts/python.exe -m pip install --index-url https://pypi.org/simple -r requirements.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          artifacts/install-venv/Scripts/python.exe -m pip install --no-deps $asterWheel.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          artifacts/install-venv/Scripts/python.exe -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          artifacts/install-venv/Scripts/aster.exe --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/verify_web_wheel.py $asterWheel.FullName --install-python artifacts/install-venv/Scripts/python.exe --static-root $env:ASTER_WEB_STATIC_ROOT --report artifacts/validation/ci-wheel.json

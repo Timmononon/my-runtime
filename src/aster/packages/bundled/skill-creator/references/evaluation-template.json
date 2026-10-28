@@ -1,0 +1,11 @@
+{
+  "id": "workflow-example",
+  "prompt": "A concrete task",
+  "initial_files": {},
+  "assertions": {
+    "required_files": [],
+    "forbidden_effects": []
+  },
+  "mode": "offline_protocol_or_explicit_live",
+  "result": "not_run"
+}

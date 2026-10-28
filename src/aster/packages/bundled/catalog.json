@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "name": "webapp-testing",
+      "version": "1.0.0",
+      "digest": "eafc8599d908d3b4ae2f5db0dd7201285412f12e4584172e091f271dc16440d3",
+      "description": "Test a local web application with scoped browser tools and objective artifact checks.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "mcp-builder",
+      "version": "1.0.0",
+      "digest": "576cfca1a38aef8b9ff9e0b293aca2c0cde95b83aac666ee28c6a140bf0e8620",
+      "description": "Build and verify a Python MCP integration with focused schemas, bounded calls and explicit side effects.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "skill-creator",
+      "version": "1.0.0",
+      "digest": "56e4daea1726d2e8633d54bd95dd714074518cc936e797a4e8920abad2a3345d",
+      "description": "Create an Aster skill with clear trigger, source references, limited tools and measurable acceptance.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "doc-coauthoring",
+      "version": "1.0.0",
+      "digest": "03b5036f67884a2a9bb26c3b8addcc8417b2689e6b83bc2855a7f0c161420c16",
+      "description": "Coauthor a source-grounded document through context gathering, structured drafting and reader checks.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "frontend-design",
+      "version": "1.0.0",
+      "digest": "c0725f37dc20259c080141f235624cdacb47eea617bf150ab48dbff967705829",
+      "description": "Design and implement a deliberate, accessible interface with responsive layout and browser evidence.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "theme-factory",
+      "version": "1.0.0",
+      "digest": "8399e2310c38dfeb9020eef2a5de200fb29c887579dcb17aa1f31a6a08c9ed4d",
+      "description": "Apply one of ten local theme palettes and typography references consistently to an HTML artifact.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "web-artifacts-builder",
+      "version": "1.0.0",
+      "digest": "0b586db149a5fedde15b2d9a4bdea4a5821b83b232ca2bdd684564fcaa0e7376",
+      "description": "Build a standalone interactive HTML artifact with local assets and objective browser checks.",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "pdf-reader",
+      "version": "1.0.0",
+      "digest": "7710c6289fd713ff35f809dbed788bb697da7d2a350a3e962750d8df65574637",
+      "description": "Read a PDF with source-linked text extraction and bounded visual page inspection.",
+      "license": "MIT"
+    }
+  ]
+}

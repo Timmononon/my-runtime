@@ -1,0 +1,37 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.env
+.env.*
+!.env.example
+.aster/
+credentials.yaml
+*.log
+*.db
+*.db-wal
+*.db-shm
+artifacts/
+test-results/
+.coverage
+htmlcov/
+frontend/node_modules/
+frontend/*.tsbuildinfo
+frontend/.vite/
+frontend/coverage/
+
+# Local design, audit and handoff records are excluded from publication.
+/docs/
+/AGENTS.md
+/HANDOFF.md
+/STATUS.md
+
+# Local backups and restored data can contain credentials.
+/aster-backup*.zip
+/aster-restored/
+/backups/
+
