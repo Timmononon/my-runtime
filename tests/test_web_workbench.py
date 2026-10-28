@@ -165,10 +165,30 @@ async def test_workbench_fixture_question_cancel_and_attachment_roundtrip(workbe
         assert "sample.txt" in history[-1]["message"]["content"]
 
 
-async def test_workbench_real_http_ticket_cookie_csrf_and_logout(workbench_server):
+@pytest.mark.parametrize("cwd_form", ["canonical", "windows-short-path"])
+async def test_workbench_real_http_ticket_cookie_csrf_and_logout(workbench_server, cwd_form):
+    cwd = str(Path(workbench_server["cwd"]).resolve(strict=True))
+    if cwd_form == "windows-short-path":
+        if os.name != "nt":
+            pytest.skip("Windows 8.3 directory aliases require Windows")
+        import ctypes
+        from ctypes import wintypes
+
+        short_path = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+        short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        short_path.restype = wintypes.DWORD
+        size = short_path(cwd, None, 0)
+        if not size:
+            raise ctypes.WinError(ctypes.get_last_error())
+        buffer = ctypes.create_unicode_buffer(size)
+        if not short_path(cwd, buffer, size):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if buffer.value.casefold() == cwd.casefold():
+            pytest.skip("Temporary directory has no Windows 8.3 alias")
+        cwd = buffer.value
     origin = workbench_server["base_url"]
     async with client_for(workbench_server) as launcher, httpx.AsyncClient(base_url=origin, trust_env=False) as browser:
-        issued = await launcher.post("/ui/tickets", json={"cwd": workbench_server["cwd"]})
+        issued = await launcher.post("/ui/tickets", json={"cwd": cwd})
         assert issued.status_code == 201
         ticket = issued.json()["ticket"]
         body = {"ticket": ticket}
@@ -182,13 +202,14 @@ async def test_workbench_real_http_ticket_cookie_csrf_and_logout(workbench_serve
         assert (await browser.post("/ui/auth", json=body, headers=headers)).status_code == 401
         assert (await browser.get("/sessions")).status_code == 403
         bootstrap = await browser.get("/ui/bootstrap", headers={"X-Aster-UI": "1"})
-        assert bootstrap.status_code == 200 and bootstrap.json()["cwd"] == workbench_server["cwd"]
+        assert bootstrap.status_code == 200
+        assert Path(bootstrap.json()["cwd"]).samefile(cwd)
         assert bootstrap.json()["model"] == "deepseek-flash"
         for origin_value in ("http://attacker.invalid", origin + "/", "null"):
             denied = await browser.post("/sessions", json={}, headers={"X-Aster-UI": "1", "Origin": origin_value})
             assert denied.status_code == 403
         assert (await browser.post("/sessions", json={}, headers={"X-Aster-UI": "1"})).status_code == 403
-        created = await browser.post("/sessions", json={"cwd": workbench_server["cwd"]}, headers=headers)
+        created = await browser.post("/sessions", json={"cwd": cwd}, headers=headers)
         assert created.status_code == 201
         assert (await browser.post("/ui/tickets", json={}, headers=headers)).status_code == 403
         assert (await browser.post("/ui/logout", headers=headers)).status_code == 200

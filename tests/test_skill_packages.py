@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -11,6 +12,7 @@ import pytest
 from aster.customization.skills import SkillRegistry, SkillScope, UseSkillTool
 from aster.domain import ToolContext
 from aster.packages import SkillPackageManager
+from aster.packages.manager import tree_digest
 from aster.packages.tools import build_package_tools
 
 
@@ -18,6 +20,39 @@ def package(path, *, name="example", body="first"):
     path.mkdir(parents=True, exist_ok=True)
     (path / "SKILL.md").write_text(f"---\nname: {name}\ndescription: Local workflow\n---\n{body}\n", encoding="utf-8")
     return path
+
+
+def test_windows_git_checkout_preserves_bundled_package_digests(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    repository = tmp_path / "source"
+    bundle_path = Path("src/aster/packages/bundled")
+    shutil.copytree(root / bundle_path, repository / bundle_path,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copy2(root / ".gitattributes", repository / ".gitattributes")
+    (repository / "ordinary.txt").write_bytes(b"LF checkout control\n")
+    env = dict(os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+
+    def git(*arguments, cwd=repository):
+        subprocess.run(["git", "-c", "core.autocrlf=false", *arguments], cwd=cwd, env=env,
+                       capture_output=True, text=True, check=True)
+
+    git("init", "-b", "main")
+    git("add", "--all")
+    git("-c", "user.name=offline-test", "-c", "user.email=offline@example.invalid",
+        "commit", "-qm", "Record bundle bytes")
+    checkout = tmp_path / "checkout"
+    git("clone", "--no-checkout", str(repository), str(checkout), cwd=tmp_path)
+    git("-c", "core.autocrlf=true", "checkout", "-q", "main", cwd=checkout)
+
+    # Prove the checkout exercised CRLF conversion outside the pinned assets.
+    assert (checkout / "ordinary.txt").read_bytes() == b"LF checkout control\r\n"
+    catalog = json.loads((checkout / bundle_path / "catalog.json").read_text(encoding="utf-8"))["packages"]
+    assert len(catalog) == 8
+    for entry in catalog:
+        package_root = checkout / bundle_path / entry["name"]
+        files = {path.relative_to(package_root).as_posix(): path.read_bytes()
+                 for path in package_root.rglob("*") if path.is_file()}
+        assert tree_digest(files) == entry["digest"], entry["name"]
 
 
 @pytest.mark.asyncio

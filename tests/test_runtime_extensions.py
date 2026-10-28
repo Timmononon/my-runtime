@@ -485,25 +485,46 @@ async def test_steering_during_semantic_summary_continues_with_new_user_message(
         store.append_message(sid, None, Message("assistant", tool_calls=[ToolCall(f"history-{index}", "read", {})]))
         store.append_message(sid, None, Message("tool", "context " + "x" * 1100, tool_call_id=f"history-{index}"))
     entered = asyncio.Event()
+    summary_cancelled = asyncio.Event()
+    resumed = asyncio.Event()
 
     async def wait_summary(messages, tools):
         assert tools == []
         entered.set()
-        await asyncio.Event().wait()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            summary_cancelled.set()
 
-    model = FakeModel([wait_summary, ModelTurn("new direction accepted")])
+    async def answer_new_direction(messages, tools):
+        assert summary_cancelled.is_set()
+        assert any(message.content == "new objective during summary" for message in messages)
+        resumed.set()
+        return ModelTurn("new direction accepted")
+
+    model = FakeModel([wait_summary, answer_new_direction])
     engine = Engine(model, Registry(), store, config=RunConfig(context_tokens=7000, reserve_tokens=1000,
                                                               retained_context_rounds=2))
     task = asyncio.create_task(engine.run(sid, "continue"))
     try:
-        await asyncio.wait_for(entered.wait(), 3)
-        rid = store.list_runs(sid)[0]["id"]
-        store.queue_message(sid, "new objective during summary")
-        assert engine.steer(rid)
-        result = await asyncio.wait_for(task, 3)
+        # Synchronize on control transitions, rather than imposing a three-second
+        # budget on cancellation plus SQLite checkpoints and durable cleanup.
+        async with asyncio.timeout(15):
+            await entered.wait()
+            rid = store.list_runs(sid)[0]["id"]
+            store.queue_message(sid, "new objective during summary")
+            assert engine.steer(rid)
+            await summary_cancelled.wait()
+            await resumed.wait()
+            result = await task
         assert result.status == "completed", result.error
         assert any(message.content == "new objective during summary" for message in model.calls[-1]["messages"])
         assert store.run_budget(rid)["model_requests"] == 2
+        assert store.get_run(rid)["status"] == "completed"
+        events = store.events(run_id=rid)
+        assert [event["payload"]["purpose"] for event in events if event["type"] == "model.request"] == ["compaction", "main"]
+        assert [(event["payload"]["outcome"], event["payload"]["category"])
+                for event in events if event["type"] == "model.finished"] == [("interrupted", "steering"), ("completed", None)]
     finally:
         if not task.done():
             task.cancel()

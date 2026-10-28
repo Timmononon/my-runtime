@@ -180,8 +180,30 @@ async def test_local_memory_query_uses_read_permission_and_remote_switch_still_r
             await dialog.get_by_role("button", name="关闭", exact=True).click()
             if width < 700 and not await page.locator(".sidebar.open").count():
                 await page.get_by_role("button", name="打开导航", exact=True).click()
+            identity_read, release_identity = asyncio.Event(), asyncio.Event()
+
+            async def delay_identity(route):
+                response = await route.fetch()
+                identity_read.set()
+                await release_identity.wait()
+                await route.fulfill(response=response)
+
+            identity_route = f"**/sessions/{session['id']}/lineage"
+            await page.route(identity_route, delay_identity)
             await page.get_by_role("button", name="本地语义查询验收", exact=True).click()
-            if width < 700 and not await page.locator(".sidebar.open").count():
+            try:
+                await asyncio.wait_for(identity_read.wait(), 5)
+                if width < 700:
+                    await expect(page.locator(".sidebar.open")).to_have_count(1)
+            finally:
+                release_identity.set()
+            # Opening a saved conversation awaits its identity read before it
+            # closes mobile navigation. Wait for that transition before reopening.
+            await expect(page.locator(".page-name")).to_have_text(session["title"])
+            await expect(page.locator(".page-name")).to_be_enabled()
+            await page.unroute(identity_route, delay_identity)
+            if width < 700:
+                await expect(page.locator(".sidebar.open")).to_have_count(0)
                 await page.get_by_role("button", name="打开导航", exact=True).click()
             await page.get_by_role("navigation", name="主导航").get_by_role("button", name="记忆", exact=True).click()
             query = page.locator(".memory-query")

@@ -1,0 +1,2 @@
+# Digest-pinned skill assets must retain their recorded bytes on every checkout.
+src/aster/packages/bundled/** -text
