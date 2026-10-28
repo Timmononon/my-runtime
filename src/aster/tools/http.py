@@ -280,6 +280,8 @@ class HTTPTool:
             lambda: httpx.AsyncClient(trust_env=False, follow_redirects=False, timeout=args.get("timeout", 30)))
         async with factory() as client:
             for redirect in range(6):
+                # The fixed DNS fallback receives no target headers.
+                # Failed pinning aborts this hop before any destination dispatch.
                 pinned, host, sni = await pin_url(url, allowed,
                     dns_fallback=ctx.services.get("http_dns_fallback", "google"),
                     dns_client_factory=ctx.services.get("http_dns_client_factory"))
