@@ -33,6 +33,8 @@ def context_usage(store, session_id):
                  "tools_tokens": basis["tools_tokens"] if available else None,
                  "message_tokens": message_tokens,
                  "calibration_tokens": basis["calibration_tokens"] if available else None}
+        # Without a validated checkpoint basis, window and occupancy stay unknown;
+        # billing totals and archive size cannot supply either.
         used = sum(parts.values()) if available else None
         window = basis["context_window"] if available else None
         return {"schema_version": 1, "session_id": session_id,
