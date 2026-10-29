@@ -563,6 +563,8 @@ class Engine:
                 turn = task.result()
                 if not isinstance(turn, ModelTurn):
                     raise TypeError("Provider returned a non-ModelTurn value")
+                # Usage belongs to the completed provider request even when a
+                # newer user direction wins before its answer can be applied.
                 self.store.finish_model_request(receipt, turn.usage)
                 measured = turn.usage
                 if steer and steer.is_set():
