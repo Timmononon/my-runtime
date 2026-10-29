@@ -195,6 +195,8 @@ class Dispatcher:
         # Re-evaluate restrictions at dispatch; no new authorization can be implied.
         if self.policy.evaluate(tool.spec, call, context).action == "deny":
             return rejected("Policy changed before dispatch", "permission")
+        # Record intent before dispatch so recovery can distinguish a prepared
+        # call from an action that may already have affected external state.
         entry = self.store.prepare_tool(context.session_id, context.run_id, call,
                                         risk=tool.spec.risk, replay_safe=tool.spec.replay_safe)
         if context.cancel.is_set():
