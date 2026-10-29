@@ -33,6 +33,8 @@ def _identifier(value):
 
 
 def _projection(payload):
+    # Rebuild the performance view from allowed fields; event payloads may
+    # also contain source text that must stay out of timing summaries.
     output = {}
     for key in ("model", "tool_call_id", "name"):
         if key in payload and (value := _identifier(payload[key])) is not None:
