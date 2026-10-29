@@ -468,6 +468,8 @@ class MCPClient:
             if self._current(name, state):
                 self._failed(state.connection)
             raise MCPTransportError("MCP catalog is unavailable", dispatched=False) from None
+        # A replacement can retire this state while discovery awaits the server;
+        # discard its catalogue instead of publishing tools from an old generation.
         if not self._current(name, state):
             raise MCPTransportError("MCP server was replaced or closed", dispatched=False)
         state.definitions = definitions
