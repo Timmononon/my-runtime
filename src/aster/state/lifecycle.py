@@ -158,6 +158,8 @@ class SessionLifecycle:
                 self.get_session(session_id)
                 self._require_lifecycle_idle(db, self.lifecycle_related_sessions(session_id))
                 records = self._artifact_records(db, session_id)
+                # Copy branch receipts and surviving artifact grants before their
+                # source rows disappear; the copies do not authorize replay.
                 self._preserve_branch_evidence(db, session_id, records)
                 tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
                 if "automation_jobs" in tables:
