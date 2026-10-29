@@ -191,6 +191,8 @@ class CompactionController:
             return await self._prepare(messages, force=force, phase=phase, semantic=semantic,
                                        allow_helpers=allow_helpers)
         except BaseException:
+            # Roll back the candidate observation and context-manager state;
+            # durable learning receipts still record helpers that already ran.
             self.manager.__dict__.clear()
             self.manager.__dict__.update(manager_state)
             for key in set(self.observer.__dict__) - {"store", "context"}:
