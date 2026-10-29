@@ -61,6 +61,8 @@ class ProcessTool:
                         script = shlex.quote(arguments.get("conda_executable", "conda")) + \
                                  " run --no-capture-output -n " + shlex.quote(arguments["conda_environment"]) + \
                                  " bash -c " + shlex.quote(script)
+                    # The per-invocation marker scopes cleanup to the launched setsid group,
+                    # rather than other processes sharing the selected WSL distribution.
                     marker = f"/tmp/aster-{uuid.uuid4().hex}.pid"
                     wrapper = (f"setsid bash -c {shlex.quote(script)} & child=$!; printf '%s' \"$child\" > {marker}; "
                                f"wait \"$child\"; code=$?; rm -f -- {marker}; exit \"$code\"")
