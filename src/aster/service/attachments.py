@@ -166,6 +166,8 @@ class AttachmentService:
         record = next((item for item in self.list(session_id) if item["attachment_id"] == attachment_id), None)
         if record is None:
             raise PermissionError("Attachment is not registered for this session")
+        # The session registration supplies both identity and original path;
+        # restore mappings may relocate the file without widening this grant.
         path = resolve_artifact(self.data_dir, artifact_id=record["artifact_id"], path=record["path"])
         if path.stat().st_size != record["size"] or path.stat().st_size > MAX_ATTACHMENT_BYTES:
             raise ValueError("Attachment size changed after registration")
