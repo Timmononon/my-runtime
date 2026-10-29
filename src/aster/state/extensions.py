@@ -100,6 +100,8 @@ class SessionExtensions:
                                     "source_message_id": row["id"], "source_seq": row["seq"]}
                 mapping[row["seq"]] = self._append(db, child_id, None, message)
             checkpoint = db.execute("SELECT * FROM checkpoints WHERE session_id=?", (session_id,)).fetchone()
+            # Reuse a checkpoint only when its archive marker was copied; a
+            # later source checkpoint must not cross this fork boundary.
             if checkpoint and checkpoint["archive_through"] in mapping:
                 db.execute("INSERT INTO checkpoints VALUES(?,?,?,?,?,?)", (child_id, checkpoint["run_id"],
                            mapping[checkpoint["archive_through"]], checkpoint["messages_json"], checkpoint["metadata_json"], now))
