@@ -14,6 +14,8 @@ def read_registered_artifact(store, data_dir, session_id, raw):
         records.extend(message.metadata.get("artifacts", []))
         if item := message.metadata.get("output_artifact"):
             records.append(item)
+    # This session's registration events cover later outputs without importing
+    # additional grants from its parent or sibling conversations.
     with store._lock:
         events = store.connection.execute(
             "SELECT payload_json FROM events WHERE session_id=? AND type='artifact.registered' ORDER BY event_id",
