@@ -354,6 +354,8 @@ class ContextManager:
             pending.update(call.id for call in _calls(message))
             if message.role == "tool":
                 pending.discard(message.tool_call_id)
+            # Parallel calls share one removable prefix: finishing one result
+            # must not strand other calls from that assistant message.
             if not pending and message.role in {"tool", "assistant"}:
                 boundaries.append(index + 1)
         return boundaries
