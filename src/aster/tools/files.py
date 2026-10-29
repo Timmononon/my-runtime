@@ -197,6 +197,8 @@ class FileTool:
             return ToolResult(content, data=data)
         if action in {"file_write", "file_edit"}:
             with FileLock(path.parent / f".{path.name}.aster.lock"):
+                # Atomic replacement prevents partial writes, not stale-read overwrites;
+                # verify the caller's observed version while holding the writer lock.
                 exists = path.exists()
                 if exists:
                     if not args.get("expected_hash"):
