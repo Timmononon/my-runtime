@@ -163,6 +163,8 @@ class BrowserManager:
         state = self._pages.get(page_id)
         if state is None or state.scope != self._scope(context):
             raise PermissionError("Unknown page or page belongs to another browser identity")
+        # Attachment alone cannot authorize a page after navigation or policy edits;
+        # bridge page actions must still match the current exact URL allowlist.
         if state.bridge:
             config = self._config(context)
             if config["mode"] != "bridge" or state.page.url not in config["allowed_pages"]:
