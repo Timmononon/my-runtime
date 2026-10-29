@@ -189,6 +189,8 @@ class CompactionPersistence:
             rows = db.execute("SELECT seq FROM compaction_snapshots WHERE session_id=? ORDER BY seq", (session_id,)).fetchall()
             excess = len(rows) - retention
             if excess > 0:
+                # Multiple slots keep the oldest surviving baseline; expired
+                # entries were removed above and cannot be saved by this pin.
                 candidates = rows[1:] if retention >= 2 else rows
                 db.executemany("DELETE FROM compaction_snapshots WHERE seq=?", [(row[0],) for row in candidates[:excess]])
         return self.get_compaction_snapshot(session_id, identity)
