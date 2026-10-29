@@ -125,6 +125,8 @@ def enforce_image_budget(encoded: list[dict], *, max_base64_bytes=MAX_AGGREGATE_
     total = sum(item[3] for item in images)
     if total <= max_base64_bytes:
         return encoded
+    # A shallow copy would still share nested content lists with the caller.
+    # Budget eviction must replace blocks only in this request's projection.
     shaped = copy.deepcopy(encoded)
     for message_index, field, part_index, size in images:
         if total <= max_base64_bytes:
