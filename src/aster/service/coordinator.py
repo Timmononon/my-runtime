@@ -323,6 +323,8 @@ class RunCoordinator:
                    "selection": selection, "selected_skill_snapshot": selected_snapshot}
         if execution_snapshot is not None:
             payload["automation_selection_mode"] = captured.get("selection_mode", "fixed")
+        # Persist this run's selection before updating the session defaults;
+        # later UI changes must not rewrite the queued request snapshot.
         run, _ = self.store.create_run(session_id, system=system, config=to_dict(config),
                                        request_id=request_id, initial_status="queued", request_payload=payload)
         self.providers.save_selection(session_id, selection)
