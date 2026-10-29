@@ -88,6 +88,8 @@ class ObservationManager:
             with self.store._lock:
                 row = self.store.connection.execute("SELECT * FROM file_observations WHERE session_id=? AND path=? AND start_line=? AND max_lines=?",
                     (self.context.session_id, str(path), start, count)).fetchone()
+            # An unchanged disk hash alone cannot suppress a read: the earlier
+            # complete range must still be visible in the model context.
             if not row or row["tool_call_id"] not in self.visible_reads:
                 return None
             if json.loads(row["content"]).get("encoding", "utf-8") != call.arguments.get("encoding", "utf-8"):
