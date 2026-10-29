@@ -62,6 +62,8 @@ def _apply(root, journal, *, rollback=False):
             entries.append((target, before if rollback else after))
         if {target.name for target, _ in entries} != {"config.yaml", "AGENT.md"}:
             raise ManagementRecoveryError()
+        # Both files must match a recorded before/after state before either is
+        # rewritten; recovery must not treat an unrelated local edit as its own.
         for target, content in entries:
             if content is None:
                 target.unlink(missing_ok=True)
