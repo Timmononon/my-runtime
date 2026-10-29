@@ -393,6 +393,8 @@ class WorkbenchActions:
                 controller.manager.overhead_tokens = overhead
             before = estimate_tokens(messages)
             shaped = await controller.prepare(messages, force=True, phase="manual", semantic=True)
+            # The helper can finish while cancellation is pending; check again
+            # before publishing its result as the model-live checkpoint.
             if cancel.is_set():
                 raise asyncio.CancelledError
             after = estimate_tokens(shaped)
