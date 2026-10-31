@@ -183,6 +183,8 @@ class SimulatorEnvironment:
             if not matches:
                 raise BFCLExecutionUnsupported("A documented function has no pinned simulator implementation")
             owner, method = matches[-1]
+            # Wire aliases satisfy provider naming limits; the reverse map keeps
+            # simulator dispatch and schema validation keyed by the documented name.
             alias = name if _WIRE.fullmatch(name) else "b_" + hashlib.sha256(name.encode()).hexdigest()[:24]
             if alias in self.original_names:
                 raise BFCLExecutionUnsupported("Simulator wire alias collision")
