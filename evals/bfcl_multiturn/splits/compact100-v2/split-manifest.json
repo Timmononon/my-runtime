@@ -1,0 +1,2550 @@
+{
+  "capability_score": null,
+  "counts": {
+    "active": 100,
+    "active_families": 25,
+    "development": 40,
+    "development_families": 10,
+    "historical_regression20_inactive": 16,
+    "historical_regression20_retained_in_active_development": 4,
+    "holdout": 60,
+    "holdout_families": 15,
+    "inactive": 700,
+    "original_development_not_selected": 160,
+    "original_holdout_not_selected": 540,
+    "per_category": {
+      "multi_turn_base": {
+        "active": 25,
+        "development": 10,
+        "holdout": 15
+      },
+      "multi_turn_long_context": {
+        "active": 25,
+        "development": 10,
+        "holdout": 15
+      },
+      "multi_turn_miss_func": {
+        "active": 25,
+        "development": 10,
+        "holdout": 15
+      },
+      "multi_turn_miss_param": {
+        "active": 25,
+        "development": 10,
+        "holdout": 15
+      }
+    },
+    "source_pool": 800
+  },
+  "dataset": "BFCL V4 Multi-Turn",
+  "families": [
+    {
+      "family_index": 91,
+      "members": [
+        "multi_turn_base_91",
+        "multi_turn_miss_func_91",
+        "multi_turn_miss_param_91",
+        "multi_turn_long_context_91"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 139,
+      "members": [
+        "multi_turn_base_139",
+        "multi_turn_miss_func_139",
+        "multi_turn_miss_param_139",
+        "multi_turn_long_context_139"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 3,
+      "members": [
+        "multi_turn_base_3",
+        "multi_turn_miss_func_3",
+        "multi_turn_miss_param_3",
+        "multi_turn_long_context_3"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 107,
+      "members": [
+        "multi_turn_base_107",
+        "multi_turn_miss_func_107",
+        "multi_turn_miss_param_107",
+        "multi_turn_long_context_107"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 54,
+      "members": [
+        "multi_turn_base_54",
+        "multi_turn_miss_func_54",
+        "multi_turn_miss_param_54",
+        "multi_turn_long_context_54"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 158,
+      "members": [
+        "multi_turn_base_158",
+        "multi_turn_miss_func_158",
+        "multi_turn_miss_param_158",
+        "multi_turn_long_context_158"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 4,
+      "members": [
+        "multi_turn_base_4",
+        "multi_turn_miss_func_4",
+        "multi_turn_miss_param_4",
+        "multi_turn_long_context_4"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 51,
+      "members": [
+        "multi_turn_base_51",
+        "multi_turn_miss_func_51",
+        "multi_turn_miss_param_51",
+        "multi_turn_long_context_51"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 5,
+      "members": [
+        "multi_turn_base_5",
+        "multi_turn_miss_func_5",
+        "multi_turn_miss_param_5",
+        "multi_turn_long_context_5"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 186,
+      "members": [
+        "multi_turn_base_186",
+        "multi_turn_miss_func_186",
+        "multi_turn_miss_param_186",
+        "multi_turn_long_context_186"
+      ],
+      "split": "development"
+    },
+    {
+      "family_index": 34,
+      "members": [
+        "multi_turn_base_34",
+        "multi_turn_miss_func_34",
+        "multi_turn_miss_param_34",
+        "multi_turn_long_context_34"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 128,
+      "members": [
+        "multi_turn_base_128",
+        "multi_turn_miss_func_128",
+        "multi_turn_miss_param_128",
+        "multi_turn_long_context_128"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 103,
+      "members": [
+        "multi_turn_base_103",
+        "multi_turn_miss_func_103",
+        "multi_turn_miss_param_103",
+        "multi_turn_long_context_103"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 90,
+      "members": [
+        "multi_turn_base_90",
+        "multi_turn_miss_func_90",
+        "multi_turn_miss_param_90",
+        "multi_turn_long_context_90"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 127,
+      "members": [
+        "multi_turn_base_127",
+        "multi_turn_miss_func_127",
+        "multi_turn_miss_param_127",
+        "multi_turn_long_context_127"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 122,
+      "members": [
+        "multi_turn_base_122",
+        "multi_turn_miss_func_122",
+        "multi_turn_miss_param_122",
+        "multi_turn_long_context_122"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 164,
+      "members": [
+        "multi_turn_base_164",
+        "multi_turn_miss_func_164",
+        "multi_turn_miss_param_164",
+        "multi_turn_long_context_164"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 113,
+      "members": [
+        "multi_turn_base_113",
+        "multi_turn_miss_func_113",
+        "multi_turn_miss_param_113",
+        "multi_turn_long_context_113"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 120,
+      "members": [
+        "multi_turn_base_120",
+        "multi_turn_miss_func_120",
+        "multi_turn_miss_param_120",
+        "multi_turn_long_context_120"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 1,
+      "members": [
+        "multi_turn_base_1",
+        "multi_turn_miss_func_1",
+        "multi_turn_miss_param_1",
+        "multi_turn_long_context_1"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 33,
+      "members": [
+        "multi_turn_base_33",
+        "multi_turn_miss_func_33",
+        "multi_turn_miss_param_33",
+        "multi_turn_long_context_33"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 55,
+      "members": [
+        "multi_turn_base_55",
+        "multi_turn_miss_func_55",
+        "multi_turn_miss_param_55",
+        "multi_turn_long_context_55"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 193,
+      "members": [
+        "multi_turn_base_193",
+        "multi_turn_miss_func_193",
+        "multi_turn_miss_param_193",
+        "multi_turn_long_context_193"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 116,
+      "members": [
+        "multi_turn_base_116",
+        "multi_turn_miss_func_116",
+        "multi_turn_miss_param_116",
+        "multi_turn_long_context_116"
+      ],
+      "split": "holdout"
+    },
+    {
+      "family_index": 78,
+      "members": [
+        "multi_turn_base_78",
+        "multi_turn_miss_func_78",
+        "multi_turn_miss_param_78",
+        "multi_turn_long_context_78"
+      ],
+      "split": "holdout"
+    }
+  ],
+  "generator": {
+    "path": "evals/bfcl_multiturn/splits/create_compact_split_v2.py",
+    "sha256": "c4bee8f86906625552496803715e7e011e73249232f8fe00435a6ea4151d2f40"
+  },
+  "grouping_audit": {
+    "exact_question_duplicates_across_source_families": 0,
+    "rule": "Keep four categories with the same integer source suffix in one split",
+    "semantic_near_duplicate_audit": "Not performed; inherited mechanical family boundary is not complete semantic independence"
+  },
+  "id_files": {
+    "development-ids.txt": {
+      "lines": 40,
+      "sha256": "b1d7ec61a7ca160f21e1322d021435ab1f5ccb370bbcb03c1939e2c1be9f7381"
+    },
+    "holdout-ids.txt": {
+      "lines": 60,
+      "sha256": "8c40803ac4aed94e855a0d75a43611895bb743c5af9eef4013dd08afe3d05e2d"
+    }
+  },
+  "judge_api_calls": 0,
+  "model_api_calls": 0,
+  "original_split": {
+    "path": "evals/bfcl_multiturn/splits/frozen/split-manifest.json",
+    "sha256": "dfdc29bb1b700a99537b42196814d3f1c415d2038ab13814c97763a9ab199e35"
+  },
+  "policy": {
+    "authority": "This manifest and two ID lists define the new active scope; historical files remain unchanged",
+    "comparison": "Report future paired A0/A1 scores on the exact same selected development tasks; old 200-task score is a separate population",
+    "conflicts": "Allocation counts are not a certification of scorable counts; quarantine newly discovered source conflicts without resampling or modifying raw sources",
+    "execution": "This module only creates/validates membership; existing 200-task execution entry is unchanged",
+    "exposure_boundary": "Development only from original development; holdout only from original holdout; all four same-suffix variants stay together",
+    "holdout": "Original holdout membership is the local exposure boundary; use after strategy/configuration freeze; this is not proof of absence from model pretraining",
+    "inactive": "The other 700 source tasks are outside this plan; no additional regression tasks are silently added",
+    "outcomes": "Never select or move tasks using pass/fail, tool traces, usage, latency or scores; no campaign result files are read",
+    "regression20": "Historical 20 are not all forced into this scope: their 20 source families would require at least 80 development tasks; unselected records remain historical",
+    "source_bodies": "No question or reference-answer bodies are written here; answers remain evaluator-only"
+  },
+  "predeclared_data_exclusions": [
+    {
+      "family_index": 173,
+      "reason": "Previously documented schema/gold ticket_id type conflict in all four variants",
+      "selection_basis": "Known source-data conflict, independent of Agent outcomes",
+      "task_ids": [
+        "multi_turn_base_173",
+        "multi_turn_miss_func_173",
+        "multi_turn_miss_param_173",
+        "multi_turn_long_context_173"
+      ]
+    }
+  ],
+  "sampling": {
+    "algorithm": "sha256_seeded_separate_pool_family_rank_v1",
+    "development_families_in_rank_order": [
+      91,
+      139,
+      3,
+      107,
+      54,
+      158,
+      4,
+      51,
+      5,
+      186
+    ],
+    "domain": "aster-bfcl-v4-multiturn-compact100-v2",
+    "holdout_families_in_rank_order": [
+      34,
+      128,
+      103,
+      90,
+      127,
+      122,
+      164,
+      113,
+      120,
+      1,
+      33,
+      55,
+      193,
+      116,
+      78
+    ],
+    "outcomes_used": false,
+    "pool_labels": [
+      "development",
+      "holdout"
+    ],
+    "rank_input": "UTF-8(domain + NUL + decimal(seed) + NUL + pool_label + NUL + decimal(family_index))",
+    "selection": "First 10 eligible original-development families; first 15 eligible original-holdout families",
+    "sort": "Ascending SHA-256 hex digest, then ascending integer family_index",
+    "task_order": "Seeded family rank within each split; Base, Missing Functions, Missing Parameters, Long Context within each family"
+  },
+  "schema_version": 1,
+  "scope": "compact100-v2",
+  "seed": 20261030,
+  "source_revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+  "sources": {
+    "artifacts/bfcl/v4-coverage-20261029/provenance.json": {
+      "bytes": 70707,
+      "sha256": "654544beaafcb071f46da5101b5e0c539295506b39a5e227c0ba00813cdded48"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json": {
+      "bytes": 390425,
+      "sha256": "1a21a995d06fd6f20ba55de7bced30ef953ec35e998f502ec2ecf4d66ef1c43a"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json": {
+      "bytes": 392016,
+      "sha256": "78c3268c5cc8e97c0f4ec6c811b3b9a2bba14323b1830b7a874b06d822749324"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json": {
+      "bytes": 401159,
+      "sha256": "87d28ce10e37d864b72de85d5732eef2a867b241d6c1c99b4ae682c9e3ea921c"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json": {
+      "bytes": 402974,
+      "sha256": "f0c66dda3795f5f53e3e1c0cc8ba0246b6761c8f58bdba8317203bf451ab8838"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json": {
+      "bytes": 78931,
+      "sha256": "1fee67823b317571649177dd89d63969feaae4e810cc7448ee55ba797fb7c8fc"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json": {
+      "bytes": 114439,
+      "sha256": "e82aa0e839c39d23c64a05834f7ae024d7c9738ec21738ecee78dc876e3d0d18"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json": {
+      "bytes": 80589,
+      "sha256": "69e679b806d1c871b05393a4b95583bb973248e5b8d96c2d7f4ca05e29fc32e6"
+    },
+    "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json": {
+      "bytes": 80816,
+      "sha256": "59c442901779e2c31c33abcd566d032e03736e5ad8069de2fe05489873046ecf"
+    },
+    "evals/bfcl_multiturn/splits/frozen/development-ids.txt": {
+      "bytes": 4834,
+      "sha256": "7a5884ad0093605a5d9c1a238d6849fb53f1eff0df46e95a6d285d92acf7d706"
+    },
+    "evals/bfcl_multiturn/splits/frozen/holdout-ids.txt": {
+      "bytes": 14526,
+      "sha256": "bf15c99c4e1e0ea51f37dfc6e387339f7fbd4d1176c4f7bf3d76c6dc4f59f223"
+    },
+    "evals/bfcl_multiturn/splits/frozen/regression20-ids.txt": {
+      "bytes": 487,
+      "sha256": "40201cbed9bd0d3a64d78a6515371652e089e5af36e2ecf845bd4ba516990787"
+    },
+    "evals/bfcl_multiturn/splits/frozen/split-manifest.json": {
+      "bytes": 931797,
+      "sha256": "dfdc29bb1b700a99537b42196814d3f1c415d2038ab13814c97763a9ab199e35"
+    }
+  },
+  "supersedes": {
+    "prior_scope_model_api_calls": 0,
+    "prior_scope_preserved": true,
+    "reason": "User requested more holdout tasks: replace the unexecuted 60/40 proposal with 40/60",
+    "scope": "compact100-v1"
+  },
+  "tasks": [
+    {
+      "answer_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "7eb8da068cbd1c1adf7c63ccf6d8e2894108e27e8a54b74be22aa017e2d58043",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "6ec4eedbe7be8ba7ccac84f0ce330c7eb39762b25c9f3cef162ea477abf9b070"
+      },
+      "category": "multi_turn_base",
+      "family_index": 91,
+      "id": "multi_turn_base_91",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "2bfeea986134d27068785ffa5ef3de264e6434d25f7f7a5d0657244a3bbc9375",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "6c3662c2fadff6a5f3b0de523e6436ce8f1869b5d0cd60553e9eaa20feb06e25"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "ab291cd946bf58b34887020b09adde9aade4203731b7b94db611defe6b1e125b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "b8cfea3c69dc9724ae5c11824b2f5eaad4087c2e36532ee023ca4d7e193c6133"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 91,
+      "id": "multi_turn_miss_func_91",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "1e8a4d693467b320427e3c6dd7ebbf078045fededc1ee56fb62601a6df6b6989",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "4b96bc51dceacce62e35358f4d9f743f771149a3c7151fa6a76b8c4d93cb5825"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "37f304ba6e45aaf7a4b25a86d5596d71dca52e3012f09882952c1618fd6a31c7",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "7a2eb086404096dc51b99f1306dcfbccbd642d26b8a78ffcfab788876762222d"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 91,
+      "id": "multi_turn_miss_param_91",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "18285ec781decca1888512504b0db5ff31beaa69f37cb121fbfd1d2200aeb83f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "eacf02b7be6a2a3f69fffa54c096ccaa4f1ffd641fff468eac882f5f4b0c44f0"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "aa7b3598312eddbd3a454e83c0766bf0a875be197c7eb6b16b680d76728218e5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "f1bc5e24245d485c4e8cceaf46ebd08acaaecb13f1fc893628bb420717f5b6a0"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 91,
+      "id": "multi_turn_long_context_91",
+      "original_split": "development",
+      "previously_selected_20": true,
+      "question_source": {
+        "line": 92,
+        "line_sha256_without_line_ending": "722c70866912ffd6b2ad1ac82b8d236a04657cba12bb6065f9e12b1f4d7ab9b2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "5786842e9a466b2e1e36aeb73b77965234f3e5f87b6bf844cd853151011b8971"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "18fae9597c3eafeb15ed04214a38727a32198c9a91c4870c266f178c4d4abe23",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "3a0c09d7ba77a96f12afdf6a293b692655fb3613c9e9d1aaf40304e309f1db7b"
+      },
+      "category": "multi_turn_base",
+      "family_index": 139,
+      "id": "multi_turn_base_139",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "87d8fa492280fc0aa3c41eef4c864c5e157739b418d2329336cbe64c984e3ba2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "e94b3d64e8c394119cbefccaf7f6d0e5d10a7e09165b263ee84540832cb87882"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "65fb59d0dd987ffdb836903ef6ff123584893d25faa7977fd4808633b1d0467b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "6a020e38229c50a1703655cc1c159f75a3a31277b9d2b1636d82db8178f4800f"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 139,
+      "id": "multi_turn_miss_func_139",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "d93db3d5316d630a39e902f0c7075eee685ed2a66e538e20f28d0639f9d2c1ba",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "a4cd303048e06ae50635f24f610cc0bb55cef3f07ba251d8d12e618f7c8f4a80"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "d182b03a521cfdb2366499cc4a6386c821578f5e16e27872e8698ef6c139c12d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ca0391f300f68a65a81470ba366814db36ad7e3171f7f2a5d028a1cf969c617c"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 139,
+      "id": "multi_turn_miss_param_139",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "700b5fb7357f49426d015c5c131557a1f113982ef78ea580b5972865d285cfcf",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "f3b9b146f18d9a0f877c64c1b50cf1d934c33acd68435914f2f1adf8ab66faf0"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "33236a273fb95804551451d670ac18e5c25bd7b1a7d940e90a486c6d87608251",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "797b3bada65566237497ba5fa2fe806881311bded14886c74aae80eaf6bf4ec7"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 139,
+      "id": "multi_turn_long_context_139",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 140,
+        "line_sha256_without_line_ending": "56e63be8ef4d5454e2192876c5c680f7e6eb84bfaa92fa0ffdf88518a6495553",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "7f2d22c0681078a4f0856029956bc0214f2925d579bdcaf06fb10e3cf3e14c7d"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "4346de76deed8250ad57487c8f29dc52d11949c8edff42ec4263302c8eb04c9e",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "e9ecc5556671deb2b6d7c31e6b2b9d8a402e67fd6b9081b342f5f7473a58150d"
+      },
+      "category": "multi_turn_base",
+      "family_index": 3,
+      "id": "multi_turn_base_3",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "3b84496e26ab4798096e96e8940bdff56065bda086cb63b5819f77faff6a3fb5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "cf8d3c3e9bf4c6857f3f4c13b31e96b5a5eb6e8d9f1cd8e80d0e42f118249785"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "4c84e1d68f012b50ae99e0cf7ba15e6680c9106deae61b398eadc3e36d6f1095",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "0f8b9f78e02a004eda017002d78503514db4c0f250d873d37ee89040a46622eb"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 3,
+      "id": "multi_turn_miss_func_3",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "c3655c395b98c0f7674c8975c750c84f92089778a1be77bf5487c12a13023165",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "9824f9323e54a9e17b4aac83335c4937c3e664d7da637f6933ee367852a3b382"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "f019b5193e8f7f637ea1f3a33d0d10b51db6906cf18cafb840309dcb1302ada5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "5884ef33f0f05a656d6d8416142c04a7b0d603a4d16365c1ccc6722bed67e3f9"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 3,
+      "id": "multi_turn_miss_param_3",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "b4ac7086e0c815e37f8895533514d8b28ad4766e326aacf99c2fea047bad0d44",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "9c12c611e3f6ec6638c8a6d3e02fd369f8d6cf3d771d162467fb1d85a77c5eee"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "ac07e314485d58314d2c09571965853f941cc5be6f8fff3bd3da63188bd405d9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "994af25df82c281fb26ca4d8fe19105fed3f092d3c995184f461a5e1c61e2f3b"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 3,
+      "id": "multi_turn_long_context_3",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 4,
+        "line_sha256_without_line_ending": "d728e17c43c20660e065722b7dfe15fd75dac78dc2d27305b925c7becf3cbe91",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "94907816eef44e5c7a7064f169846e91dd0d45fa66170f94720e362340791843"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "ff18cc6741d8df30640924ed9d14bb341089b20b6d98dd3a75cb28ddc48b56e5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "a5cbce80623764c3b66c80a33faca1d57f381d8323934facd7b117b78fbc1600"
+      },
+      "category": "multi_turn_base",
+      "family_index": 107,
+      "id": "multi_turn_base_107",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "96c0a217d859db1f1876feeaa71ed8b880501d52a939592cc3ef70a10cddf703",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "141579488afd00fe9657f4fbc7ea1b8aef3a1cc7ac9d2a5d0349a040a2624754"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "2e045872d18faf6e3983da36f10455704b2f43b5681fe4eed605fe4133827c59",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "3e0439af99680ca72fd0b7ad34d9a983a691a0fddca9c69866e013502a2e527b"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 107,
+      "id": "multi_turn_miss_func_107",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "0def7154bdec2481c4d126859539d681a572f74d290dbae51aa7665f3a45cc02",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "3a6053a498bd8f13cb050e7c48d0aeec87353266bb87b3be85455993d6795684"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "47099669b2d9eba072c64f87798a1fc941c309e041e4f20dbba92df8c7f1adc4",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "fc3a41a1405a37af21a879b884c4db4edda7352fda37e8a1e55f6d14bd8971c0"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 107,
+      "id": "multi_turn_miss_param_107",
+      "original_split": "development",
+      "previously_selected_20": true,
+      "question_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "8b38a73efbeab98984af675833d64121020fe052f4235a5c94774ffa8971c600",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "48336d1a3110d23c7065c81327081e43be410057a261b1379aa0db65c8727f90"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "98d8391fc926e6cd7b614fd46c9141ed844ad91cc66642a5c4b3a1dc070444f6",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "04927ba6447aee362d6b57ea3678d57c421d0b36fc27633910af673886def741"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 107,
+      "id": "multi_turn_long_context_107",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 108,
+        "line_sha256_without_line_ending": "7d2f4d5082e185513a267cf68cee012484149ca5b286c4c8df404b1a60049746",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "ce54dc42e92bba84178dc9526ce057754e21a99eeda038a0eb96875888e74a8b"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "984f1b98810dcd0ca13e28e797b2f06543c3fc6e399c2df77aa718132d644d10",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "e56debd0ee9e11177de56e945e6b159fbf9c210e740ef2f7931de792a44b6c87"
+      },
+      "category": "multi_turn_base",
+      "family_index": 54,
+      "id": "multi_turn_base_54",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "91f417e820d3e95b1023e11dee57cf7c5b8022e287ab752d0c4533eefd9cab8f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "0cfad2ed41dfc2dd59a215321c6ae2643acdf14201639f2ffcc27eff93528179"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "d8ad9145c55006ced49138e71dfb5902752bbb5c93ed241396dab395606b43ca",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "3bc8a1b3a53c2cbf2fd77c96afd15bcb7781028dd27439ad85740642054589f7"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 54,
+      "id": "multi_turn_miss_func_54",
+      "original_split": "development",
+      "previously_selected_20": true,
+      "question_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "46c52c6e56dc63b96feda106dae2b5ce07051ba61899142d7d8fed0a1b14a1f2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "422bd45f60607fcd5a4f3b1444a9410eee80d581e162ba86f0d8b9895e1078d8"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "4b5a9c24a0c404589d138191f895883e5a5a6d4ef5ff9e0153498c5215adde35",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "8e0bcdda4bcd7549289af74e6884e7db2203dce151f29673f3f65de9edacc372"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 54,
+      "id": "multi_turn_miss_param_54",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "2505a245ce33c6e7e0350b1d23318ea0a812852f9193478f81356e0373672b52",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "e16f141491c4a36f6e1689e59d52a7b18567da82a73c2c27a9ec37db415e4d01"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "37b1b46a32ac97bdb78d3a5dae27b3071355bee5b0bc9d75d3ac4a7e66da6b33",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "9a98b8056a791c4d46fd055d96a52e5d03bc29f6ed992b250fcd6d34ee7eb3dd"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 54,
+      "id": "multi_turn_long_context_54",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 55,
+        "line_sha256_without_line_ending": "5a5b5934bee8c0f1dcf0cb7feb59f1de4239dd438d35bc40df4511e2a500e5d2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "1501edc4121fd2f1ac1b98a8e469cab1094b01402ea42d5eb901ad9a43eaacc3"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "135b37cf45607cc6ee1813ab7ff8e754f1198cf1b22f64c9c30c847f9bb16d2a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "49ab94e10d5338d05302717335ca48aea623d6e7c7656fd26ea10eaf99333d9f"
+      },
+      "category": "multi_turn_base",
+      "family_index": 158,
+      "id": "multi_turn_base_158",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "62365873c04eb079cf8ca2b4a0ecf97b0fa3f092e4e9da311bb1c75007723807",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "4c359d06b3d38647acc24f18cbd78f71569e5530fd65933d6bc789df6d7a8f28"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "653687f2aeb07ccd8a7eb088b9ca783d4cd7f6a6d7da4b2473ad94f39e41f14d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "78b2471c627e309e6e0d82b8f720165de0680c503fd4f29d737c448e7938d1a7"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 158,
+      "id": "multi_turn_miss_func_158",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "3c826eb872e675fc085f2765993cca990560ddd6416a485f63afe9432b973091",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "4c581a81b0bbb7eba755715bab9e47367af4c5aa561cb20f58c42987806c87c2"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "b102337375dcc3bce3b6d86469f478d99528f3c2bde180c2cea8470cd83d6051",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "87b6b0b8e261c1984377bf30c57e86e8354a7f629bffba129edb66f9cb205ef6"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 158,
+      "id": "multi_turn_miss_param_158",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "a4f96d5505b86f08948b439dff04658e96d951cb73914fe72ff5915f7ce7c46d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "2ec1bf9fa3d14d5ec0a43f330bd3757f5959a12131854346115222e4adcffcab"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "844f41b4765180c0442817ef8528c63fcba0282aeb8973a0f4dbff17d348e20e",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "f5f16ea1d3facdd95f44daca2c81b47ce58962a5d466c2a4d6c05949fca5e9c5"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 158,
+      "id": "multi_turn_long_context_158",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 159,
+        "line_sha256_without_line_ending": "0cfa68ec200f62968e6a997f8eb81a26985062df5cc1f8d078ac367ed345e002",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "dacdac91a2735ddb8573cff9f75c952a76fe4a05ec6094e5124bc85bec7afb8b"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "bf055e1462b1bb1014f0dac0211fe89cc19541373399de1ee2670a7470ec8a00",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "693666649ffabce599fe685f85b736e0e3b9a4d883f943c59ce3cdea3447b291"
+      },
+      "category": "multi_turn_base",
+      "family_index": 4,
+      "id": "multi_turn_base_4",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "f60022332e0914805fbe978d116fbdf474fc039c14deaa56a67006bb948e1071",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "46cefba45e493392a8f0bf47308725cca0248072855f6d7c496c2801d3c50400"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "3990923b47685a6ff7cfee691020977b9f0a679a71dc15312b046db20b23be2b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "5f0e89f82886b8afd06585bae00f09fb098048abc26ad7285babacb84ceacca1"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 4,
+      "id": "multi_turn_miss_func_4",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "50f367d0804f3f3be6412b6403e2e0be2a5b80337583f6a33c174f418eb0078f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "71b2fb3c722d7dcb9201bd48cd023475e938271d7fb6b3b0e81477d453669ee7"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "cf0a272a0b2683c724c8ec1ef1db2ad01c9522f26e41072d18ae497a3ca8cdf0",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "48269b5c861b1b35738457c57d28e5c66954f3c2a907528fa2b0cb5118cd6a04"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 4,
+      "id": "multi_turn_miss_param_4",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "03f8fe7fa471839770227b47a6211f99626709fd39781e527b16503cada36525",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "8cfd9afc4ec8d41f7f93aa68e5e2f2377520cf82b3acf721a6a88e9a66013e63"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "0b7cefc3308c62308df5c438c31a4df0fb45b00369121f7d85eedc44512b78b2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "3805ee61514b639a83e5c660b43e4bf808fd8bb659599885988e74ae6131330d"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 4,
+      "id": "multi_turn_long_context_4",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 5,
+        "line_sha256_without_line_ending": "211ccd088e710ab7e8fa0b3c46e46f3e44866eefb465afb1fa44d527ba0f99c1",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "9ba17d56f9721a2b3b2f5a27ad6585b394f42207ee244dfa2f9d6130dfc2c89d"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "192e3b764d17f50d8eafc87fc018151589e122306ff59f182a2f7886c35c2cda",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "2052569f4a317e0c026a90b566a791fcf287fa3dbfbec2c9f3f20d1913fea5d9"
+      },
+      "category": "multi_turn_base",
+      "family_index": 51,
+      "id": "multi_turn_base_51",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "834969043b3dc276653c3367db77f5270e89f0d27b0107b9a0333effa6fa6bf6",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "3d0f9ef64415b3cef5c045e38d3d527586268003cadfb83946845e19adcd5fda"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "472df0b4f06229203ee5100e20a45a8fc784a2c21e7465ff0eba2fd764d33a16",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "60076be581be3b134f628233a86cb79cd846ee189c28568932395aac5bbaa24e"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 51,
+      "id": "multi_turn_miss_func_51",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "56ca17d734037dc26444844851a38b03aead606f479cc614c9f7bedad7e00c3a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "222c1ea5a0752796930d5b2902c98d83b54df1ec457b40b9872586435d2028b1"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "06a24c3b59b001b15cd45eea6e7b95626d762b7c9baf9013b45ef4d77361ed51",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "a00ddceacb0a637507ef790ab579456ea3d60f779bd6e08b444b5a5d647aeccc"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 51,
+      "id": "multi_turn_miss_param_51",
+      "original_split": "development",
+      "previously_selected_20": true,
+      "question_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "f5440ffd1efa49e0bd56c9643976181c2270d944b20245a310427e875315d683",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "614dcff5a43ea8d0ad39183e5bf036a121014577e75ac8a3bceae81f084d8163"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "1659af57a5a2b11968dcd8542f6f99da18cabe0793d53cb20f300c458bef08c3",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "eb67adaf91af1886cf0df9e0aec64b6c59855e16ae125ec19c1efbc27ad913e7"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 51,
+      "id": "multi_turn_long_context_51",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 52,
+        "line_sha256_without_line_ending": "6af60d42dc14c3c9ab236d1fd935a95319da8d2ebd57e8370f2f61dec81bffd1",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "040d4b7ee52cf9caaadbe1efdc2bc1a587755ac949ac6a69d1ce61da61f6e142"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "3bfb5f74fbd3dad8282c00806bca84dd50cfe6ba484c3e5e6fa661b6380e45e0",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "aa04153644878eb7337485518c4aac12a9d831c038eb4af8d86f4eaeb7f571ae"
+      },
+      "category": "multi_turn_base",
+      "family_index": 5,
+      "id": "multi_turn_base_5",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "f31164f7de92888ff8e74f17385bad83b145580fa902807ef0a7f07f18ba65a4",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "ea73e690516ab9350c5497d0a35df83776c0dc2c2a17459ece745eedcaf9ff99"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "934933aa866a6656b554698405405e1b09f7751bb4c20c153875c96838a9a0fb",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "d2abda1cdc31f373663926e917db4a7805bc3e6e776db7b4440fa2acf4e967c5"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 5,
+      "id": "multi_turn_miss_func_5",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "afa4721f534851b22b701a697057f48f3a669f9dc587cba345a55c5c67b476d6",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "d2d43be637f3958c58f46009b5edb2a91a305aad2aa881ab35c3cf96e19c1f8b"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "aa4e8395e0e8b20037e0854220e21644664de65fcb83bf191d9cda5c494477ff",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "08762e548fd1acbc9daf58aa7c1def8bc3c70721c5092198e929829e431c4552"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 5,
+      "id": "multi_turn_miss_param_5",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "0ee81941826fee9c80f7e03800def16537af04bfda3436ef2c84a8f9a5742959",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "8d466be3d0ab041d321ed95d4e5a0d66d70a61bda49e6d1d33304935c5fbc6f3"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "6a5ac65e8f173f6bf11f430f72cb11fad62b58b86f926da8283d93e60d095f09",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "0ec121251eae63c94f7dd8cefa8f6b4dc74ff933ef50309ecfeffcfdfe2133bb"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 5,
+      "id": "multi_turn_long_context_5",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 6,
+        "line_sha256_without_line_ending": "18b5e79be7e7c7acd3beecdebd02039520df623449f445b58de75b3acaac16c5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "9fd3e3f2c6c3124e88faca9e5a012b1b5a574058488ec3b8650110ae59bfc4d6"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "eb89c274d697e93bbcbae5a848b5a7257756fcec0087708914be3d13005e7928",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "4b5ff688f3d14d6d320a98a3ca239bbc7a810a045c22a07a6e037a3bc99bb6aa"
+      },
+      "category": "multi_turn_base",
+      "family_index": 186,
+      "id": "multi_turn_base_186",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "5c474d2e5115eb88b06a15c8f8029d5dff80dc41aa5ca2b30b8ac6d8c0c86ce3",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "917fcd20a2f5e6ccfd6e87754646f13dcb2739fd28360dcba2085a0f83e427e0"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "3e9bfc4531ec6691cdf4eee04d31558edbb3a1c19f3aa9cfd515b4dbd418a811",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "deb616bb8ed7b80043509067b77e7eabed918cc34b9e45c74a9a790922693ee7"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 186,
+      "id": "multi_turn_miss_func_186",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "090bc8425b0c6caa0a17b95c91cee2d5b38f1e7e5a12a7dbc840a584605b275c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "64aff1841c5a8bb708cd86050b3a35aab967ec2c45ed7e985a0e08c96935d5c2"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "3d32da59b210804d15e13d58e6ac594de5c41bc02d30d28dc53dfef0e8034ba3",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "c0e85628ee4334f64d33febe7a37e82d0cb9ca18de4641b389da4d41c0dabec3"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 186,
+      "id": "multi_turn_miss_param_186",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "2a64ddb1e7b9799146cc2b5d4217e8f23b9a1f583c96489dbc64d43a74fe8b15",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "d6b518d0a09485b94400799506ab46c990f9f537145298f216a39c86a2fe0f8d"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "367d9fea7f9389eedacefcd85efbf6fa6bfe84bfeee3c115afaac8610328629b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "388031762e872a9489d39e1f1f825a075069e893023b2a9dfc62403172a75484"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 186,
+      "id": "multi_turn_long_context_186",
+      "original_split": "development",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 187,
+        "line_sha256_without_line_ending": "81471f745e1dc4744f6d1d59f0f7e544bb7b51743fd10de841bbb2cbcadd5bd8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "ae01a35dff682400870466678b017f3591c5e0e878960d857a40df6b73013beb"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "development"
+    },
+    {
+      "answer_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "ae65283d59a3fe0d705b2bb85a2655c2c52e8d70e43251e2baae260d6df73833",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "313cd705900faceb086a8fc3fa5ba17538fbeb257da5c4b5e96218665f59f5e2"
+      },
+      "category": "multi_turn_base",
+      "family_index": 34,
+      "id": "multi_turn_base_34",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "a2f6326de72892100dfba776a4336a3f7389608ecd590268ba0bf9efd3d1f6a1",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "48b6d46bc5717aa72abc42e6843bd58a56e18f27fe5def574d49e865567ee963"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "ef9a42e83aeda78951ba421fca4916186837cb40491078b9cc9f29418c6124fc",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "5f25265bcc8fbf52686d258df6f888217da10455a6559cb96b17d8e92d8e54c7"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 34,
+      "id": "multi_turn_miss_func_34",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "82ac55213ebefad7500c4befa1b0928b55b1837648f9c807cb599ee40eba599d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "ea713a2e04e8fb0a5404ebc2c03484565b170a2334a1d95f218c8c80454d4b1f"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "d5b1e8e73ee08b6cb01082354263faa2e92c73345d3a734e66bb4357137bd1bb",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ba92275dd4992c34fbc69ed5af43dc11801c03f961a332098600b008cb69ffee"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 34,
+      "id": "multi_turn_miss_param_34",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "701c91d743032740e22a5c84844aa1b9c668fdfbdb94d5d502ed20b9c3cf37f9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "90d058bc802c2def446b0939bf8ceba0c23541d4bee6b4cc637ae5e483def061"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "54e31e3f93d6dc845a49d2a79d01f6170ad93b026d15f70e8891e6c8b95621f7",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "79f3acdaa3d203c4713c75a8ab35f35333982a29b7358e796a51c2a523d28b7b"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 34,
+      "id": "multi_turn_long_context_34",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 35,
+        "line_sha256_without_line_ending": "e98c8a5f6387c2041a9561f7d334519691c06b0564352211e725e152e75660b2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "9b2d3bbf33c3f2f6277aa78182106e87ee957fe0d4e1ed7c0a904aac517a0dd6"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "c318bf6b3a484a544cdab7db3dff8ca0afa1f856b9e8a985fd0cad30305af697",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "55d0d20fb6214583937eb27262557232e4ca47bc275acd17899583df37f876db"
+      },
+      "category": "multi_turn_base",
+      "family_index": 128,
+      "id": "multi_turn_base_128",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "28ef6272a5d161612b3dabed484d795cf4057242bfa830e1bff8e00c28dc9eef",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "cf8277795f05fc33b8973ab2149e5259e840a7c949f0183171af71ea2f37ec2a"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "5bc02c2244ee27fd785ad3c37bcff4faddf8e746e80b698da8e43f7b0285631c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "4746d5fb0295c48495d223031f4f0cf256748f95a04f048ce592a25466df69d3"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 128,
+      "id": "multi_turn_miss_func_128",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "b87b3fed3e9b199d85b61c2afad1750f40c762cb02bbf583985dc3a04bbe0365",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "dbab93efdfd12d21668c8ede83182d5feb200b95782d055d16b372c34d28a1fd"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "9d235e6c04951319189a213c31ad90d8e3dd0a5e3d75c0f72b7b5580ace4daaf",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "1cbda96e0f883d52f41a09e5fd949941533475c66fcaee96bbd874085039d749"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 128,
+      "id": "multi_turn_miss_param_128",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "076d8cb3a270f29250791f5cf8bbf19c4b23edb2a70d8fd77d6b89d8a45d3f3a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "d3e1b2a6b2cd50c88fdffdfee8d80d2024315aeae03f0d3da26ba342e61f0f4c"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "6f05c1ca1d2762b41904a9ecf540a62d209c5960c87efbbb06a64ae4a2869434",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "b57a5e8f4ce23d1fd46da8d7a6433d39f66fc097a0ddfb102451031bbba1b04c"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 128,
+      "id": "multi_turn_long_context_128",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 129,
+        "line_sha256_without_line_ending": "1b9ad41186b9fb8591517fe66ac52863e503475698e9f46607e10ac3ac20f068",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "02566cc573741143fa57a5cde06c5b4b5c6c548961adb7bfaf5d1aae750699e8"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "055c9d65d84e175e94fe6e1edb59d49d1947e3b4a9c0cc5dbd71cd209f11ea54",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "58a4f8f9911c64d7d4db283d02b556d41e52ed263ccc8ae08113e32fc2451610"
+      },
+      "category": "multi_turn_base",
+      "family_index": 103,
+      "id": "multi_turn_base_103",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "cad2b999ca71af4502c1e043c3082d98d3ab4ee7997a24658810ddb95d175ff9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "ce02da95e4d370d56afb3ba48ecb066712249d6bdf8329ca8d2dcc61770a6893"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "66fee9e207882823fb28a6d64222abefa7428d29672a68206fe50f4eb93513d2",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "4dc4e899d8eb35aecb98f4a58170ed95b6b60e095011bd48ae6fb8ac97475bc7"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 103,
+      "id": "multi_turn_miss_func_103",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "354558b2b81823a936a65bbf6608b9fcee80c7729892736c702c52021e09b572",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "0762db6c2161bddef213c8b38326534fdbaf0e36cfbc78f89f77e9a973f864d3"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "ab295b0e78dc564709c62feada658c789ddf259d457a8c370e276cd12661ff17",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "86717876b3bac1a7165c7a7ff79e61ad215878648481244b6440fe0a6358c73d"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 103,
+      "id": "multi_turn_miss_param_103",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "6eeba5b65e11cafb32d9e757414decfafa7a5be3b1a0f82c1a7af5f27e858f00",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ce03ee7aee0ae9b6cd0695eabff660f4b1956781cd0d56b4c87bcf60d0f7ca25"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "93c1e9448f1f65be5b419fd65d8a18b6b321fadc5c4bdd0e3ec6edd09c8ec753",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "aa0599578e9a03df1604baa8f4e719458b7752698cab37255838c19a8fd30a2d"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 103,
+      "id": "multi_turn_long_context_103",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 104,
+        "line_sha256_without_line_ending": "a4fa43812aca387f6edecd445ce76aebf33c47e6f66650a33e779b1a03d5e4fd",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "95365a1fc20a2eaccd2c275567f28e72309f7a6370ba7dc30d79372676a5961f"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "4655b1210c150542d6079ce19b4eba602e198d030e3ceda7cde8dc5b8d20d9cb",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "dbf0815a534358f17073aab7c27b852e8df43ecb4c2b333827a0e172e373a713"
+      },
+      "category": "multi_turn_base",
+      "family_index": 90,
+      "id": "multi_turn_base_90",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "f22af7973c3709f2ff2371cb10676581fc6af04b26cb279215492a07f66382bf",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "4c13fc403f9dc8b5a6d15f861c7ccbff82859c37f8a1b67c0ab92376d6d8ca1e"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "99fffe7b7e1a66ef150288072fed07fb747107ad0dc156afab52ee20e52c3e86",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "fe95f89cac7b29d5e32cd5d6992225654c0d7f62b83e48f5ad5ee177a0af7f5f"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 90,
+      "id": "multi_turn_miss_func_90",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "e2b9591a775e5e070fdac701156c661cdf4d5abb1a9cad2278dff670514258dd",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "6b1c76783862c33b5053eb20f970075268196eb417e215dca06bc6a025db9e59"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "6e2cc5c077b846b8e2718d41421451788e69e41ca1660112339306ef5eb4e996",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "51bb9612a3ebe4e610e6b8d953e74903f8a2d5dadeef0f40a01f5d3de3a7ca52"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 90,
+      "id": "multi_turn_miss_param_90",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "bde70c459d3c48e04921ec7cf391cb41a5e9e841d11af4092538024b54b92ff8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "131b8ce7c7144edffbb2c75243dc980b44709718b86fe2ba3843aaf5399a3f69"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "49415ed0f663d8e620f4cad22855f30d3bf3b1e88752392938707de46b86c96e",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "9f66db0b8f91455c251b44e2fd6484d20d803f6abc9b4300386b8fd2ee900a85"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 90,
+      "id": "multi_turn_long_context_90",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 91,
+        "line_sha256_without_line_ending": "d194dcd627f2c2262014447ce9be8a52178f890820a47edb532f50dd38aa1b67",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "b609e9bfb46889cc4302f22bf3a399fb425eb0e181b115d2e4e0d82a7f0a2af9"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "cd0b8bc4512879408a214d1de54490f104b2e79a8183ce1b11fff307f5ee66c8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "8b4ca930afb1a53abfca820641b33100ffc6ade687ff0c2cd9018cc4464fde1f"
+      },
+      "category": "multi_turn_base",
+      "family_index": 127,
+      "id": "multi_turn_base_127",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "9e9254cc63984d075ae3bc6980f9ca7f05d538b2f381f39d5aaa4d08e78e33ba",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "fc422acadd93967fc3632fe7d0440d32acd48ed7d2c3fa66410f46b8406092f9"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "647d3efa561c8d1adec3e2dab69d198f97b130dae3d8982dc279e35efda97709",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "3f0e59d65353c9ca5de34bfed6ca22f9915d0500c55f632b085f5f29f7b7ce46"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 127,
+      "id": "multi_turn_miss_func_127",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "60dcd2f4d1db2961cd5978a686042cb6eb7f4541c8ca1d80c21adec89650238a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "8a8116c4743585c607aa342c933d667f5f6dfac26b65294ba699dd50b05b2826"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "ecb9deb1cd8cb7c32cba4e0b397d9eace9b0b82c2459411dfc794609e53bdee0",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "e7886b60af6e2e62fc32369a93f639ecd5d20885f5fad8d2143369850d95b0d3"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 127,
+      "id": "multi_turn_miss_param_127",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "3ba0f914ecdacfc5ae7827b3026238db63db3ff8b5ca92bf1eb474644e49c517",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "13e05be1bc68b4784fb868933f41099d12eeee3592db5355a5a28c010984ec7a"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "043b4affdef0d38f1551fcce7be19aef9dbddfff33351d8d3ba547c41ae174ad",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "11f36097a6fb890fa9f06e34ff3d4a2cc68f36ecba54f33bdae5703021622438"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 127,
+      "id": "multi_turn_long_context_127",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 128,
+        "line_sha256_without_line_ending": "1421759d7405056f60f3dd1ad9f464664d96a27e17b041943b71471db4ae0604",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "d88202b6cf9aeae1b6b205280a1f7fb8c68e9d5a1cebd58e0b2703ef1a757f46"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "32fb5002c44e1e79dd5426050d7b0e246311eb2ff20c1fb62a82872a2f6de277",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "e17e8b087707de53937fef613ea4093938d76ffab5a03c0d0d413397d18cc46f"
+      },
+      "category": "multi_turn_base",
+      "family_index": 122,
+      "id": "multi_turn_base_122",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "46bdbd46a091fe11d363b22ef88b364689e710b67d48d140d5ee60bba1bfb3f5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "adb055a0a62f2679a4155a461a58faac080351451bb7c87d1768decdd72ca829"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "aec0d520e2966a241c80cd5a2bdde08c2294e306f69250ea4d2fcbdb6d29111a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "72bcf4f4cf8ba13b9cdad95b1d1ba874d5de17f242f531977dc2f8e8a6d64e0e"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 122,
+      "id": "multi_turn_miss_func_122",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "cb8fbb461ccfc7f09ba855aa55a00c16b344f7eb1028ab0259b6baa886e51607",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "60fae3a121ff951f76e3cc02116689b8114eff5365097d3dbf91594a02782bae"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "fca5740c9cc58ee64e0c31f7e1bc0ff041d4ad310c9b736dca4c467c20c744cf",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "86673b9db2329f1d0122474599e9ace6c41761988019cd8c81c9606e11ab191a"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 122,
+      "id": "multi_turn_miss_param_122",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "7f1ddf6dd874f5ccb3ffd1d7640fb19b885ebeb80c4c4d88c6adc61df58e93a9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "13db5455dbdd44376778580f098849f9e70f214a5972951beadf48a521a86b6b"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "29f843ed268bcf388233612071a8a7fc0551989419a5e8e9dbaf0403df198335",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "67e0784b0f41ea3cb780133d461164ac2b62f971c2dbff76f02de0b8f7454f80"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 122,
+      "id": "multi_turn_long_context_122",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 123,
+        "line_sha256_without_line_ending": "5a3d46a56627a7d6e588d0712cf88107ab2b9306d8d4bc0f4ee77f659365c8cc",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "6a4e1f9a0778a2e542316d3378c8b1f92981dff40e8448a727572270b20b5c82"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "8b808b19ec7d5c966d0ae03736b1cb64996a7d69d11f7e94b9a4c60d9b3cd24a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "a76f6da1bde498ea6533f54f94f961df6bd04dd01c48ffc4bfcc2ce8961502fd"
+      },
+      "category": "multi_turn_base",
+      "family_index": 164,
+      "id": "multi_turn_base_164",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "5cb96b6483c546b077a9c57dfdf4d11b246baad4501e4c36be6fd4bbd475b4c4",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "8b7f72784054a0418444b8bd640195bfe6df41c0c5cdac046708301094087689"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "59e5e54deec8324a81918ac4eb258088445a3c46a525fbc20d67bdfd1d04e035",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "208df6f17d8b293f55d8401a679e092224da2682109163e2dd90c44f7bc6ae2d"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 164,
+      "id": "multi_turn_miss_func_164",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "5674e49ada3b8cee3edb37ae39afd4d7dedf6f4ba2f60a76efdf8753d85b21b8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "691c2a18d0763357ccb5c6a8d2302f24a6a0e5923f6c8a75dd539f91132a2a7a"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "b37f1738a6ea44424f0c23a0fdd09e3ec34724ee15c689373c3d4f089640e41d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "3ecff94c2a3e5363a9c4160085a869a25990cc8a10842fb7af7a9e52e716e95b"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 164,
+      "id": "multi_turn_miss_param_164",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "964a8aa977562f3ae23a0da86bbbdfd1ec8466e847326bd476679cb368586add",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "a22f2e2aa8d39a820bc951b501544a5c490e84080ecfb3d3863b46db096f2032"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "994ebba2aac007718df633dd605b643a16aa05fc0580ad35bda5d039b7ec0e6c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "075f7284364f559c50633816a8e893577b3be1f190c9a9f0d1d3b6b1ad9aa679"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 164,
+      "id": "multi_turn_long_context_164",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 165,
+        "line_sha256_without_line_ending": "1d984db289b5f3bcd295c20aeeecbdb5bf91badd9a524a72b4fd6b7b064e848c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "f17c8b5e23894a5bafe0030dee489e61cee06a4ea51280edafc37cf3d1ba8d4e"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "f8086aec50fb8d616fe991939a38e844f8b90b5b2bf38c91149a52d30aca4d88",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "8175df37aec1128b821ba4ab9ddedc7af524215fec44937d7fa701f525553d88"
+      },
+      "category": "multi_turn_base",
+      "family_index": 113,
+      "id": "multi_turn_base_113",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "c79f796cccfd9fce16d07b58da709c5bb9527e8dbeb6ea9c96408ba791740a2a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "5e929807e92eff80471fec8d9a2b084cc6d4e7d365f8a1c34483f9d6ac5b54b7"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "3a45d278facf30dc1e76f41cb6f2b1dc4942745e101817f6ab8bf3ba188290d0",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "8db1893499125c3e220c89b4e8a18ff18ee665596f358996f9ced9c933b57721"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 113,
+      "id": "multi_turn_miss_func_113",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "41a026cb95647574e0705ee56205e11d17e8c0d8cdc1b0c7b309b99124f5182f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "c74c61c8862cc66c7add79ac02adc413d45ccbe928f9825dfd8d137957bc0b4c"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "7af9481c1b256c694f3a1a55eb0d67ce1ce0a17df847e6caf987a39d02e35363",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "7c42aa5d9fa9f42908693f5489c73883a43424e5293226d3dc71968e0de67597"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 113,
+      "id": "multi_turn_miss_param_113",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "17508a4e38b2555e480bddf4adf969863cb14b5dcadeff4748050fae8d2c6422",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "e1832b9b522f9ed63b26607f4aff8da5158b9ebc9bab26bc3b37a64a9c77dc61"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "2b5cfbebdfaa5a6375c88fde01fe9b6202736265e4277034906b049a97aedcde",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "85afb91745b397f3555be25aaeed5839a3555ecb3a16c525f7c8a257299b30a7"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 113,
+      "id": "multi_turn_long_context_113",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 114,
+        "line_sha256_without_line_ending": "030164f31f711b5ce9f9ce42421d207ea66b42d2633db99c3f28f2ffda898d3f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "6df480628aa08ef6ce1829b2a179f39340767e41e843f46dbed255b159f06272"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "0b99c627bef0c1aaefcc0d0011d177a1c17394e89c0bac55ed734cc82cc1096c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "1d9b1a3e837ac991b74626744670188c3e95416b9f3c3180cd1a681a9df14104"
+      },
+      "category": "multi_turn_base",
+      "family_index": 120,
+      "id": "multi_turn_base_120",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "86c714a90fc87a872f59720900579194ec195a479721227d4dd60862d1c741ea",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "c01980db41849c6adebe742d51e41aa559b4b96c091d22b77019665bd9549e2e"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "3d31e6bd8708998ec7574bb3f43adf7796d7c40d06edf32f139744196bb75696",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "0f57ea2c85b15397ac6515c9871bf5ba01f5d230340341bc25fb2aa9060847ea"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 120,
+      "id": "multi_turn_miss_func_120",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "64244eae707f9a54b31dfa05054fa7f13de61cd2f3301a35d5687a2df9a97e5a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "27d30b0303b90f84f79d72150c61af1a969e4078be1bfb0b369e2c3652f11ccf"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "cad604f9592d0856bced0d1e4f004c716ec16a87c3b2cf7a7ea853a50fc5e5ad",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ed95c33dbdfd6af7dbba9b2c1307d6ec24828d1b9917d4174941b7de439987c9"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 120,
+      "id": "multi_turn_miss_param_120",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "4f7cc2c8b0464354d49d294fb1f995204066836874a1132890bdeb777d60eb82",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "28346345d5133a8cc0c24fd4191034badaebf27da39cc4c546cb6bc523e1b5c9"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "ef32fb86e0749a11835f98012c5798be0e9e8e55c9ffb208659d77c15d60aa13",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "868924fb50bb8e07ee03216ad895440fa253b2e9eafb8d2818eb3830635989ed"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 120,
+      "id": "multi_turn_long_context_120",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 121,
+        "line_sha256_without_line_ending": "1061f215248a625bdc6215f7de2bdca46acb03086903008cef52d52ee06cfda8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "14d26c61d2b13739ec58e7c6b77a7fbd3b7b77825536bcf891e38a7873256e7f"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "db572ac8560973658cb750cccdeea08cf5def3d0b90748c85df9a03230aab797",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "0f8d143d8ae2cb533292be8746bbc7e2d1b80966f4e7d0cd91491a507f802905"
+      },
+      "category": "multi_turn_base",
+      "family_index": 1,
+      "id": "multi_turn_base_1",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "e25af4153a2401eaf9ae2ed9651ac6a26e5b10d1bdb6c83ade811625b8a7aa20",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "adbf36cd8ecb38eab1413c434b841f741af6a951903a191b7a940a90cf7ce346"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "454172ef928790d96f47233c63dd1cc25a79a1c62892edd3e08d63c5fc8e6f7f",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "d1fa1919e272006212daee38625c990c28e7d08f7b105b9805db58d0396c60ef"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 1,
+      "id": "multi_turn_miss_func_1",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "07b96117f4800886dac6b16eb312d2f787d75b0e0f6f1b0ccbc1f1dd4eebdab0",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "dae25839065ef434e7d07b0a10b12062aacde0d8a07b7bf300fc1c08e7c492b2"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "7657325090ad768fbb2711ff27523fd804f34c23309375016f87dc932f902889",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "5e8db5cf22fa774373082e63d48a7a5a6cd825663631b4448f60cfad4a3b4c4a"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 1,
+      "id": "multi_turn_miss_param_1",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "07e79315cfb79b3ea0392b4c03bb1a56ea1c7cfee156d88ae1990f25a10affba",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "e09d43a138676f295212f0fe578a1a12cb3515c98cc5da13c50e25a89990881e"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "577b82a2f7452029abc48f1550340488f5ff88a6993fc4bff3d3fe1cb343c542",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "223bcf4d465406fd574e8eb02c539efb647337c9546ff6ae05e1988ed12af6eb"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 1,
+      "id": "multi_turn_long_context_1",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 2,
+        "line_sha256_without_line_ending": "4fdcf71a728bb18daf82cf53113781e8704ae0f94c75bda15b7e6ba8a4af82c3",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "30c099046d81dc6e792a9accad4aa2b5179947b80451d4e4741d80ba9e75265e"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "4506f1c223d9edabf85230b5b37adfd229fd04f01fe44d3aed551b5b988ececb",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "606435603b8c24f2a562a4a39671fbbd4e6b47994f412b1262f283114601f9cf"
+      },
+      "category": "multi_turn_base",
+      "family_index": 33,
+      "id": "multi_turn_base_33",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "e7a5f8666aed45d1d769a2df2e886102efc18872c5c43afaa275241aaf9b08ac",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "daff6b176de82b9759dfdbfe6d5df1bd1db1d3fdc38870fd519281943e0bd335"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "aff071ee997c41f811d6ce506eb3886548d02c7de84b9938ea10aa37233b5844",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "2ede8a150a5f3e1acee11da5c81b4fb4e34bec7b1d7f887c1aba44469b3c6999"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 33,
+      "id": "multi_turn_miss_func_33",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "c45de8a75c45809314d16edf61228fd206cfd7af0fe8c5ca97ccc1b27e01b477",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "1ef810ace7c1b5954d91f6820bbbb445ebfd6b9db7181d340c3562a04ed7132c"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "f0fa1bb21882ce6c912cdbd7e117f8bb30300c32a828bd5122c3cc0d13a1dc58",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "62f58dfd3f6101980820f4a31d345a2cdb1eed119fc7dfe295e61f9a9698ec31"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 33,
+      "id": "multi_turn_miss_param_33",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "7ac7fe9bb828e4f83778f219b91796746d30f548ec68860a988c70e4d534daa1",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "4fe926cb4e607bd55adff20c3fae29b27ff31298197064ae5635f186bc52bd8d"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "5fa70ea88b9cb24dabbff2c203adad4b1a41cb864f395aef11009aeef6a2304a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "b57452279edd52bbe10bd30637c066b7a25e74f1b539ec5aeb25750ab4b610f0"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 33,
+      "id": "multi_turn_long_context_33",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 34,
+        "line_sha256_without_line_ending": "726f7e013d6b33dc7e4427a3c5b6610015b5c0b1c8372597aa369f5a735180c3",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "0d8651824060c0bde46248d06dcdf5bc206aec5db15e6af18b242413abf92590"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "97b781c36a64473ef171b61e3cb728392d9194b98c4785390fb989124898ffb8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "f42dfc870dfdc642d1bdb5b0e60fff117beb02a27e78ffff43f1a2e431600751"
+      },
+      "category": "multi_turn_base",
+      "family_index": 55,
+      "id": "multi_turn_base_55",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "b0d1053209eb7223887e0f691d35dc0a0339167c2e77b99086ea227d8cf19177",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "c4c43775f085f6ce4ea546c53818ff41c6264195f98981b67e6e7a754f1c43ba"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "7094fa368dba844dad6c4a296460137ed3e4085efae4e078040c1f105c65300a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "674894754437a584c59a5d2a791c4683c43f000ed2094ccf5777fbf631f22af0"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 55,
+      "id": "multi_turn_miss_func_55",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "a9d634d157021ab0e0bfe177b4fa0599b907ad2604019a809782be073f4eea94",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "0b6a18482a1a2bad9135cc535888963c1fed97fc7a3647ff7d95d6cb41f7da99"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "3227ab71bd2403aa1fe9161ef14a613a4513abb54828c7779f9de17df8b6eb3d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "cd83ea8b29ccc887a80c977b11ca6e718c9bbdf56d5c7531ff9a0238a27b10b9"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 55,
+      "id": "multi_turn_miss_param_55",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "90c9601edd05b7409b8a456efd61607688dbfd5154e4ef5cd6208b394ad3e996",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "f275798f9184038956d5ca09af2eaaf355f6f7aa3c492be2e25c49e95c5426fc"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "be40ba6aa15f0e7e8c870b8f02aa92ec275c5617f722e5fb78cc51cc9de8924b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "bce4c85b7c60c4bdadc6ef7b1b8d4a1d766fa52a989b7eff1121a845354659f9"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 55,
+      "id": "multi_turn_long_context_55",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 56,
+        "line_sha256_without_line_ending": "137450ff762876bc302be151a0e264d11a883d080e911be66ac6554e4ff27969",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "d91e43340b0e26897e5f65dbf788161327f40c89809f8ac011e6d7703cb08ceb"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "4f15a316ac5ffeb967ffa72804e603289f0c057e477309e195b5d3c98130d435",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "83b2186d88dd464b8761b23513292626188ef10b210dfde749bc20627ff5b9e1"
+      },
+      "category": "multi_turn_base",
+      "family_index": 193,
+      "id": "multi_turn_base_193",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "7f8f3bb8bcf5a2927d1f3c6bd5e19abb53b7d6912299b9f6d58be9d3c3073752",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "297667bda6efe2876aff50771d3ffdc24ba9965212f340d9ef96e8170fa2fd4d"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "ee64b3f146efb8f8d4d5ea329f5dab2f25f6392299adefe71960fbf1242a6da5",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "8b6ce4621337a9af7914d1822e0ca386f365070d97832fa35b0e4c44c62d470d"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 193,
+      "id": "multi_turn_miss_func_193",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "18ad12b88ef36f08c8bf0b2827ac1efde4709c8df4cd68e6af46241cdcfa130a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "1c8d1cd0698011a358595ecdd15610a0aedb16751efe7b220c10c6c6deea2947"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "6e07cfda3998deb86b96c05fc3b6ed843ce9d85972fbf96eeb424e4716399f7b",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "bea13e5d451536798a517aea1c8ab220b40700ebd1a0ed9b883c1a0633b3802e"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 193,
+      "id": "multi_turn_miss_param_193",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "a26e2d2e49f8307bd44f45a704555f5ab41afca98c9d4c1b1f2e1fddbf90312d",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "11b6670b41d57d08d0db7cf6c3a229b88fb5864204407b623b8a1d9f76c00e68"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "38c02899379c703fb9b067febd7bdb6be5d2bff65c4c7213e1b55684c8a80db1",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "a562807e559245ed3514b1194c07d65e7b8f1da950b4f769e3540b705c03738e"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 193,
+      "id": "multi_turn_long_context_193",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 194,
+        "line_sha256_without_line_ending": "3a4075bfe437cc90a6b6878fd4abc527e9da3ee8b1176a26a0b640a7b65073c8",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "7709572835a753e2109fdea6c03f045b7a73211da762033402762768c41780a2"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "4c0abe595b0ffaec4047e7807528a3d50c38985eb9afa6178cd52c54273acaab",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "0c18906042ea7541bf6835cc20639ca0ea605a5b894897709c3b625ba6073251"
+      },
+      "category": "multi_turn_base",
+      "family_index": 116,
+      "id": "multi_turn_base_116",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "d01ebe972c6cd35596706b68ca27a10b7349e7760ebe6277c29e185a1e1d6d97",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "eb6afe8f5c10b8a8ab48110288e918d022b2822d5e9ac5e01681411c84dfb0e1"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "5adbfd06bd197a122c2034e6b034201b58599dbe9c5c741f46d97d8a1280fcae",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "f69bad9b0c68937916b2926cf2936404519be2f8c5e36ed6eb6711a2ed2fa5ae"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 116,
+      "id": "multi_turn_miss_func_116",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "58f6f6d3ead2a331cd0fdf71908abf8678eee4277b2a88d96d1fc7c1a696ff8a",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "c4668e3fdd186bb5a42a3f4ddc4545db4f91257e3e9c221a295eacd5d7f79002"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "4a8256bd2940ef236d89181533ab7851561bfcfacc76034831bce2fd7565c035",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "300c1eb39ae413e2f1d1cbb10d978f7ad19e5787b37345b09748daecf93235d1"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 116,
+      "id": "multi_turn_miss_param_116",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "184ab31ab9ae5a2b68776657a3b84592c5dbd6ee283232589094a89c71f0ce51",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ab0596db22d6b67e2a119af3b6009cfeecbe7903a7bcc70096b98245cc7cf3cd"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "bd087bd3b77ac9f4eea82daedd46e8083f52366d219392d4c6fdd2256f7ed38c",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "0e4562dacad2ae128ae2c68595cd5c0fd3c10f456ddb1833dddb4b61552f590d"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 116,
+      "id": "multi_turn_long_context_116",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 117,
+        "line_sha256_without_line_ending": "90d968c6e8153111ca42ef890dea01342c00a5f5e82d09cdc88c8afa3ce5ec11",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "5f0640ef05e6270aa8595e1ef877d37eb3d51f319f1743d768f10d7a385221ea"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "4a09568f4c388de8edfe38bf729c4091c60d1cd4a68f75cf3d0a431792e5e531",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "5ffa4fac57ddfff2d3fb140533e17e0f3e0512c9eb7a63b3afa0c88ef1466519"
+      },
+      "category": "multi_turn_base",
+      "family_index": 78,
+      "id": "multi_turn_base_78",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "3ce2d376e99cb02843a780d34fd840793db7ce5c8feb75ee0b02f5e441b1e2d9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+        "record_sha256_canonical_json": "5b69b256a816885163482c0270ba3f7ff1628997ddb1fe5d3420514d6cdff749"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "dc79043c659a6bef539932e70ebe3bb6dac2087adf03c7b48d6639fa4e761bc7",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "beec9efd30a8a982a5d3ae47868f4ceb323e18261cd5f21a24ea58d4fd2f2338"
+      },
+      "category": "multi_turn_miss_func",
+      "family_index": 78,
+      "id": "multi_turn_miss_func_78",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "6c9d9185575357a93ef944519e419f75794fc4c3c4f31c726627bd5835f5ccfd",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_func.json",
+        "record_sha256_canonical_json": "dc9c4bc64b5a7e279eaf9f04ad2ee639e8196ab4094a8964a8da951d05714395"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "99e90663fcd92b2f8306b54963cf04dd6b7aa3abfb1e9fa28f475d6ebb1434e6",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "ed47458c7131850469f4bf9cf082d2dd71abe61d1b30b5e5d85ec07c8ffd07f9"
+      },
+      "category": "multi_turn_miss_param",
+      "family_index": 78,
+      "id": "multi_turn_miss_param_78",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "6ae698c2c7d8dc772a4d45cf1cdfd65be2c2e2ff5997a4568b8c6dbc1a6f68f9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_miss_param.json",
+        "record_sha256_canonical_json": "68fab49bbe43a921018d78fdf4aa77e985c3bf2cb65d3f6446a3ce0a0ef2eb34"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    },
+    {
+      "answer_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "fd0372fad1a11a04fef572cb6cff5dc9ed61fcd5842217719ef807582d503cd9",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/possible_answer/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "b8a94d1d6c5814b8ae4f4cc8795b92217afad3f2cede45ee7255c7c259115f96"
+      },
+      "category": "multi_turn_long_context",
+      "family_index": 78,
+      "id": "multi_turn_long_context_78",
+      "original_split": "holdout",
+      "previously_selected_20": false,
+      "question_source": {
+        "line": 79,
+        "line_sha256_without_line_ending": "9c83218140648c4eec4467fe665b3417f384ca25243a3d1b51e3783080a13690",
+        "path": "artifacts/bfcl/v4-coverage-20261029/raw/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_long_context.json",
+        "record_sha256_canonical_json": "f7fa93ee0ab98a8693b712b9f9a1e5c2a62393717f0119d30d9fd0ce4b4929dc"
+      },
+      "scoring_eligibility": "not_prevalidated_by_this_split",
+      "split": "holdout"
+    }
+  ]
+}

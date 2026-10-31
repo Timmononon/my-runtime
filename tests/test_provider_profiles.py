@@ -229,7 +229,7 @@ def test_profiles_reject_unsafe_addresses(url):
 async def test_public_transport_pins_resolved_address_and_tls_hostname(monkeypatch):
     seen = []
 
-    async def address(_):
+    async def address(_, **kwargs):
         return "93.184.216.34"
 
     monkeypatch.setattr("aster.providers.profiles.verify_public_endpoint", address)

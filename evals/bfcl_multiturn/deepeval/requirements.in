@@ -1,0 +1,3 @@
+# Evaluation tooling only. Install into .eval-tools/deepeval-venv, never Aster .venv.
+deepeval==4.3.2
+pytest==9.0.2

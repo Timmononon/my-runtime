@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "configuration_label": "Readiness-Gate-v2",
+  "measurement_label": "Readiness-Gate-v2-interrupted-R1",
+  "status": "interrupted_incomplete_measurement",
+  "ready": false,
+  "capability_baseline_ready": false,
+  "usage_baseline_ready": false,
+  "promote_as_improvement": false,
+  "campaign": "artifacts/bfcl/compact-dev40-clarify-gate-c20-20261030",
+  "original_allocated_tasks": 40,
+  "complete_saved_tasks": 39,
+  "saved_complete_pass_count": 17,
+  "saved_complete_fail_count": 22,
+  "incomplete_tasks": [
+    "multi_turn_miss_param_5"
+  ],
+  "full_40_score": null,
+  "missing_parameter_full_10_score": null,
+  "full_40_improvement_vs_A0_or_MF_Gate_v1": null,
+  "holdout_evaluated": false,
+  "holdout_tasks_evaluated": 0,
+  "holdout_score": null,
+  "agent_policy": "readiness_check_v2",
+  "agent_policy_identity": {
+    "policy": "readiness_check_v2",
+    "gate_prompt_sha256": "fb4d97dc1aed1f59981b88e00f6b258d84f5fdc754a6a3d6824c1fd3494ffbfb",
+    "native_prompt_policy": "readiness_prompt_v1",
+    "native_prompt_sha256": "d1b0d6d039eb984a07484e0a8e52d71c363d6b672e7bee894d4c358cb6a10e86",
+    "check_frequency": "once_per_user_turn",
+    "parse_failure_policy": "fallback_to_native"
+  },
+  "source_branch": "codex/bfcl-clarify-gate-dev40-frozen",
+  "active_branch": "codex/bfcl-needs-clarification",
+  "source_commit": "26d170e42439bbebf3649dd685fabe0e654c0eb6",
+  "parent_MF_Gate_v1_commit": "2beefb554487c03ce9f6f9bf59672b6c3ecabb39",
+  "source_files": 301,
+  "source_manifest_sha256": "c609b1945f5543a42548b9d77dec7bdbbdfa655b61b8887318dc85bd42b157c6",
+  "dataset_binding": "5d9eff050fcbb73e34d1dc621f917791f4b0dcd33ebcfb623871a97d3e3176a4",
+  "model_identity": {
+    "provider_id": "deepseek",
+    "base_url": "https://api.deepseek.com",
+    "protocol": "deepseek_responses",
+    "model": "deepseek-flash",
+    "reasoning_effort": "none",
+    "identity_revision": 1
+  },
+  "maximum_concurrency": 20,
+  "split_manifest_sha256": "477aa07cff732f1158ce59138e5f1b4bf8f701c3f2de211a43a2c0a01f6d58c8",
+  "development_ids_sha256": "b1d7ec61a7ca160f21e1322d021435ab1f5ccb370bbcb03c1939e2c1be9f7381",
+  "holdout_ids_sha256": "8c40803ac4aed94e855a0d75a43611895bb743c5af9eef4013dd08afe3d05e2d",
+  "matched_complete_ids_sha256": "0eaafaea0143653e2ff6bdfa334279e49108559c91507183f2498dc3b342c04e",
+  "actual_model_HTTP_attempts": 497,
+  "known_HTTP_200_headers": 496,
+  "unknown_HTTP_outcomes": 1,
+  "known_complete_receipt_usage_attempts": 471,
+  "unfinished_task_attempts_without_complete_receipt_usage": 26,
+  "complete_campaign_token_totals": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "reasoning_tokens": null,
+    "cache_hit_tokens": null,
+    "cache_miss_tokens": null
+  },
+  "known_complete_receipt_token_subtotals": {
+    "input_tokens": 2890800,
+    "output_tokens": 31085,
+    "reasoning_tokens": 0,
+    "cache_hit_tokens": 1963904,
+    "cache_miss_tokens": 926896
+  },
+  "complete_elapsed_seconds": null,
+  "model_or_task_replays": 0,
+  "historical_baselines_preserved": {
+    "A0": {
+      "full_saved_score": 0.275,
+      "full_saved_pass_count": 11,
+      "identity": "evals/bfcl_multiturn/baselines/A0-compact-dev40-deepseek-flash-none-c20-20261030.json"
+    },
+    "MF-Gate-v1": {
+      "full_saved_score": 0.475,
+      "full_saved_pass_count": 19,
+      "identity": "evals/bfcl_multiturn/baselines/MF-Gate-v1-compact-dev40-deepseek-flash-none-c20-20261030.json",
+      "identity_sha256": "857f64b7729e94f1bec008e31ceb62c090b4ee65dd5f7c947a80618481045e0c"
+    }
+  },
+  "offline_framework": {
+    "name": "deepeval",
+    "version": "4.3.2",
+    "directory": "artifacts/bfcl/compact-dev40-clarify-gate-interrupted-deepeval-20261030",
+    "actual_evaluate_calls": 12,
+    "actual_main_testcases": 117,
+    "matched_complete_tasks_per_configuration": 39,
+    "native_saved_pass_counts": {
+      "A0": 11,
+      "MF-Gate-v1": 19,
+      "Readiness-Gate-v2-interrupted-R1": 17
+    },
+    "summary_sha256": "703cf077c89425db41a20a936724907904ca76a5ddf04948262d585ad98b400f",
+    "frozen_files": {
+      "file_count": 54,
+      "manifest_sha256": "758b862049f5c3f5ae9a8265566508d83aeed0a48a8dc41c769399a0fb493718"
+    },
+    "guard_test_count": 8,
+    "tests_frozen_files": {
+      "file_count": 22,
+      "manifest_sha256": "b1af71a63e1a5050f30626c9b7ec5d4b8933a608c14f5aee6d8915e1ac3619c6"
+    },
+    "new_model_capability_measurement": false,
+    "judge_enabled": false
+  },
+  "interrupted_assessment_sha256": "6b6537929ad8454e543ca6a0b9c3099d2ba5b0799dcb8584f45ab8f7f993adc5",
+  "original_campaign_file_count": 648,
+  "original_campaign_frozen_files_sha256": "6ecd4d3a5bef054172dcaad9a5d1be4cc88519b8fb6b44d2b2e203e1b943941a",
+  "older_protected_files_preserved": 2893,
+  "complete_and_residual_gate_cross_check_sha256": "284b53c8de3fceb1c0c1b4503a8d28ab9625d284a97085b8e3e388f0bf90cfad",
+  "new_offline_model_api_calls": 0,
+  "new_judge_api_calls": 0,
+  "unrun": [
+    "Normal sealed full-40 DeepEval comparisons",
+    "Prepared completed-campaign independent audit",
+    "Official simulator/subchecker re-execution for this interrupted review",
+    "Any holdout model evaluation"
+  ],
+  "interpretation": "Interrupted experiment identity for the experiments registry. No certified complete baseline or stable improvement. Unknown delivery, billing and missing token counts remain unknown."
+}

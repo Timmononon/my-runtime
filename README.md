@@ -139,6 +139,10 @@ Python 检查和离线测试：
 
 测试使用临时数据目录；浏览器、Windows 集成及可选依赖场景可能需要额外环境。`live` 测试需要显式配置凭据和 API 预算。
 
+BFCL 提供独立 CLI：`python -m aster bfcl --help` 与 `python -m aster bfcl v4 --help`，支持输入校验、版本固定规则下的离线评测和保存结果导出；原 `evaluate` 入口保持。先安装可选依赖 `& $asterPython -m pip install '.[bfcl]'`。V4 使用固定 revision 的检查器与模拟器，并校验来源、题目和 split 的身份摘要；离线检查或合成场景通过不代表真实模型能力成绩、完整 BFCL 榜单或所有能力均已实测。
+
+真实模型运行需要独立测试凭据目录及显式请求预算，不复用隐式用户 Runtime；新增可选控制策略默认关闭。[promptfoo](evals/bfcl_multiturn/promptfoo/README.md) 与 [DeepEval](evals/bfcl_multiturn/deepeval/README.md) 适配器需按各自锁文件独立安装工具环境，使用前还要准备所需的本地题库、历史轨迹或可校验的保存结果 bundle。仓库中的历史路径示例不代表新检出自带这些输入，保存结果对比也不会重新运行模型。
+
 修改前端需要 Node.js：
 
 ```powershell
@@ -152,3 +156,5 @@ npm --prefix frontend run build
 ## 第三方许可
 
 随附资产的来源与许可证见[内置技能声明](src/aster/packages/bundled/THIRD_PARTY_NOTICES.md)及[评测声明](src/aster/evaluation/NOTICE.md)。对应许可包括 [Apache-2.0 技能许可](src/aster/packages/bundled/webapp-testing/LICENSE.txt)、[PDF 读取技能 MIT 许可](src/aster/packages/bundled/pdf-reader/LICENSE.txt)和[评测 MIT 许可](src/aster/evaluation/LICENSE-KOCORO.txt)。
+
+BFCL V4 的来源、适配边界与 Apache-2.0 许可见 [BFCL NOTICE](src/aster/evaluation/_vendor/bfcl_v4/NOTICE.md) 和 [LICENSE](src/aster/evaluation/_vendor/bfcl_v4/LICENSE)。

@@ -1,0 +1,157 @@
+{
+  "label": "Aster-A0-BFCLv4-MultiTurn-dev40-deepseek-flash-none-c20-20261030",
+  "ready": true,
+  "usage_ready": true,
+  "campaign": "artifacts\\bfcl\\compact-dev40-c20-20261030",
+  "scope": "Frozen compact100-v2 forty development tasks, one actual API run, four equal-weight Multi-Turn categories",
+  "development_tasks": 40,
+  "holdout_tasks_inferred": 0,
+  "split_manifest_sha256": "477aa07cff732f1158ce59138e5f1b4bf8f701c3f2de211a43a2c0a01f6d58c8",
+  "development_ids_sha256": "b1d7ec61a7ca160f21e1322d021435ab1f5ccb370bbcb03c1939e2c1be9f7381",
+  "holdout_ids_sha256": "8c40803ac4aed94e855a0d75a43611895bb743c5af9eef4013dd08afe3d05e2d",
+  "dataset_binding": "69c35fedac3892930d7f9746bb81518a7acd57431b58ca02c8ecb213298a0c44",
+  "source_manifest_sha256": "74e8895ca84446789edd1705057da726695444ac9a3c207333ee5788d1a1e137",
+  "campaign_plan_sha256": "c29014aaee02c4ce540e4146e85b9358e64cae8d638b8d8ffbca1a522b1f1c04",
+  "execution_control_sha256": "6463eb8bcd078870da952cd3067e7bb10d919505683624704acbec29f7154416",
+  "as_run_source_files": 293,
+  "model_snapshot": {
+    "provider_id": "deepseek",
+    "provider_name": "DeepSeek",
+    "base_url": "https://api.deepseek.com",
+    "protocol": "deepseek_responses",
+    "model": "deepseek-flash",
+    "reasoning_effort": "none",
+    "identity_revision": 1,
+    "capabilities": {
+      "id": "deepseek-flash",
+      "name": "DeepSeek-V4.1-Flash",
+      "context_window": 1048576,
+      "max_output_tokens": 393216,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "effort_levels": [
+        "none",
+        "low",
+        "high",
+        "max"
+      ]
+    }
+  },
+  "runtime_policy": {
+    "max_api_calls": null,
+    "per_case_maximum": null,
+    "official_max_steps_per_turn": 20,
+    "case_official_step_bounds": {
+      "multi_turn_base_91": 40,
+      "multi_turn_miss_func_91": 60,
+      "multi_turn_miss_param_91": 60,
+      "multi_turn_long_context_91": 40,
+      "multi_turn_base_139": 40,
+      "multi_turn_miss_func_139": 60,
+      "multi_turn_miss_param_139": 60,
+      "multi_turn_long_context_139": 40,
+      "multi_turn_base_3": 40,
+      "multi_turn_miss_func_3": 60,
+      "multi_turn_miss_param_3": 60,
+      "multi_turn_long_context_3": 40,
+      "multi_turn_base_107": 100,
+      "multi_turn_miss_func_107": 120,
+      "multi_turn_miss_param_107": 120,
+      "multi_turn_long_context_107": 100,
+      "multi_turn_base_54": 60,
+      "multi_turn_miss_func_54": 80,
+      "multi_turn_miss_param_54": 80,
+      "multi_turn_long_context_54": 60,
+      "multi_turn_base_158": 60,
+      "multi_turn_miss_func_158": 80,
+      "multi_turn_miss_param_158": 80,
+      "multi_turn_long_context_158": 60,
+      "multi_turn_base_4": 60,
+      "multi_turn_miss_func_4": 80,
+      "multi_turn_miss_param_4": 80,
+      "multi_turn_long_context_4": 60,
+      "multi_turn_base_51": 80,
+      "multi_turn_miss_func_51": 100,
+      "multi_turn_miss_param_51": 100,
+      "multi_turn_long_context_51": 80,
+      "multi_turn_base_5": 80,
+      "multi_turn_miss_func_5": 100,
+      "multi_turn_miss_param_5": 100,
+      "multi_turn_long_context_5": 80,
+      "multi_turn_base_186": 120,
+      "multi_turn_miss_func_186": 140,
+      "multi_turn_miss_param_186": 140,
+      "multi_turn_long_context_186": 120
+    },
+    "max_output_tokens": 8192,
+    "case_deadline_seconds": 3600,
+    "case_tool_safety_limit": 10000,
+    "inherited_runtime_safety": {
+      "max_total_tokens_per_user_run": 300000,
+      "duplicate_limit": 3,
+      "context_tokens": 96000,
+      "reserve_tokens": 4096,
+      "semantic_compaction": false,
+      "model_retries": 0
+    }
+  },
+  "maximum_concurrency": 20,
+  "concurrency_performance_policy": {
+    "version": "task_locked_campaign_infrastructure_v3",
+    "batch_lock_wait_seconds": 300,
+    "ledger_lock_wait_seconds": 300,
+    "immutable_validation": "outside_shared_batch_lock",
+    "aggregate_report": "finalize_only",
+    "retained_case_scope": "selected_task_only",
+    "completed_receipt_validation": "on_discovery_explicit_read_and_finalize",
+    "windows_atomic_replace_retry": {
+      "maximum_wait_seconds": 5,
+      "initial_delay_ms": 5,
+      "maximum_delay_ms": 50,
+      "winerrors": [
+        5,
+        32,
+        33
+      ],
+      "scope": "known_failed_same_directory_atomic_tmp_replace_only",
+      "trace": "results/io-retries/<pid>.jsonl",
+      "http_or_task_replay": false
+    }
+  },
+  "official_checker_vendor_manifest_sha256": "b5d16693613e112bdf073c4788a7871175f11a3af23cc5b94f9f18890064073a",
+  "verified_summary_path": "artifacts\\bfcl\\dev40-c20-audit-20261030\\verified-run-summary.json",
+  "verified_summary_sha256": "4f9562db8f9232cedfa29ffdf83dcb6f1091b73d239c1e2b58aa37ec2d13a001",
+  "score": {
+    "passed": 11,
+    "failed": 29,
+    "scorable_tasks": 40,
+    "micro": 0.275,
+    "category_macro": 0.275
+  },
+  "usage": {
+    "input_tokens": 2612566,
+    "output_tokens": 46381,
+    "reasoning_tokens": 0,
+    "cache_hit_tokens": 2302464,
+    "cache_miss_tokens": 310102
+  },
+  "actual_model_api_calls": 475,
+  "http_statuses": {
+    "200": 475
+  },
+  "elapsed_seconds": 101.828,
+  "baseline_comparison_contract": "Future paired development comparisons retain exactly these IDs, model/provider/thinking, budgets, scorer and concurrency; label deliberate changes separately",
+  "scoring_boundary": "Pinned official pure subcheckers with explicit Aster irrelevance wiring, not unchanged full upstream runner or whole BFCL leaderboard",
+  "optimization_gain": null,
+  "full_leaderboard_score": null,
+  "holdout_score": null,
+  "new_audit_model_api_calls": 0,
+  "new_audit_judge_api_calls": 0,
+  "limitations": [
+    "Single development-set run; public benchmark pretraining exposure unknown",
+    "Old 200-task and old A6 provider runs are distinct historical populations/configurations",
+    "60-task holdout remains reserved for configuration-frozen final paired evaluation"
+  ]
+}

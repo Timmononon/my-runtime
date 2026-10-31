@@ -1,13 +1,11 @@
 """Operator-managed provider identities. SQLite holds metadata, never key values."""
 from __future__ import annotations
 
-import asyncio
 import copy
 import hashlib
 import ipaddress
 import json
 import os
-import socket
 import time
 import uuid
 from urllib.parse import urlsplit
@@ -61,16 +59,23 @@ def endpoint_url(value: str, protocol: str) -> str:
     return target
 
 
-async def verify_public_endpoint(value: str):
-    """Check each explicit network operation; redirects and proxy env are disabled."""
-    host = urlsplit(value).hostname
+async def verify_public_endpoint(value: str, *, dns_fallback="off", dns_client_factory=None):
+    """Verify and pin public HTTPS; only proxy fake-IP DNS may use fixed DoH."""
+    from aster.tools.http import PublicDNSFailure, pin_url
+
     try:
-        rows = await asyncio.get_running_loop().getaddrinfo(host, 443, type=socket.SOCK_STREAM)
-        if not rows or any(not ipaddress.ip_address(row[4][0]).is_global for row in rows):
-            raise ValueError()
-    except (OSError, ValueError) as exc:
-        raise ProviderError("Provider DNS address is unavailable or non-public", category="endpoint") from exc
-    return rows[0][4][0]
+        target = endpoint_url(value, "openai_chat")
+        host = urlsplit(target).hostname
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            if "." not in host or host.endswith((".home.arpa", ".test", ".invalid")):
+                raise ValueError() from None
+        pinned, _, _ = await pin_url(target, set(), dns_fallback=dns_fallback,
+                                     dns_client_factory=dns_client_factory)
+        return pinned.host
+    except (OSError, ValueError, TimeoutError, PublicDNSFailure):
+        raise ProviderError("Provider DNS address is unavailable or non-public", category="endpoint") from None
 
 
 class PublicProviderTransport(httpx.AsyncBaseTransport):
@@ -79,14 +84,16 @@ class PublicProviderTransport(httpx.AsyncBaseTransport):
     This avoids a second DNS lookup changing a public check into a private
     connection. HTTP redirects remain responses; no credential forwarding.
     """
-    def __init__(self, base_url):
+    def __init__(self, base_url, *, dns_fallback="off", dns_client_factory=None):
         self.base = httpx.URL(base_url)
+        self.dns_fallback, self.dns_client_factory = dns_fallback, dns_client_factory
         self.inner = httpx.AsyncHTTPTransport(retries=0)
 
     async def handle_async_request(self, request):
         if request.url.scheme != "https" or request.url.host != self.base.host or request.url.port != self.base.port:
             raise ProviderError("Provider request origin differs from its saved profile", category="endpoint")
-        address = await verify_public_endpoint(str(self.base))
+        address = await verify_public_endpoint(str(self.base), dns_fallback=self.dns_fallback,
+                                               dns_client_factory=self.dns_client_factory)
         headers = request.headers.copy()
         headers["Host"] = self.base.netloc.decode()
         pinned = httpx.Request(request.method, request.url.copy_with(host=address), headers=headers,
@@ -138,9 +145,11 @@ def validate_protocol_models(protocol, models):
 
 
 class ProviderProfiles:
-    def __init__(self, store, credentials, *, client_factory=None):
+    def __init__(self, store, credentials, *, client_factory=None, dns_fallback="off"):
         self.store, self.credentials = store, credentials
         self.client_factory = client_factory  # Explicit offline test injection only.
+        # A trusted global reader is evaluated only for an explicit catalogue request.
+        self.dns_fallback = dns_fallback
         with store.transaction() as db:
             db.execute("CREATE TABLE IF NOT EXISTS provider_profiles (id TEXT PRIMARY KEY, document TEXT NOT NULL, credential_ref TEXT, revision INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0)")
             db.execute("CREATE TABLE IF NOT EXISTS session_model_selection (session_id TEXT PRIMARY KEY REFERENCES sessions(id), document TEXT NOT NULL)")
@@ -332,8 +341,9 @@ class ProviderProfiles:
         elif data["protocol"] == "deepseek_responses" and data["base_url"] == DEEPSEEK_ORIGIN:
             client = native_deepseek_client(20)
         else:
+            dns_fallback = self.dns_fallback() if callable(self.dns_fallback) else self.dns_fallback
             client = httpx.AsyncClient(timeout=20, follow_redirects=False, trust_env=False,
-                                       transport=PublicProviderTransport(data["base_url"]))
+                                       transport=PublicProviderTransport(data["base_url"], dns_fallback=dns_fallback))
         try:
             async with client.stream("GET", data["base_url"] + "/models", headers={"Authorization": "Bearer " + key}, follow_redirects=False) as response:
                 if response.status_code != 200:

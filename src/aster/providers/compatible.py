@@ -157,6 +157,15 @@ class CompatibleClient(DeepSeekResponsesClient):
                              retry_after=_retry_after(response.headers.get("retry-after", "")))
 
     async def _chat_stream(self, body, emit, progress):
+        def optional_text(value):
+            # Compatible servers may serialize absent delta fields as null.
+            # Only null is an empty placeholder; wrong types remain errors.
+            if value is None:
+                return ""
+            if not isinstance(value, str):
+                raise TypeError()
+            return value
+
         calls, text, raw_usage, finish, done_received = {}, [], None, None, False
         async with self._client.stream("POST", self.base_url + "/chat/completions", json=body,
                                        headers=self._headers(), follow_redirects=False) as response:
@@ -192,38 +201,73 @@ class CompatibleClient(DeepSeekResponsesClient):
                     break
                 try:
                     event = json.loads(chunk)
+                    if not isinstance(event, dict):
+                        raise TypeError()
                     if event.get("error"):
                         raise ProviderError("Provider emitted a stream error", category="protocol")
                     if event.get("usage") is not None:
                         raw_usage = event["usage"]
+                        if not isinstance(raw_usage, dict):
+                            raise ValueError()
+                        for detail in ("prompt_tokens_details", "completion_tokens_details"):
+                            if raw_usage.get(detail) is not None and not isinstance(raw_usage[detail], dict):
+                                raise ValueError()
                     choices = event.get("choices", [])
-                    if len(choices) > 1 or choices and choices[0].get("index", 0) != 0:
+                    if choices is None and isinstance(event.get("usage"), dict):
+                        choices = []
+                    if not isinstance(choices, list):
+                        raise TypeError()
+                    if len(choices) > 1:
                         raise ProviderError("Only one model choice is supported", category="protocol")
                     if not choices:
                         continue
                     choice = choices[0]
-                    delta = choice.get("delta") or {}
-                    if finish is not None and delta:
+                    if not isinstance(choice, dict):
+                        raise TypeError()
+                    index = choice.get("index", 0)
+                    if type(index) is not int or index != 0:
+                        raise ProviderError("Only one model choice is supported", category="protocol")
+                    delta = choice.get("delta")
+                    if delta is None:
+                        delta = {}
+                    if not isinstance(delta, dict):
+                        raise TypeError()
+                    content = optional_text(delta.get("content"))
+                    tool_calls = delta.get("tool_calls")
+                    if tool_calls is None:
+                        tool_calls = []
+                    if not isinstance(tool_calls, list):
+                        raise TypeError()
+                    if finish is not None and any(value is not None for value in delta.values()):
                         raise ProviderError("Chat output continued after its final choice", category="protocol")
-                    if delta.get("content"):
+                    if content:
                         progress["received"] = True
-                        text.append(delta["content"])
+                        text.append(content)
                         last_progress = asyncio.get_running_loop().time()
                         if emit:
-                            await emit("model.text.delta", {"text": delta["content"]})
-                    for call in delta.get("tool_calls", []):
+                            await emit("model.text.delta", {"text": content})
+                    for call in tool_calls:
+                        if not isinstance(call, dict):
+                            raise TypeError()
                         progress["received"] = True
                         index = call["index"]
                         if type(index) is not int or index < 0:
                             raise ValueError()
+                        if call.get("type") not in {None, "function"}:
+                            raise ValueError()
                         item = calls.setdefault(index, {"id": "", "name": "", "arguments": ""})
-                        if call.get("id"):
-                            if item["id"] and item["id"] != call["id"]:
+                        call_id = optional_text(call.get("id"))
+                        if call_id:
+                            if item["id"] and item["id"] != call_id:
                                 raise ValueError()
-                            item["id"] = call["id"]
-                        function = call.get("function") or {}
-                        item["name"] += function.get("name", "")
-                        item["arguments"] += function.get("arguments", "")
+                            item["id"] = call_id
+                        function = call.get("function")
+                        if function is None:
+                            function = {}
+                        if not isinstance(function, dict):
+                            raise TypeError()
+                        item["name"] += optional_text(function.get("name"))
+                        item["arguments"] += optional_text(function.get("arguments"))
                         last_progress = asyncio.get_running_loop().time()
                     if choice.get("finish_reason") is not None:
                         finish = choice["finish_reason"]

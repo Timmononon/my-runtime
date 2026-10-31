@@ -109,6 +109,8 @@ def parser():
     add_parsers(commands)
     from aster.evaluation.cli import add_parsers as add_evaluation_parsers
     add_evaluation_parsers(commands)
+    from aster.evaluation.bfcl_cli import add_parsers as add_bfcl_parsers
+    add_bfcl_parsers(commands)
     return root
 
 
@@ -489,6 +491,9 @@ def main(argv=None):
     args = parser().parse_args(argv)
     from aster import maintenance
     try:
+        if args.command == "bfcl":
+            from aster.evaluation.bfcl_cli import handle_command as bfcl
+            return asyncio.run(bfcl(args))
         args.data_dir = resolve_data_dir(args.data_dir)
         if args.command == "evaluate":
             from aster.evaluation.cli import handle_command as evaluate

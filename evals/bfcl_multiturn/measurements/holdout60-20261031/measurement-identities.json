@@ -1,0 +1,18 @@
+{
+  "identities": {
+    "A0": {
+      "file": "evals/bfcl_multiturn/measurements/holdout60-20261031/A0-holdout60-deepseek-flash-none-c20-20261031.json",
+      "sha256": "383ba7ba8f59098d1acffe433abfe9a51f3ddc61caf2a895d2c4ffc8b5aaa4b7"
+    },
+    "A3": {
+      "file": "evals/bfcl_multiturn/measurements/holdout60-20261031/A3-holdout60-deepseek-flash-none-c20-20261031.json",
+      "sha256": "51856053a507c767c5899376ce633e36923f9baa9513e0470105825a0e4be869"
+    },
+    "MF-Gate-v1": {
+      "file": "evals/bfcl_multiturn/measurements/holdout60-20261031/MF-Gate-v1-holdout60-deepseek-flash-none-c20-20261031.json",
+      "sha256": "014a4c00c7cd77400b56ec06df0b36f785b924c4c0ce1efc78ccfc53258f6c93"
+    }
+  },
+  "source_authority": "artifacts/bfcl/holdout60-measurement-identities-20261031/measurement-identities.json",
+  "historical_development_baselines_unchanged": true
+}

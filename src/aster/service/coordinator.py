@@ -19,6 +19,10 @@ from aster.customization.hooks import HookCommand, HookManager, supervised_hook_
 from aster.customization.skills import SkillRegistry, SkillScope
 from aster.domain import ToolCall, ToolContext, ToolResult, message_from_dict, to_dict
 from aster.engine import Engine, RunConfig, RunOutcome
+from aster.engine.readiness_prompt import POLICY as READINESS_PROMPT_POLICY
+from aster.engine.readiness_prompt import SYSTEM_PREAMBLE as READINESS_PROMPT_PREAMBLE
+from aster.engine.task_control import POLICY as TASK_CONTROL_POLICY
+from aster.engine.task_control import SYSTEM_PREAMBLE as TASK_CONTROL_PREAMBLE
 from aster.memory.service import MemoryService
 from aster.policy import ApprovalBroker, PermissionPolicy, QuestionBroker
 from aster.providers.deepseek import DeepSeekResponsesClient
@@ -50,7 +54,8 @@ class RunCoordinator:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.store = Store(self.data_dir / "runtime.db")
         self.credentials = credentials or CredentialStore(data_dir=self.data_dir)
-        self.providers = ProviderProfiles(self.store, self.credentials)
+        self.providers = ProviderProfiles(self.store, self.credentials,
+            dns_fallback=lambda: read_yaml(self.data_dir / "config.yaml").get("http_dns_fallback", "google"))
         from aster.memory.local_embedding import LocalEmbeddingManager
         self._local_embedding_factory = local_embedding_factory or LocalEmbeddingManager
         self.local_embeddings = self._local_embedding_factory()
@@ -306,7 +311,7 @@ class RunCoordinator:
                 # Strip only the runtime-owned suffix after the exact captured
                 # instruction prefix; an identical header inside user-authored
                 # project rules must remain part of the immutable instructions.
-                prefix = _SYSTEM_PREAMBLE + captured["instructions"]
+                prefix = self._system_preamble(settings) + captured["instructions"]
                 if system.startswith(prefix):
                     marker = system.find(_LEARNING_NOTES_HEADER, len(prefix))
                     if marker >= 0:
@@ -354,8 +359,15 @@ class RunCoordinator:
             raise ConfigurationError("Unknown runtime configuration fields: " + ", ".join(sorted(unknown)))
         return RunConfig(**requested)
 
+    def _system_preamble(self, settings):
+        config = self._run_config(settings)
+        if config.prompt_policy == READINESS_PROMPT_POLICY:
+            return READINESS_PROMPT_PREAMBLE
+        return TASK_CONTROL_PREAMBLE if config.task_control == TASK_CONTROL_POLICY else _SYSTEM_PREAMBLE
+
     def _system(self, snapshot, *, session_id=None):
-        system = _SYSTEM_PREAMBLE + snapshot.instructions
+        preamble = self._system_preamble(snapshot.data)
+        system = preamble + snapshot.instructions
         skills = SkillRegistry(self.data_dir / "skills")
         skills.reload()
         if skills.catalog():
@@ -532,7 +544,8 @@ class RunCoordinator:
                 from aster.providers.compatible import CompatibleClient
                 client = (self.providers.client_factory() if self.providers.client_factory else
                           httpx.AsyncClient(timeout=httpx.Timeout(run_config.model_timeout_seconds, connect=20), trust_env=False,
-                                            transport=PublicProviderTransport(pin["base_url"])))
+                                            transport=PublicProviderTransport(pin["base_url"],
+                                                dns_fallback=settings.get("http_dns_fallback", "google"))))
                 resources.append(client)
                 model = CompatibleClient(key, protocol=pin["protocol"], client=client, **common)
                 model.capabilities = {model.model: capability(pin)}

@@ -1,0 +1,413 @@
+{
+  "adapters": [
+    {
+      "file": "__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "constants/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "constants/model_config.py",
+      "sha256": "ba3c22adef1468ef6519c27f8b6c9a11c0a40a61497fe2dad7a18e113d49b641"
+    },
+    {
+      "file": "eval_checker/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "eval_checker/agentic_eval/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "eval_checker/ast_eval/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "eval_checker/ast_eval/type_convertor/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "eval_checker/multi_turn_eval/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "eval_checker/multi_turn_eval/func_source_code/__init__.py",
+      "sha256": "b31326ac29f39a3b8462533f85ba1c18b62a519356a2f0160261f72e194f1bd4"
+    },
+    {
+      "file": "memory_paths.py",
+      "sha256": "6aff961c2e639b31cb6fdd1b4cb2950c984d7b9fdf69afc40449866e6389fbea"
+    },
+    {
+      "file": "vector_context.py",
+      "sha256": "f4ed8144470c6a3793011d24839e7b0a7e477ce8292f32d379a2d462271698e7"
+    },
+    {
+      "file": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "file": "NOTICE.md",
+      "sha256": "9b502ff2638e27c92d5f8b5917ae8925ee88e1b3249323a453da406faeb25174"
+    }
+  ],
+  "files": [
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "constants/enums.py",
+      "source": "_sources/constants/enums.py.txt",
+      "source_git_blob": "7400315f045419d4a8a28525f3999c1844f5e9af",
+      "source_sha256": "2182becfa2a1d071ee1db30db593b4758c6bf866aa12d2d4b8daf09175ea518a",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/constants/enums.py",
+      "vendored_sha256": "20413292f5be2d751b44d77f035d7111af66a1c5c15ad81b7c723f3845d4867f"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "constants/type_mappings.py",
+      "source": "_sources/constants/type_mappings.py.txt",
+      "source_git_blob": "fdbdde48402f8f2812b146f9b7341b6aae9e55b8",
+      "source_sha256": "1702fb67afbe2c492608e58e2b7d02e46381f50166b47f3c952f76e34c7cd3bd",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/constants/type_mappings.py",
+      "vendored_sha256": "27c241fc0c5caec020855309f5bde15ec342ecc2618a930bf70904f73ef8176e"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/ast_eval/ast_checker.py",
+      "source": "_sources/eval_checker/ast_eval/ast_checker.py.txt",
+      "source_git_blob": "160fd75cfc8b2b7ef9f83a244f81da0fe0244e39",
+      "source_sha256": "2aae7a68461a8f76c0be3894c8901b66b56967a1989d3ab066051e3fb97f1538",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/ast_eval/ast_checker.py",
+      "vendored_sha256": "0ee5348b848a1a1544a2a0c4e6d2de4e8bedbaef7b965ba4cfda449e9526616e"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/ast_eval/type_convertor/java_type_converter.py",
+      "source": "_sources/eval_checker/ast_eval/type_convertor/java_type_converter.py.txt",
+      "source_git_blob": "7d2b141dfcb8e527df6424893e60a833eb69f3e1",
+      "source_sha256": "2fd4f4b0443b3dd974a1723bb4e45c086d7b352631062da7807ad1ad40706604",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/ast_eval/type_convertor/java_type_converter.py",
+      "vendored_sha256": "f1cad2169e7509366d29b33305e9ce3a8cb896e825ad051b90d1e7dc8be3cf66"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/ast_eval/type_convertor/js_type_converter.py",
+      "source": "_sources/eval_checker/ast_eval/type_convertor/js_type_converter.py.txt",
+      "source_git_blob": "4205b92e05af83d2e61a7bf4bd2530718b57acee",
+      "source_sha256": "a114e9ff75c025cb52787ac33d6c2fbaa390905c6125a2b3c6afebab232bb5e4",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/ast_eval/type_convertor/js_type_converter.py",
+      "vendored_sha256": "a9cf6d480c997ef2c931c4351fd94b640c0f7ae04343627b3cbc074a295bd26e"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/agentic_eval/agentic_checker.py",
+      "source": "_sources/eval_checker/agentic_eval/agentic_checker.py.txt",
+      "source_git_blob": "ad81695bcdbf5607e7303ad2f2c37337c5614e2e",
+      "source_sha256": "b9d008cc0afccc006471f315444923119150e66df56114b1ea2be15f52dea1b6",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/agentic_eval/agentic_checker.py",
+      "vendored_sha256": "4d0e907d96d0077ebbcea0b4cca1fdca769353f149b166c47d1f5e934a4e0fc2"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite",
+        {
+          "extracted_functions": [
+            "is_empty_execute_response"
+          ]
+        }
+      ],
+      "file": "eval_checker/multi_turn_eval/multi_turn_utils.py",
+      "source": "_sources/eval_checker/multi_turn_eval/multi_turn_utils.py.txt",
+      "source_git_blob": "dfcf6512a2eeb592820f3a0fa0fb564a117facc4",
+      "source_sha256": "9fdbd779ec715959c310445b54b431e91abaa8b45a302abb6fd8db8d61b62ba2",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/multi_turn_utils.py",
+      "vendored_sha256": "ba62fd07a26c176659bdb0a48efae22f4d00a3e8f0a6ec48b2b2466e602f7a41"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite",
+        {
+          "extracted_functions": [
+            "_compare_instances",
+            "_is_subsequence",
+            "_is_subsequence_unordered",
+            "method_invoke_order_checker",
+            "multi_turn_irrelevance_checker",
+            "response_checker",
+            "state_checker"
+          ]
+        },
+        "Import only the extracted pure empty-response helper; exclude executable checker and eval executor."
+      ],
+      "file": "eval_checker/multi_turn_eval/multi_turn_checker.py",
+      "source": "_sources/eval_checker/multi_turn_eval/multi_turn_checker.py.txt",
+      "source_git_blob": "34b36715cdfaa4464ba1be137af4d30e85da8efb",
+      "source_sha256": "b3b787515eda3bf0e365e39634a8fc7f831763f010f716d35d86f96fd5aab1b5",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/multi_turn_checker.py",
+      "vendored_sha256": "837ae12534d871fae90c1d7cd499d78044277420ebec4d45c07c20dfa37b26eb"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/gorilla_file_system.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/gorilla_file_system.py.txt",
+      "source_git_blob": "6d269dd5fcf809d514eb531263f1e0e14246993c",
+      "source_sha256": "84173750930b09aaa31b90547c9bd79ce75714682608b35e78a9c1ea259faf2b",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/gorilla_file_system.py",
+      "vendored_sha256": "e104a22e226d2757e5c390f31cb0569e9be0087cfcd68f2c366bd7ce7c8a036a"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/math_api.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/math_api.py.txt",
+      "source_git_blob": "e1b43b3817a3d8cbedc011bb36d4d9253fd6a05a",
+      "source_sha256": "abde32cc25e71b2ff3acf4d028a3c005b98409c174aba4abddbfe1c018afb9a8",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/math_api.py",
+      "vendored_sha256": "698ccb9da17d18184e0fe7f485b1731602896dde9702d171e93acd41b8d03182"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/message_api.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/message_api.py.txt",
+      "source_git_blob": "3fb461dfbf60ecb9b6cc832162c97368d69ec1ae",
+      "source_sha256": "cf72af1635654147af17df1891a7fb354549e78a61930139f741a31f4be21121",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/message_api.py",
+      "vendored_sha256": "23bd2bd5588d54f3c32261ee83e681ec364db3a48198af1b2999e95a70f3e906"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/posting_api.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/posting_api.py.txt",
+      "source_git_blob": "ccd7566181bc36889d235c2ad62a064a6e16ba00",
+      "source_sha256": "32b887aaa37c7167ad9c84ddfa7bbb855c75d3c1edab19ba868aba29acc4cfa1",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/posting_api.py",
+      "vendored_sha256": "58a3a29857d7f64669f6a28d53151bfa3f9d35cd8631406ea8276b6eb0577122"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/ticket_api.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/ticket_api.py.txt",
+      "source_git_blob": "6ce72a1cd23a11d814841b46a39d173ccc4e47bb",
+      "source_sha256": "6a9375aa6425410c07a151aef27f3e44e9ed1023bb5cc5c25f14f4a9b3c99116",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/ticket_api.py",
+      "vendored_sha256": "19d8de56a7c3355369b5b9adff17072113792d8f0e248681e42369f883f652be"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/trading_bot.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/trading_bot.py.txt",
+      "source_git_blob": "e745788b15d729194ef39844f5eb1a3a67a4d55a",
+      "source_sha256": "cc2e3949035b561e9d07418b081561aa07b211672200e2e511aec074bf79fcb2",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/trading_bot.py",
+      "vendored_sha256": "592e688cc80d70de1924e09316ebe33ee74d6b190f157f6ead0841f171556dc9"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/travel_booking.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/travel_booking.py.txt",
+      "source_git_blob": "f357ccdabdedc5fed0019392101a7de1f524ef77",
+      "source_sha256": "e698e22adccf0d6d41b297f2d5e44faebd828cef4752df6a4ffb1570c0c35296",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/travel_booking.py",
+      "vendored_sha256": "a422b6fa0f28f39cab858fb8d383a783e6ca8d5ec946e65c7744891790f01c76"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/vehicle_control.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/vehicle_control.py.txt",
+      "source_git_blob": "ab7ef900d1a4d0120638b79c95441710eb8f5282",
+      "source_sha256": "f5f7a2f28968728927a98ae12ec68a32d70781cfb74c2d7b14801772362b12d1",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/vehicle_control.py",
+      "vendored_sha256": "a87acbeafdd1c0ddc5c5f85421f209c053390689551cf2784551ccbd5d4b526c"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/long_context.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/long_context.py.txt",
+      "source_git_blob": "938105bea5a07e46ee15615ab11d1c0988124b5d",
+      "source_sha256": "5c9a5710115609c779e5b2ccb43f6ad58271ed96f2ea7a797edb0d65c385aa38",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/long_context.py",
+      "vendored_sha256": "8f2dddbf20d9d680f16fb8d61ccf8321bb0d0ac6ae01531aff7ab6f4616368c4"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/memory_kv.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/memory_kv.py.txt",
+      "source_git_blob": "a2d3fc7ee0649957a8e755c7be7ebc3c62a6af0a",
+      "source_sha256": "7be11ccae7741e07fcd7a2fc6664cad556357a047453db68db9e11bfec6c0ca7",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/memory_kv.py",
+      "vendored_sha256": "1517886b16b46b8ace744356474a00a81637b70964e67271c8ef1690f5e96cdc"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/memory_rec_sum.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/memory_rec_sum.py.txt",
+      "source_git_blob": "8022198997c83d88a7d3b6674c5a30d026726bde",
+      "source_sha256": "e5a08f4183ab2c14a330eb3db1aca5e13533e0ffe70ce1c424851944295b898c",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/memory_rec_sum.py",
+      "vendored_sha256": "5b4fd1632205d9e55be5555ebedeb5f5c19b52802ce7b629c3c983686108b3ec"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite",
+        {
+          "import_adapter": "from overrides import final -> from typing import final"
+        },
+        {
+          "import_adapter": "from aster.evaluation._vendor.bfcl_v4.utils import ( -> from aster.evaluation._vendor.bfcl_v4.memory_paths import ("
+        }
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/memory_api_metaclass.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/memory_api_metaclass.py.txt",
+      "source_git_blob": "d4436eb564b1545dc327aa53a86a6d4c4015ef2f",
+      "source_sha256": "5b924c2482797fa2055c4c606788db517470d0a65d1a64c97f21bceb5f820611",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/memory_api_metaclass.py",
+      "vendored_sha256": "a150189b3044667201cc6d47e6a22101d1a91b1959cffd46994f046a7154797a"
+    },
+    {
+      "changes": [
+        "ruff suppression header",
+        "bfcl_eval import namespace rewrite",
+        "Remove eager SentenceTransformer import and construction; explicitly admitted ContextVar ENCODER proxy; fixed official dimension384; original class/function bodies unchanged"
+      ],
+      "file": "eval_checker/multi_turn_eval/func_source_code/memory_vector.py",
+      "source": "_sources/eval_checker/multi_turn_eval/func_source_code/memory_vector.py.txt",
+      "source_git_blob": "5f7c72a798be2daac08141db2df1114d945db54d",
+      "source_sha256": "489df326a8fc6e19270d6a349c8c3434f4bdcb360050d7ac17596eeb4da03a54",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/eval_checker/multi_turn_eval/func_source_code/memory_vector.py",
+      "vendored_sha256": "644fd6ff870d26fba10a915727f5540f603f458479aeaecb8fd38a66c0b7bcfc"
+    }
+  ],
+  "harness_adaptations": [
+    {
+      "aster_explicitly_invokes_unchanged_official_subchecker": true,
+      "id": "explicit_multiturn_irrelevance_wiring",
+      "note": "Not an unchanged upstream end-to-end runner; no legacy bypass.",
+      "upstream_runner_omits_call": true
+    },
+    {
+      "id": "agentic_source_over_blog_prose",
+      "note": "Word-bounded normalized containment in final non-tool message, not whole-message or extracted answer equality."
+    },
+    {
+      "eager_model_loading_removed": true,
+      "encoder_context": "Explicit local encoder contract, fixed384 dimensions, no default model. Fixture encoders verify protocol only, not real retrieval quality.",
+      "id": "explicit_vector_encoder_context",
+      "original_class_bodies_unchanged": true
+    }
+  ],
+  "resources": [
+    {
+      "class_name": "GorillaFileSystem",
+      "file": "data/multi_turn_func_doc/gorilla_file_system.json",
+      "sha256": "c4c1b741c71e2a17c97a5dc9c4a91d89978c4eaece56494d14272d5df6c650e9",
+      "source_git_blob": "b9a6d2d314febe8ccf201887ef87cfe081ffbf4e",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/gorilla_file_system.json"
+    },
+    {
+      "class_name": "MathAPI",
+      "file": "data/multi_turn_func_doc/math_api.json",
+      "sha256": "83fa31708c89442bdcf12ac4dfbe3be8663ec9183a1b1524a9fda98164bc7e0b",
+      "source_git_blob": "52a911035a2b71390027e02af70c1abb904c71b3",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/math_api.json"
+    },
+    {
+      "class_name": "MessageAPI",
+      "file": "data/multi_turn_func_doc/message_api.json",
+      "sha256": "4d58ea933a5d2b280d7a52366617fb47fecd333d7b0e08e724db6fa12fb5f847",
+      "source_git_blob": "a178734ad47f269571c877e6e433b26171516024",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/message_api.json"
+    },
+    {
+      "class_name": "TwitterAPI",
+      "file": "data/multi_turn_func_doc/posting_api.json",
+      "sha256": "87f9fc404a06e4107d7c366f1399c596440e84c16cb119faf374b2f532d86e8b",
+      "source_git_blob": "2a8737a376640ba304c313d23d63049927f823eb",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/posting_api.json"
+    },
+    {
+      "class_name": "TicketAPI",
+      "file": "data/multi_turn_func_doc/ticket_api.json",
+      "sha256": "31324e0380782664fe82ba05bd23517808ad55692b45a5fe7c3d4d395fe4f0f8",
+      "source_git_blob": "f8281657b64c4b6410a8590cc82b9584bc39729f",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/ticket_api.json"
+    },
+    {
+      "class_name": "TradingBot",
+      "file": "data/multi_turn_func_doc/trading_bot.json",
+      "sha256": "1a7933fd8f0cb8fbec38aeae05cb8c24132747cad4904fe1c13ac3d01fc22c2d",
+      "source_git_blob": "7dce37326156f65efc55df30db26064d68e8dc8c",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/trading_bot.json"
+    },
+    {
+      "class_name": "TravelAPI",
+      "file": "data/multi_turn_func_doc/travel_booking.json",
+      "sha256": "f17b950c13adddf41d0848077df58788252e4c2e7cad5cfa71c8c4bf04f57b26",
+      "source_git_blob": "95008945fa5a9bc104a77647e4990d1e36ce7ec5",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/travel_booking.json"
+    },
+    {
+      "class_name": "VehicleControlAPI",
+      "file": "data/multi_turn_func_doc/vehicle_control.json",
+      "sha256": "0c8a66292844874ef7b168f343bc394d8615d2d9e1f4387999a9ee23011eac78",
+      "source_git_blob": "7139dfc3bf2646be8f71ac383760f28899b17f85",
+      "url": "https://raw.githubusercontent.com/ShishirPatil/gorilla/6ea57973c7a6097fd7c5915698c54c17c5b1b6c8/berkeley-function-call-leaderboard/bfcl_eval/data/multi_turn_func_doc/vehicle_control.json"
+    }
+  ],
+  "revision": "6ea57973c7a6097fd7c5915698c54c17c5b1b6c8",
+  "safety_note": "No model handlers or WebSearchAPI imported. No global executable-call cache or eval executor. Vector encoder requires explicit offline admission; module never imports SentenceTransformer or auto-loads model weights.",
+  "schema_version": 1
+}

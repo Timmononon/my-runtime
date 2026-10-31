@@ -1,2 +1,7 @@
 # Digest-pinned skill assets must retain their recorded bytes on every checkout.
 src/aster/packages/bundled/** -text
+
+# Original/adapted BFCL sources and frozen evaluation identities are byte-pinned.
+# Preserve split manifests and dependency locks without newline conversion.
+src/aster/evaluation/_vendor/bfcl_v4/** -text
+evals/** -text

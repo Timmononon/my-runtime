@@ -9,11 +9,19 @@ import time
 from pathlib import Path
 
 from aster.domain import Message, ModelTurn, ToolContext, ToolResult, to_dict, tool_result_message
+from aster.engine.capability_gate import CHECK_SYSTEM, CapabilityGate
+from aster.engine.capability_gate import POLICY as CAPABILITY_GATE_POLICY
 from aster.engine.compaction import CompactionController, calibration_fingerprint
 from aster.engine.context import CompactionInterrupted, ContextBudgetExceeded, estimate_tokens
 from aster.engine.context_usage import context_usage_basis
 from aster.engine.dispatcher import Dispatcher, rejected
 from aster.engine.observations import ObservationManager
+from aster.engine.readiness_gate_v2 import CHECK_SYSTEM as READINESS_CHECK_SYSTEM
+from aster.engine.readiness_gate_v2 import POLICY as READINESS_GATE_POLICY
+from aster.engine.readiness_gate_v2 import ReadinessGate
+from aster.engine.readiness_prompt import POLICY as READINESS_PROMPT_POLICY
+from aster.engine.task_control import CONTROL_SYSTEM, TaskControlError, TaskController
+from aster.engine.task_control import POLICY as TASK_CONTROL_POLICY
 from aster.policy import ApprovalBroker, PermissionPolicy, QuestionBroker
 from aster.state import SessionBusy, StateError, Store
 from aster.state.store import TERMINAL, BudgetExceeded, DeadlineExceeded, dumps, identifier
@@ -61,8 +69,22 @@ class RunConfig:
     time_compaction_enabled: bool = False
     time_compaction_gap_seconds: float = 3600
     time_compaction_keep_recent: int = 5
+    task_control: str = "off"
+    prompt_policy: str = "off"
+    capability_gate: str = "off"
 
     def __post_init__(self):
+        if not isinstance(self.task_control, str) or self.task_control not in {"off", TASK_CONTROL_POLICY}:
+            raise ValueError("Unsupported task control policy")
+        if not isinstance(self.prompt_policy, str) or self.prompt_policy not in {"off", READINESS_PROMPT_POLICY}:
+            raise ValueError("Unsupported prompt policy")
+        if self.prompt_policy != "off" and self.task_control != "off":
+            raise ValueError("A prompt policy cannot be combined with task control")
+        if (not isinstance(self.capability_gate, str)
+                or self.capability_gate not in {"off", CAPABILITY_GATE_POLICY, READINESS_GATE_POLICY}):
+            raise ValueError("Unsupported capability gate policy")
+        if self.capability_gate != "off" and (self.prompt_policy != READINESS_PROMPT_POLICY or self.task_control != "off"):
+            raise ValueError("Capability checking requires the native readiness prompt without task control")
         for name in ("max_iterations", "max_tool_calls", "max_concurrency", "max_total_tokens", "max_model_requests", "duplicate_limit"):
             if getattr(self, name) < 1:
                 raise ValueError(f"{name} must be positive")
@@ -258,13 +280,33 @@ class Engine:
         tool_services["read_observer"] = observer
         fingerprint = calibration_fingerprint(self._runtime_identity(), self.registry.specs(), run["system"])
         prior_checkpoint = self.store.get_checkpoint(sid)
+        task_control = (TaskController(sid, rid, previous=(prior_checkpoint or {}).get("metadata", {}).get("task_control"))
+                        if config.task_control == TASK_CONTROL_POLICY else None)
+        task_context_extra = 0
+        gate_type = ReadinessGate if config.capability_gate == READINESS_GATE_POLICY else CapabilityGate
+        capability_check_system = (READINESS_CHECK_SYSTEM if config.capability_gate == READINESS_GATE_POLICY
+                                   else CHECK_SYSTEM)
+        capability_gate = (gate_type(sid, rid,
+            previous=(prior_checkpoint or {}).get("metadata", {}).get("capability_gate"))
+            if config.capability_gate in {CAPABILITY_GATE_POLICY, READINESS_GATE_POLICY} else None)
+        capability_context_extra = 0
 
         def checkpoint(messages, metadata=None):
+            basis = context_usage_basis(run["system"], self._offered_specs(context), config,
+                session_id=sid, model=str(getattr(self.model, "model", "")),
+                overhead_tokens=compaction.manager.overhead_tokens)
+            if task_control is not None:
+                # The next tool-free control request carries schemas and
+                # auxiliary state in its input envelope. Count that envelope,
+                # without publishing source text or learning fake calibration.
+                basis["system_tokens"] += task_context_extra
+            if capability_gate is not None:
+                basis["system_tokens"] += capability_context_extra
             return self.store.checkpoint(sid, rid, messages, metadata={**(metadata or {}),
                 "overhead_tokens": compaction.manager.overhead_tokens, "calibration_fingerprint": fingerprint,
-                "context_usage": context_usage_basis(run["system"], self._offered_specs(context), config,
-                    session_id=sid, model=str(getattr(self.model, "model", "")),
-                    overhead_tokens=compaction.manager.overhead_tokens),
+                "context_usage": basis,
+                **({"task_control": task_control.snapshot(self.store.usage(rid))} if task_control is not None else {}),
+                **({"capability_gate": capability_gate.snapshot(self.store.usage(rid))} if capability_gate is not None else {}),
                 **compaction.state()})
         outcome = RunOutcome(sid, rid, "running")
         budget = self.store.start_budget(rid, config.deadline_seconds)
@@ -308,6 +350,113 @@ class Engine:
             previous_usage = prior_meta.get("last_prompt_total")
             if type(previous_usage) is int and 0 <= previous_usage <= config.context_tokens * 2:
                 compaction.real_tokens = previous_usage
+
+        task_action = False
+        capability_reply = False
+
+        async def generate_turn():
+            nonlocal token_total, task_action, task_context_extra, capability_reply, capability_context_extra
+            task_action = False
+            capability_reply = False
+            if capability_gate is not None:
+                scope = context.services.get("skill_scope")
+                offered = [spec for spec in self._offered_specs(context)
+                           if spec.name not in self.policy.denied_tools
+                           and (scope is None or scope.check_tool(spec.name))]
+                source = capability_gate.prepare(messages, offered, self.store.usage(rid))
+                if source is not None:
+                    check_system = run["system"] + "\n\n" + capability_check_system
+                    estimated = estimate_tokens(source, [], check_system)
+                    capability_context_extra = max(0, estimated - estimate_tokens(messages, offered, run["system"]))
+                    checkpoint(messages)
+                    if estimated > config.context_tokens - config.reserve_tokens:
+                        raise ContextBudgetExceeded("Capability check input exceeds the current context budget")
+                    if token_total + estimated >= config.max_total_tokens:
+                        raise ContextBudgetExceeded("No token budget remains for capability checking")
+
+                    async def check_event(kind, payload):
+                        known = {"model.text.delta", "model.reasoning.delta", "model.tool.delta"}
+                        await event("capability.check.progress", {"provider_event": kind if kind in known else "other"})
+
+                    checked = await self._generate(source, check_system, context,
+                        dataclasses.replace(config, model_retries=0), deadline,
+                        tools_override=[], emit_override=check_event, purpose="capability_check")
+                    token_total = sum((item.get("input_tokens") or 0) + (item.get("output_tokens") or 0)
+                                      for item in self.store.usage(rid))
+                    if cancel.is_set():
+                        raise asyncio.CancelledError
+                    if steer.is_set():
+                        raise SteeringInterrupt
+                    receipt = next(item for item in reversed(self.store.usage(rid))
+                                   if item.get("raw", {}).get("purpose") == "capability_check")
+                    capability_gate.accept(checked, request_number=receipt["raw"]["request_number"])
+                    capability_context_extra = 0
+                    checkpoint(messages)
+                    await event("capability.check.decision", {"status": capability_gate.current["status"],
+                        "parse_status": capability_gate.current["parse_status"]})
+                    await event("capability.check.usage", {name: getattr(checked.usage, name) for name in
+                        ("input_tokens", "output_tokens", "reasoning_tokens")})
+                    if steer.is_set():
+                        raise SteeringInterrupt
+                    if capability_gate.current["status"] not in {"missing_capability", "needs_clarification"}:
+                        # The outer reservation belongs to the helper. Native
+                        # execution consumes another step from the SAME cap.
+                        if token_total >= config.max_total_tokens:
+                            raise ContextBudgetExceeded("Capability checking exhausted the shared token budget")
+                        outcome.iterations = self.store.reserve_iteration(rid, config.max_iterations)
+                if capability_gate.current["status"] in {"missing_capability", "needs_clarification"}:
+                    capability_reply = True
+                    return ModelTurn(capability_gate.current["reply"], finish_reason="completed")
+                return await self._generate(messages, run["system"], context, config, deadline)
+            if task_control is None:
+                return await self._generate(messages, run["system"], context, config, deadline)
+            scope = context.services.get("skill_scope")
+            offered = [spec for spec in self._offered_specs(context)
+                       if spec.name not in self.policy.denied_tools
+                       and (scope is None or scope.check_tool(spec.name))]
+            source = task_control.request(messages, offered)
+            control_system = run["system"] + "\n\n" + CONTROL_SYSTEM
+            estimated = estimate_tokens(source, [], control_system)
+            task_context_extra = max(0, estimated - estimate_tokens(messages, offered, run["system"]))
+            if estimated > config.context_tokens - config.reserve_tokens:
+                raise ContextBudgetExceeded("Task control input exceeds the current context budget")
+            token_total = sum((item.get("input_tokens") or 0) + (item.get("output_tokens") or 0)
+                              for item in self.store.usage(rid))
+            if token_total + estimated >= config.max_total_tokens:
+                raise ContextBudgetExceeded("No token budget remains for task control")
+
+            async def control_event(kind, payload):
+                # Private planning text is never streamed to the conversation
+                # or persisted as a telemetry summary.
+                known = {"model.text.delta", "model.reasoning.delta", "model.tool.delta"}
+                await event("task.control.progress", {"provider_event": kind if kind in known else "other"})
+
+            planned = await self._generate(source, control_system, context, config, deadline,
+                tools_override=[], emit_override=control_event, purpose="task_control")
+            token_total = sum((item.get("input_tokens") or 0) + (item.get("output_tokens") or 0)
+                              for item in self.store.usage(rid))
+            await event("task.control.usage", {name: getattr(planned.usage, name) for name in
+                ("input_tokens", "output_tokens", "reasoning_tokens")})
+            try:
+                decision = task_control.accept(planned)
+            except TaskControlError:
+                task_control.record_failure(planned)
+                checkpoint(messages)
+                raise
+            checkpoint(messages)
+            await event("task.control.decision", {"decision": decision["decision"],
+                "pending_field_count": len(decision["pending_fields"]), "next_tool_count": len(decision["next_tools"])})
+            if decision["decision"] != "execute":
+                return ModelTurn(decision["reply"], finish_reason="completed")
+            # The outer iteration reserved the control request. The following
+            # native action request spends another step from that same cap.
+            outcome.iterations = self.store.reserve_iteration(rid, config.max_iterations)
+            if token_total >= config.max_total_tokens:
+                raise ContextBudgetExceeded("Task control exhausted the shared token budget")
+            selected = [spec for spec in offered if spec.name in decision["next_tools"]]
+            task_action = True
+            return await self._generate(messages, task_control.action_system(run["system"]), context,
+                config, deadline, tools_override=selected, purpose="main")
         try:
             await event("run.started", {"recovered": run["resume_attempts"] > 0})
             hooks = tool_services.get("hooks")
@@ -357,7 +506,7 @@ class Engine:
                     break
                 try:
                     observer.observe_visible(messages)
-                    turn = await self._generate(messages, run["system"], context, config, deadline)
+                    turn = await generate_turn()
                 except SteeringInterrupt:
                     await event("run.steered", {"phase": "model"})
                     continue
@@ -375,14 +524,27 @@ class Engine:
                         messages = shaped
                         checkpoint(messages, {"reactive_compaction": True})
                         try:
-                            turn = await self._generate(messages, run["system"], context, config, deadline)
+                            # A reactive retry of the opt-in policy starts with
+                            # a fresh accounted decision, not a stale plan.
+                            if task_control is not None or capability_gate is not None:
+                                outcome.iterations = self.store.reserve_iteration(rid, config.max_iterations)
+                            turn = await generate_turn()
                         except SteeringInterrupt:
                             continue
                     else:
                         raise
-                compaction.observe_usage(messages, turn.usage)
+                if task_control is None and not capability_reply:
+                    compaction.observe_usage(messages, turn.usage)
+                elif task_action:
+                    # Dynamic control notes and narrowed schemas have another
+                    # envelope; never calibrate it as the static main prompt.
+                    compaction.real_tokens = ((turn.usage.input_tokens or 0) + (turn.usage.output_tokens or 0)
+                                              if turn.usage.input_tokens is not None else None)
                 token_total += (turn.usage.input_tokens or 0) + (turn.usage.output_tokens or 0)
                 await event("model.usage", to_dict(turn.usage))
+                if capability_gate is not None and steer.is_set():
+                    await event("run.steered", {"phase": "model"})
+                    continue
                 if cancel.is_set():
                     outcome.status = "timed_out" if deadline_expired.is_set() else "cancelled"
                     break
@@ -401,6 +563,11 @@ class Engine:
                 self.store.append_message(sid, rid, assistant)
                 messages.append(assistant)
                 if not turn.tool_calls:
+                    if task_action:
+                        # A textual claim from an execution step is not the
+                        # completion check. Reassess it against actual evidence.
+                        checkpoint(messages)
+                        continue
                     # A follow-up queued during generation keeps this run alive.
                     injected = self.store.drain_messages(sid, rid)
                     if injected:
@@ -420,7 +587,15 @@ class Engine:
                 else:
                     try:
                         tool_count = self.store.reserve_tool_calls(rid, len(turn.tool_calls), config.max_tool_calls)
-                        results = await self.dispatcher.execute(turn.tool_calls, context)
+                        if task_control is not None and any(call.name not in task_control.current_state.get("next_tools", [])
+                                                           for call in turn.tool_calls):
+                            # Preserve every proposed call and pair it with a
+                            # rejection; a hallucinated but registered tool must
+                            # not bypass the selected-step boundary.
+                            results = [rejected("Tool is outside the current task execution step", "task_control")
+                                       for _call in turn.tool_calls]
+                        else:
+                            results = await self.dispatcher.execute(turn.tool_calls, context)
                     except BudgetExceeded as error:
                         results = [rejected(str(error), "budget") for _ in turn.tool_calls]
                         outcome.status = "timed_out" if isinstance(error, DeadlineExceeded) else "budget_exhausted"
@@ -472,6 +647,16 @@ class Engine:
         except Exception as error:  # noqa: BLE001 - persist a terminal state for any provider/tool boundary failure.
             outcome.status, outcome.error = "failed", f"{type(error).__name__}: {error}"
         finally:
+            if task_control is not None and "messages" in locals():
+                try:
+                    checkpoint(messages, {"task_control_terminal_status": outcome.status})
+                except Exception as error:  # noqa: BLE001 - preserve the original terminal outcome.
+                    await event("task.control.persist_failed", {"error_type": type(error).__name__})
+            if capability_gate is not None and "messages" in locals():
+                try:
+                    checkpoint(messages, {"capability_gate_terminal_status": outcome.status})
+                except Exception as error:  # noqa: BLE001 - preserve the original terminal outcome.
+                    await event("capability.check.persist_failed", {"error_type": type(error).__name__})
             watchdog.cancel()
             await asyncio.gather(watchdog, return_exceptions=True)
             if self.approvals:
@@ -527,7 +712,11 @@ class Engine:
             steer = context.services.get("steering")
             if steer and steer.is_set():
                 raise SteeringInterrupt
-            receipt = self.store.begin_model_request(context.run_id, limit=config.max_model_requests,
+            limit = (min(config.max_model_requests, config.max_iterations)
+                     if config.task_control == TASK_CONTROL_POLICY
+                     or config.capability_gate in {CAPABILITY_GATE_POLICY, READINESS_GATE_POLICY}
+                     else config.max_model_requests)
+            receipt = self.store.begin_model_request(context.run_id, limit=limit,
                                                       purpose=purpose)
             offered_tools = self._offered_specs(context) if tools_override is None else tools_override
             began, first_progress, output_received = time.monotonic(), False, False

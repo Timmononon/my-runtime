@@ -1,0 +1,122 @@
+{
+  "label": "Aster-A3-BFCLv4-MultiTurn-dev40-deepseek-flash-none-c20-20261030",
+  "ready": true,
+  "usage_ready": true,
+  "promote_as_improvement": false,
+  "configuration_label": "A3",
+  "agent_policy": "readiness_state_v1",
+  "campaign": "artifacts/bfcl/compact-dev40-a3-c20-20261030",
+  "scope": "Frozen compact100-v2 forty development tasks; combined three-step Agent strategy",
+  "split_manifest_sha256": "477aa07cff732f1158ce59138e5f1b4bf8f701c3f2de211a43a2c0a01f6d58c8",
+  "development_ids_sha256": "b1d7ec61a7ca160f21e1322d021435ab1f5ccb370bbcb03c1939e2c1be9f7381",
+  "dataset_binding": "9c5146d2bed6de5c168272d020baef37ad3797fc393b47c1de078e34368cff0a",
+  "source_manifest_sha256": "b6dc5707883ce2ac6a6fb582b60d2fffb5b24f0baa981ad566a51d95715fe3b4",
+  "campaign_plan_sha256": "9b77a95d48b6f32fca0d6fceab52ff8609c785bf74b9867561f42c960365264c",
+  "execution_control_sha256": "2fee63a4d98871e92e9e47ebf62ad68fa281b7ed7f63c1293e03cc00da4349c7",
+  "model_snapshot": {
+    "provider_id": "deepseek",
+    "provider_name": "DeepSeek",
+    "base_url": "https://api.deepseek.com",
+    "protocol": "deepseek_responses",
+    "model": "deepseek-flash",
+    "reasoning_effort": "none",
+    "identity_revision": 1,
+    "capabilities": {
+      "id": "deepseek-flash",
+      "name": "DeepSeek-V4.1-Flash",
+      "context_window": 1048576,
+      "max_output_tokens": 393216,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "effort_levels": [
+        "none",
+        "low",
+        "high",
+        "max"
+      ]
+    }
+  },
+  "runtime_policy": {
+    "official_max_steps_per_turn": 20,
+    "case_official_step_bounds": {
+      "multi_turn_base_91": 40,
+      "multi_turn_miss_func_91": 60,
+      "multi_turn_miss_param_91": 60,
+      "multi_turn_long_context_91": 40,
+      "multi_turn_base_139": 40,
+      "multi_turn_miss_func_139": 60,
+      "multi_turn_miss_param_139": 60,
+      "multi_turn_long_context_139": 40,
+      "multi_turn_base_3": 40,
+      "multi_turn_miss_func_3": 60,
+      "multi_turn_miss_param_3": 60,
+      "multi_turn_long_context_3": 40,
+      "multi_turn_base_107": 100,
+      "multi_turn_miss_func_107": 120,
+      "multi_turn_miss_param_107": 120,
+      "multi_turn_long_context_107": 100,
+      "multi_turn_base_54": 60,
+      "multi_turn_miss_func_54": 80,
+      "multi_turn_miss_param_54": 80,
+      "multi_turn_long_context_54": 60,
+      "multi_turn_base_158": 60,
+      "multi_turn_miss_func_158": 80,
+      "multi_turn_miss_param_158": 80,
+      "multi_turn_long_context_158": 60,
+      "multi_turn_base_4": 60,
+      "multi_turn_miss_func_4": 80,
+      "multi_turn_miss_param_4": 80,
+      "multi_turn_long_context_4": 60,
+      "multi_turn_base_51": 80,
+      "multi_turn_miss_func_51": 100,
+      "multi_turn_miss_param_51": 100,
+      "multi_turn_long_context_51": 80,
+      "multi_turn_base_5": 80,
+      "multi_turn_miss_func_5": 100,
+      "multi_turn_miss_param_5": 100,
+      "multi_turn_long_context_5": 80,
+      "multi_turn_base_186": 120,
+      "multi_turn_miss_func_186": 140,
+      "multi_turn_miss_param_186": 140,
+      "multi_turn_long_context_186": 120
+    },
+    "max_output_tokens": 8192,
+    "inherited_runtime_safety": {
+      "max_total_tokens_per_user_run": 300000,
+      "duplicate_limit": 3,
+      "context_tokens": 96000,
+      "reserve_tokens": 4096,
+      "semantic_compaction": false,
+      "model_retries": 0
+    },
+    "case_deadline_seconds": 3600,
+    "case_tool_safety_limit": 10000
+  },
+  "maximum_concurrency": 20,
+  "source_files": 295,
+  "score": {
+    "passed": 9,
+    "failed": 31,
+    "scorable": 40,
+    "micro": 0.225
+  },
+  "actual_model_api_calls": 566,
+  "model_purpose_accounting": {
+    "task_control": 343,
+    "main": 223
+  },
+  "verified_summary_sha256": "7c6ad664f07fb3930c36195e7ac893662b8aeec2524014a0f5183cee541da321",
+  "paired_comparison_sha256": "e43964c407d4b162ab27b178fdd29dc5c43d7db0a8d53ee53b7029a17014583a",
+  "full_leaderboard_score": null,
+  "holdout_score": null,
+  "holdout_tasks_inferred": 0,
+  "new_audit_model_api_calls": 0,
+  "new_audit_judge_api_calls": 0,
+  "limitations": [
+    "Single combined A3 development sample; no component ablations or holdout evaluation",
+    "Strict original scoring including family4 semantic warnings remains unchanged",
+    "Malformed helper text is not exported; planning response hashes and typed failure evidence are available"
+  ]
+}
