@@ -112,6 +112,8 @@ class ReadinessGate:
         if self.current and self.current.get("user_turn_sha256") == user_hash:
             if self.current.get("status") in _FINISHED:
                 return None
+            # Recorded checker usage can outlive the pending checkpoint; fall
+            # back instead of requesting a second verdict for the same user turn.
             prior_count = sum(row.get("raw", {}).get("purpose") == "capability_check" for row in usage)
             completed = sum(item.get("request_number") is not None for item in self.checks[:-1])
             if prior_count > completed:
