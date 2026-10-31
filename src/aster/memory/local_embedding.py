@@ -357,6 +357,8 @@ class LocalEmbeddingManager:
         return response
 
     async def _embed_serial(self, texts, pin, batch_size):
+        # Teardown belongs to the request holding this lock; cancelling a
+        # waiter must not stop another caller's active model worker.
         async with self._lock:
             if self._closed:
                 raise _error("closed")
