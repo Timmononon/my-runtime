@@ -170,6 +170,8 @@ class PreviewManager:
                         self.send_error(404)
                         return
                 mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+                # The lease, not URL text, selects script capability here; CSP
+                # and iframe flags do not provide complete network isolation.
                 policy = INTERACTIVE_CSP if lease["interactive"] else STATIC_CSP
                 if path.suffix.lower() in ACTIVE_EXTENSIONS:
                     if inner:
