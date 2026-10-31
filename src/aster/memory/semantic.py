@@ -283,6 +283,8 @@ class SemanticMemory:
         else:
             query_vectors, query_clipped = await self._request([query], pin, cancel)
             query_vector, query_truncated = query_vectors[0], bool(query_clipped)
+        # The query await may outlive a fact edit or backend change; validate
+        # the original pin and re-read scoped candidates before ranking.
         self._validate_pin(pin)
         current_source = self.memory.candidates(scopes=scopes, at=at, scan_limit=self.config["scan_limit"])
         current = {fact["id"]: fact for fact in current_source["facts"]}
