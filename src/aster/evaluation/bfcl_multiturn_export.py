@@ -120,6 +120,8 @@ def _usage(row):
     result = {"model_requests": requests, "elapsed_seconds": _number(row.get("elapsed_seconds")),
               "unknown_usage_entries": len(entries) - len(paid),
               "unknown_paid_response_usage": None if requests is None else requests - len(paid)}
+    # Totals are known only when each recorded request has a value for the field;
+    # missing usage entries or counters must not silently count as zero.
     for key in TOKEN_FIELDS:
         values = [_number(entry.get(key), integral=True) for entry in paid]
         result[key] = (sum(values) if values and all(value is not None for value in values)
