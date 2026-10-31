@@ -114,6 +114,8 @@ class BrowserController:
             with self.store.transaction() as db:
                 db.execute("INSERT INTO browser_control_receipts VALUES(?,?,?,?,?,?,?,?)",
                            (session_id, request_id, action, digest, "prepared", None, now, now))
+                # Persist handoff before dispatch, so restart recovery cannot
+                # infer permission to resume from a missing control result.
                 if action == "pause":
                     db.execute("INSERT OR REPLACE INTO browser_handoffs VALUES(?,1,?)", (session_id, now))
             if action == "pause":
