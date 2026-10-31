@@ -109,6 +109,8 @@ def _verified_archive(corpus_dir):
     root = Path(corpus_dir).expanduser().resolve()
     manifest_payload = _local(root, "sample-manifest.json").read_bytes()
     provenance_payload = _local(root, "provenance.json").read_bytes()
+    # Pin metadata before trusting the paths and per-file hashes it supplies;
+    # checking only listed files would let a changed manifest redefine them.
     if _digest(manifest_payload) != SAMPLE_MANIFEST_SHA256 or _digest(provenance_payload) != PROVENANCE_SHA256:
         raise ValueError("The BFCL V4 archive metadata differs from the pinned manifest")
     manifest, provenance = strict_json(manifest_payload), strict_json(provenance_payload)
