@@ -70,6 +70,8 @@ class PredictionBudget:
             data = self._read()
             if len(data["calls"]) >= self.identity["max_requests"]:
                 raise RuntimeError("BFCL request budget exhausted")
+            # Reserve under the lock before yielding to the provider, so concurrent
+            # callers cannot reuse a remaining slot or recycle an unknown outcome.
             index = len(data["calls"])
             data["calls"].append({"case_id": case_id, "started_at": time.time(), "status": "outcome_unknown", "usage": None})
             _json_write(self.path, data)
