@@ -262,6 +262,8 @@ class TaskController:
                      added_tools=self._added, removed_tools=self._removed,
                      evidence_semantics="Model judgement; source reference presence is checked, semantic truth is not proven")
         state = _redact(state, self._secrets)
+        # Validate a candidate before replacing current_state, so a rejected
+        # decision contract leaves the previous generated notes available.
         self.current_state = copy.deepcopy(state)
         self.decisions.append({"index": len(self.decisions), "response_sha256": hashlib.sha256(turn.text.encode()).hexdigest(),
                                **copy.deepcopy(state)})
