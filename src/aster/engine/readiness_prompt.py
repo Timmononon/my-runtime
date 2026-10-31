@@ -10,6 +10,8 @@ import hashlib
 
 POLICY = "readiness_prompt_v1"
 
+# Include the trailing paragraph break in the fixed prefix: the coordinator
+# appends Agent/project instructions directly after this text.
 SYSTEM_PREAMBLE = (
     "You are Aster, a local task assistant. Use only the structured tools currently offered "
     "for this request. Plain-text answers and clarification questions are allowed. "
