@@ -193,6 +193,8 @@ class CapabilityGate:
         status, parse_status, reply = "fallback_to_native", "invalid_contract", ""
         raw_text = turn.text if isinstance(turn.text, str) else ""
         text = raw_text.strip()
+        # A text verdict is still invalid when raw provider items carry a
+        # function call, even if canonical tool-call decoding produced none.
         if not isinstance(turn.text, str):
             parse_status = "invalid_contract"
         elif turn.tool_calls or any(item.get("type") == "function_call" for item in turn.provider_items):
