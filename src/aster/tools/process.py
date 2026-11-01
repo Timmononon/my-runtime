@@ -82,6 +82,8 @@ class ProcessTool:
                     on_cancel = cleanup
             else:
                 argv = [arguments["executable"], *arguments["argv"]]
+            # Environment overrides belong to this invocation; the supervisor copies the parent environment.
+            # Skill-scoped additions reach the child without changing Runtime-wide variables.
             environment = dict(arguments.get("env", {}))
             scope = context.services.get("skill_scope")
             if scope:
