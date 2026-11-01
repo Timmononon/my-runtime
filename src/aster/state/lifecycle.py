@@ -182,6 +182,8 @@ class SessionLifecycle:
                         db.execute(f"DELETE FROM {table} WHERE session_id=?", (session_id,))
                 db.execute("DELETE FROM session_lineage WHERE child_id=?", (session_id,))
                 db.execute("DELETE FROM sessions WHERE id=?", (session_id,))
+                # Build surviving references after the row deletions, while the lock is held.
+                # Only owned artifacts absent from that view can enter filesystem cleanup.
                 remaining = self._artifact_records(db)
             owned = {key: value for key, value in records.items() if key not in remaining}
             try:
