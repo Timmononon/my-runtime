@@ -4,6 +4,8 @@ from typing import Protocol, runtime_checkable
 from aster.domain import ToolContext, ToolResult, ToolSpec
 
 
+# Implementations supply these members without inheriting this protocol.
+# Runtime admission and journaling are enforced by Dispatcher before execution.
 @runtime_checkable
 class Tool(Protocol):
     spec: ToolSpec
