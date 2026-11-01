@@ -25,6 +25,8 @@ class PermissionPolicy:
         scope = context.services.get("skill_scope")
         if scope is not None and not scope.check_tool(spec.name):
             return PermissionDecision("deny", "Active skill restricts this tool")
+        # Explicit denials and the active skill scope take precedence over grants.
+        # Always-ask tools still need approval when their name or risk is allowed.
         if spec.name in self.always_ask:
             return PermissionDecision("ask", "Tool requires approval on every invocation")
         if spec.name in self.allowed_tools or spec.risk in self.allowed_risks:
