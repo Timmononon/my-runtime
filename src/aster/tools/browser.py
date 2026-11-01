@@ -407,6 +407,8 @@ class BrowserManager:
 
     async def _target(self, state, args, *, surface=None, stable=True):
         if args.get("ref"):
+            # Navigation and fresh snapshots advance the version attached to element refs.
+            # Check it before lookup so a reused ref name cannot select a newer element.
             if args.get("snapshot_version") != state.version:
                 raise ValueError("Stale snapshot reference; get a fresh snapshot")
             target = state.refs.get(args["ref"])
