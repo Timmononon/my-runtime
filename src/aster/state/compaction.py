@@ -292,6 +292,8 @@ class CompactionPersistence:
         if not run_id:
             raise ValueError("Learning extraction requires an owning run")
         clean = _safe_text(content).strip()
+        # An empty result still becomes a durable extraction receipt for this digest.
+        # Keeping it prevents a restart from treating NONE as work that never ran.
         no_new_learnings = not clean or clean.upper() == "NONE"
         if no_new_learnings:
             clean = ""
