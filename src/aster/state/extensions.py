@@ -79,6 +79,8 @@ class SessionExtensions:
             if not isinstance(boundary, int) or isinstance(boundary, bool) or not 0 <= boundary <= len(rows):
                 raise ValueError("message_index is an exclusive raw-history message count")
             selected = rows[:boundary]
+            # Validate the selected raw prefix before creating any child records.
+            # Each copied tool call must have its result inside the same boundary.
             pending = set()
             for row in selected:
                 message = message_from_dict(json.loads(row["message_json"]))
