@@ -244,6 +244,8 @@ class FileTool:
             rows = []
             names = set()
             total = 0
+            # Check metadata for the whole archive before creating the destination.
+            # Extraction starts only after paths, file kinds and total declared size pass.
             for entry in members:
                 name = entry.filename if is_zip else entry.name
                 size = entry.file_size if is_zip else entry.size
