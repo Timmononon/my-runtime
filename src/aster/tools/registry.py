@@ -19,6 +19,8 @@ class Registry:
             raise ValueError(f"Empty or duplicate tool name: {spec.name!r}")
         if spec.timeout_seconds <= 0:
             raise ValueError("Tool timeout must be positive")
+        # Validate the schema before exposing this tool through catalogue reads.
+        # A rejected registration must leave the existing catalogue unchanged.
         Draft202012Validator.check_schema(spec.parameters)
         self._tools[spec.name] = tool
 
