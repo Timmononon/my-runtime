@@ -15,6 +15,8 @@ class PendingBroker:
         self._wakeups: dict[str, asyncio.Event] = {}
 
     def resolve(self, request_id: str, decision) -> bool:
+        # Persist the terminal decision before notifying the local waiter.
+        # The stored row stays authoritative when another path resolves the request.
         resolved = self.store.resolve_pending(request_id, decision)
         event = self._wakeups.get(request_id)
         if event:
