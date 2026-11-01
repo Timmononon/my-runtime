@@ -529,6 +529,8 @@ class Store(SessionExtensions, SessionLifecycle, CompactionPersistence):
             for row in rows:
                 message = message_from_dict(json.loads(row["message_json"])) if row["message_json"] else Message("user", row["text"])
                 message.metadata["mailbox_id"] = row["id"]
+                # Append history and mark the inbox entry consumed in one transaction.
+                # A crash must not leave a consumed message missing from the transcript.
                 self._append(db, session_id, run_id, message)
                 db.execute("UPDATE mailbox SET consumed_run_id=? WHERE id=?", (run_id, row["id"]))
                 db.execute("UPDATE mailbox_lifecycle SET state='consumed',updated_at=? WHERE message_id=?", (time.time(), row["id"]))
