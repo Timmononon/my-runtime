@@ -302,6 +302,8 @@ class HTTPTool:
                         before, after = urlsplit(url), urlsplit(following)
                         if before.scheme == "https" and after.scheme != "https":
                             raise PermissionError("HTTPS downgrade redirects are forbidden")
+                        # Origin-bound credentials are discarded on a cross-origin read redirect.
+                        # Each later hop is pinned again without reattaching those credentials.
                         if (before.scheme, before.hostname, before.port) != (after.scheme, after.hostname, after.port):
                             protected = {}
                         url = following
