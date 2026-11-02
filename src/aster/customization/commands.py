@@ -31,4 +31,6 @@ class CommandRegistry:
             raise ValueError("Missing command arguments: " + ", ".join(sorted(required - arguments.keys())))
         if arguments.keys() - required:
             raise ValueError("Unknown command arguments: " + ", ".join(sorted(arguments.keys() - required)))
+        # Enforce the exact placeholder set before performing a single substitution.
+        # Inserted argument text is data and is not expanded as another template.
         return template.substitute({key: str(value) for key, value in arguments.items()})
