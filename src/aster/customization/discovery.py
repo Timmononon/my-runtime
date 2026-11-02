@@ -76,6 +76,8 @@ class ToolSearchTool:
         results = search_tools(registry.specs(), arguments.get("query", ""), arguments.get("limit", 8))
         scope = context.services.get("skill_scope")
         results = [result for result in results if scope is None or scope.check_tool(result["name"])]
+        # Apply the skill boundary before adding search results to the active tool set.
+        # Discovery must not activate a tool that the current skill excludes.
         active = context.services.get("active_tools")
         if active is not None:
             active.update(result["name"] for result in results)
