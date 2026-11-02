@@ -48,6 +48,8 @@ class HookManager:
             raise ValueError("Unknown hook event")
         if _inside_hook.get():
             return HookDecision(allow=event != "PreToolUse", reason="Recursive hook invocation blocked")
+        # Track recursion in this async context rather than a process-wide flag.
+        # The finally block restores the caller context even on cancellation.
         token = _inside_hook.set(True)
         decision = HookDecision()
         try:
