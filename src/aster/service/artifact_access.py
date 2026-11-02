@@ -23,6 +23,8 @@ def read_registered_artifact(store, data_dir, session_id, raw):
         ).fetchall()
     for event in events:
         records.extend(json.loads(event[0]).get("artifacts", []))
+    # Match only explicit registration identities and their resolved paths.
+    # Merely placing a file beside registered evidence does not grant access.
     for record in records:
         identity, original = record.get("artifact_id"), record.get("path")
         if not identity or not original:
