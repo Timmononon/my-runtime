@@ -40,7 +40,7 @@ def _projection(payload):
         if key in payload and (value := _identifier(payload[key])) is not None:
             output[key] = value
     enums = {"phase": PHASES | {"proactive", "preflight", "reactive", "manual", "force_stop", "observations"},
-             "purpose": {"main", "compaction", "compaction_learning", "web_search"},
+             "purpose": {"main", "compaction", "compaction_learning", "web_search", "memory_auto_gate", "memory_auto_extract"},
              "risk": {"read", "write", "delete", "execute", "external"},
              "outcome": {"completed", "failed", "interrupted", "cancelled", "unknown", "known", "not_executed"},
              "category": {"authentication", "rate_limit", "unavailable", "server", "transport", "timeout",
@@ -81,11 +81,16 @@ def cost_estimate(store, run, data_dir):
         actual = model
         if isinstance(raw, dict) and raw.get("purpose") == "web_search":
             actual = _identifier(raw.get("model")) if raw.get("provider_id") == "deepseek" else None
-        groups.setdefault(actual or "", []).append(row)
-    totals = [pricing.total(actual, rows) for actual, rows in groups.items()]
+        elif isinstance(raw, dict) and raw.get("purpose") in {"memory_auto_gate", "memory_auto_extract"}:
+            provider = "typesafe" if raw["purpose"] == "memory_auto_gate" else "deepseek"
+            actual = _identifier(raw.get("model")) if raw.get("provider") == provider else None
+        groups.setdefault(actual, []).append(row)
+    # Missing auxiliary identity never borrows the main chat model's rates,
+    # including when someone configured a price under an empty model key.
+    totals = [pricing.total(actual, rows) for actual, rows in groups.items() if actual is not None]
     known = sum((Decimal(total["known_subtotal"]) for total in totals), Decimal(0))
     expected = budget["model_requests"] if budget else len(usage)
-    unknown = sum(total["unknown_requests"] for total in totals) + max(0, expected - len(usage))
+    unknown = sum(total["unknown_requests"] for total in totals) + len(groups.get(None, [])) + max(0, expected - len(usage))
     return {"status": "unknown" if unknown or not usage else "estimated", "amount": None if unknown or not usage else format(known, "f"),
             "known_subtotal": format(known, "f"), "unknown_requests": unknown, "currency": pricing.currency,
             "pricing_version": pricing.version, "requests": len(usage)}

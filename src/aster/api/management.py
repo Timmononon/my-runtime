@@ -17,6 +17,7 @@ class Update(Body):
     hooks: list[dict] | None = None
     permissions: dict | None = None
     embedding: dict | None = None
+    auto_memory: dict | None = None
     web_search: dict | None = None
     browser: dict | None = None
 

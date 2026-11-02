@@ -20,7 +20,7 @@ from aster.providers.profiles import endpoint_url
 from aster.state import StateError
 
 PERMISSION_KEYS = ("allowed_tools", "denied_tools", "ask_tools", "auto_approve_tools")
-GLOBAL_FIELDS = {"mcp_servers", "hooks", "permissions", "embedding", "web_search", "browser"}
+GLOBAL_FIELDS = {"mcp_servers", "hooks", "permissions", "embedding", "auto_memory", "web_search", "browser"}
 REDACTED = "<redacted>"
 
 
@@ -154,6 +154,30 @@ def validate_browser(value):
     return result
 
 
+def auto_memory_status(config, coordinator):
+    """Inspect local credentials and metadata only; never probe either model."""
+    from aster.customization.credentials import CredentialError
+    gate_configured = False
+    try:
+        gate_configured = bool(coordinator.credentials.resolve(config["credential_ref"]))
+    except (CredentialError, ValueError, TypeError, KeyError):
+        pass
+    extractor_configured = False
+    try:
+        profile = coordinator.providers.get("deepseek")
+        if (profile["configured"] and profile["protocol"] == "deepseek_responses"
+                and profile["base_url"] == "https://api.deepseek.com"):
+            coordinator.providers.pin("deepseek", config["extractor_model"], "none")
+            extractor_configured = True
+    except (CredentialError, ValueError, TypeError, KeyError, StateError):
+        pass
+    configured = gate_configured and extractor_configured
+    missing = ([] if gate_configured else ["jev_credential"]) + ([] if extractor_configured else ["deepseek_extractor"])
+    return {"enabled": config["enabled"], "configured": configured, "gate_configured": gate_configured,
+            "extractor_configured": extractor_configured, "missing": missing,
+            "status": "disabled" if not config["enabled"] else "ready" if configured else "unconfigured"}
+
+
 class ManagementService:
     def __init__(self, coordinator):
         self.coordinator = coordinator
@@ -260,6 +284,9 @@ class ManagementService:
                     elif key == "embedding":
                         from aster.memory.semantic import validate_embedding_config
                         value = validate_embedding_config(value)
+                    elif key == "auto_memory":
+                        from aster.memory.auto_capture import validate_auto_memory_config
+                        value = validate_auto_memory_config(value)
                     elif key == "web_search":
                         value = validate_web_search(value)
                         previous = before.get(key, {})
@@ -293,6 +320,9 @@ class ManagementService:
                 validate_embedding_config(candidate["embedding"], self.coordinator.providers)
             if "web_search" in changes:
                 validate_web_search(candidate["web_search"], self.coordinator.providers)
+            if ("auto_memory" in changes and candidate["auto_memory"]["enabled"]
+                    and not auto_memory_status(candidate["auto_memory"], self.coordinator)["configured"]):
+                raise ManagementValidation()
             with FileLock(self.lock):
                 if expected_revision != self.revision():
                     raise ManagementConflict()
@@ -415,11 +445,15 @@ class ManagementService:
             servers.append(defaults)
         hooks = [{**asdict(HookCommand(**item)), "args": public_arguments(item.get("args", []))}
                  for item in data.get("hooks", [])]
+        from aster.memory.auto_capture import validate_auto_memory_config
         from aster.memory.semantic import embedding_status, validate_embedding_config
+        auto_memory = validate_auto_memory_config(data.get("auto_memory", {}))
         return {"schema_version": 1, "revision": revision, "agents": agents, "mcp_servers": servers,
                 "hooks": hooks, "permissions": permissions(data.get("permissions", {})),
                 "extensions": {"embedding": validate_embedding_config(data.get("embedding", {})),
                                "embedding_status": embedding_status(data.get("embedding", {}), self.coordinator.providers,
                                                                     self.coordinator.local_embeddings),
+                               "auto_memory": auto_memory,
+                               "auto_memory_status": auto_memory_status(auto_memory, self.coordinator),
                                "web_search": validate_web_search(data.get("web_search", {})),
                                "browser": validate_browser(data.get("browser", {}))}}

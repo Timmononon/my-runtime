@@ -11,6 +11,7 @@ import type {
   RuntimeManagement,
 } from "./types";
 import SelectionFields from "./SelectionFields";
+import AutoMemorySettings, { defaultAutoMemory } from "./AutoMemorySettings";
 import EmbeddingSettings from "./EmbeddingSettings";
 
 const lines = (value: string) =>
@@ -165,16 +166,21 @@ export default function RuntimeSettings({
     [hooks, setHooks] = useState<ManagedHook[]>([]),
     [permissions, setPermissions] = useState<Permissions>(emptyPermissions()),
     [embedding, setEmbedding] = useState<Record<string, unknown>>({}),
+    [autoMemory, setAutoMemory] = useState<Record<string, unknown>>({
+      ...defaultAutoMemory,
+    }),
     [search, setSearch] = useState<Record<string, unknown>>({}),
     [browser, setBrowser] = useState<Record<string, unknown>>({});
   const [account, setAccount] = useState(""),
     [secret, setSecret] = useState("");
+  const [jevSecret, setJevSecret] = useState("");
   const accept = (value: RuntimeManagement) => {
     setData(value);
     setServers(value.mcp_servers);
     setHooks(value.hooks);
     setPermissions(value.permissions);
     setEmbedding(value.extensions.embedding);
+    setAutoMemory(value.extensions.auto_memory || { ...defaultAutoMemory });
     setSearch(value.extensions.web_search);
     setBrowser(value.extensions.browser);
     onChanged(value);
@@ -260,7 +266,12 @@ export default function RuntimeSettings({
             ? { hooks }
             : section === "permissions"
               ? { permissions }
-              : { embedding, web_search: search, browser };
+              : {
+                  embedding,
+                  auto_memory: autoMemory,
+                  web_search: search,
+                  browser,
+                };
       accept(
         await request<RuntimeManagement>("/management", {
           method: "PATCH",
@@ -673,6 +684,39 @@ export default function RuntimeSettings({
           )}
           {section === "extensions" && (
             <>
+              <AutoMemorySettings
+                value={autoMemory}
+                onChange={setAutoMemory}
+                status={data.extensions.auto_memory_status}
+                providers={providers}
+                secret={jevSecret}
+                onSecretChange={setJevSecret}
+                busy={busy}
+                onSaveKey={() =>
+                  void action(async () => {
+                    const saved = await post<{ credential_ref: string }>(
+                      "/management/credentials",
+                      {
+                        expected_revision: data.revision,
+                        account: "jev",
+                        value: jevSecret.trim(),
+                      },
+                    );
+                    setJevSecret("");
+                    setAutoMemory((old) => ({
+                      ...old,
+                      credential_ref: saved.credential_ref,
+                    }));
+                    const fresh =
+                      await request<RuntimeManagement>("/management");
+                    setData(fresh);
+                    onChanged(fresh);
+                    setNotice(
+                      "Jev 密钥已保存。请点击页面下方的保存按钮应用自动记忆选项。",
+                    );
+                  })
+                }
+              />
               <EmbeddingSettings
                 value={embedding}
                 saved={data.extensions.embedding}

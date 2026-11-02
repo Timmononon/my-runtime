@@ -105,6 +105,8 @@ class RunCoordinator:
         if self._started:
             return
         self._started = True
+        from aster.service.auto_memory import settle_interrupted_capture_evaluations
+        settle_interrupted_capture_evaluations(self.store)
         # Interrupted active runs require manual recovery. Queued requests never
         # entered the model/tool boundary and are safe to resume admission.
         for run in reversed(self.store.list_runs(statuses=("queued",))):
@@ -415,6 +417,8 @@ class RunCoordinator:
                         db.execute("UPDATE runs SET config_json=? WHERE id=? AND status='queued'", (dumps(config), rid))
                     await engine.execute_queued(rid, payload["text"], emit=self._emit_for(rid), services=services,
                                                 user_message=message_from_dict(payload["user_message"]) if payload.get("user_message") else None)
+                    from aster.service.auto_memory import capture_completed_turn
+                    await capture_completed_turn(self, run, payload, engine, services)
             except asyncio.CancelledError:
                 if rid in self._engines:
                     self._engines[rid].cancel(rid)
@@ -452,12 +456,21 @@ class RunCoordinator:
             registry.register(tool)
         structured_memory = StructuredMemory(self.store, memory)
         trusted_extensions = read_yaml(self.data_dir / "config.yaml")
+        # Capture is trusted global opt-in. Project/Agent/run overlays cannot
+        # enable it or choose a credential; malformed optional settings do not
+        # prevent the primary conversation from running.
+        from aster.memory.auto_capture import validate_auto_memory_config
+        try:
+            auto_memory_config = validate_auto_memory_config(trusted_extensions.get("auto_memory", {}))
+        except (ValueError, TypeError):
+            auto_memory_config = {"enabled": False}
         services = {**(self.factory.services if self.factory else {}), "store": self.store, "coordinator": self,
                     "skill_scope": scope, "memory": memory, "questions": None if payload["unattended"] else self.questions, "registry": registry,
                     "unattended": payload["unattended"], "agent_id": payload["agent_id"], "project_id": payload["project_id"],
                     "allowed_roots": [Path(value).resolve() for value in settings.get("allowed_roots", [settings["cwd"]])],
                     "automation": self.automation, "attachment_service": self.attachments,
                     "structured_memory": structured_memory,
+                    "auto_memory_config": auto_memory_config,
                     "semantic_memory": SemanticMemory(structured_memory, self.providers, settings.get("embedding", {}),
                         local_manager=self.local_embeddings,
                         config_loader=lambda: read_yaml(self.data_dir / "config.yaml").get("embedding", {})),

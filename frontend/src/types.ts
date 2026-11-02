@@ -308,6 +308,15 @@ export interface RuntimeManagement {
   permissions: Permissions;
   extensions: {
     embedding: Record<string, unknown>;
+    auto_memory?: Record<string, unknown>;
+    auto_memory_status?: {
+      enabled: boolean;
+      configured: boolean;
+      gate_configured: boolean;
+      extractor_configured: boolean;
+      status: "disabled" | "unconfigured" | "ready";
+      missing: string[];
+    };
     embedding_status?: {
       status: string;
       available: boolean;

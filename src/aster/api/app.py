@@ -31,7 +31,8 @@ from aster.state import StateError
 
 MANAGEMENT_CAPABILITIES = ("management_v1", "mcp_health_v1", "automation_selection_v1", "performance_timeline_v1",
                            "browser_handoff_v1", "web_search_v1", "web_search_deepseek_v1", "memory_graph_v1", "memory_semantic_recall_v1",
-                           "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1")
+                           "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1",
+                           "memory_auto_capture_v1")
 
 
 def load_api_token(data_dir: Path) -> str:
