@@ -126,6 +126,8 @@ class RunCoordinator:
             if time.time() - run["updated_at"] > max_age or run["resume_attempts"] >= max_attempts:
                 self.store.emit_event(run["session_id"], run["id"], "recovery.skipped", {"reason": "stale_or_exhausted"})
                 continue
+            # Uncertain non-read effects require reconciliation before unattended recovery.
+            # Restarting the runner cannot establish whether the external action occurred.
             if any(item["state"] in {"dispatching", "outcome_unknown"} and item["risk"] != "read"
                    for item in self.store.tool_executions(run["id"])):
                 self.store.emit_event(run["session_id"], run["id"], "recovery.skipped", {"reason": "uncertain_effect"})
