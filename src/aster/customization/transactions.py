@@ -85,6 +85,8 @@ def commit_agent_pair(root, agent_id, config, instructions, *, writer=atomic_wri
         before = target.read_bytes() if target.exists() else None
         entries.append({"path": str(target.relative_to(root)), "before": _encoded(before), "after": _encoded(after),
                         "before_sha256": _sha(before), "after_sha256": _sha(after)})
+    # Record both before/after images before invoking either file writer.
+    # Recovery can then finish or roll back an interrupted pair without guessing.
     atomic_write(journal, json.dumps({"version": 1, "entries": entries}).encode())
     try:
         for entry in entries:
