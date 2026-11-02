@@ -72,6 +72,8 @@ def atomic_write(path: Path, content: bytes) -> None:
             target.write(content)
             target.flush()
             os.fsync(target.fileno())
+        # Flush the temporary file before publishing it under the destination name.
+        # Keeping both paths in one directory allows replacement on the same volume.
         os.replace(name, path)
     finally:
         if os.path.exists(name):
