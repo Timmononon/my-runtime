@@ -114,6 +114,8 @@ class CredentialStore:
             raise CredentialError("Could not save local credential configuration") from None
 
     def delete(self, name: str = "deepseek") -> bool:
+        # Deletion targets the stored credential, independently of environment overrides.
+        # An environment-only key must not make an absent stored entry look deletable.
         if self.get(name, use_environment=False) is None:
             return False
         try:
