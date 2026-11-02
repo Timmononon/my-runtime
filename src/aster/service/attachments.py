@@ -40,6 +40,8 @@ def _inspect_content(filename: str, content: bytes, declared: str | None = None)
     elif content.startswith(b"%PDF-"):
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(content))
+        # Reject encrypted input before inspecting pages for attachment metadata.
+        # Callers must provide decrypted bytes rather than rely on parser defaults.
         if reader.is_encrypted:
             raise ValueError("Encrypted PDF attachments require a decrypted copy")
         if suffix != ".pdf":
