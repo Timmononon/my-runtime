@@ -148,6 +148,8 @@ class ProcessSupervisor:
         if stopped.is_set() or (cancel and cancel.is_set()):
             return ProcessResult(None, cancelled=True)
         artifact_dir.mkdir(parents=True, exist_ok=True)
+        # Build a child environment without mutating the host process environment.
+        # Concurrent invocations can supply different overrides independently.
         merged_env = os.environ.copy()
         merged_env.update(env or {})
         job = WindowsJob() if os.name == "nt" else None
