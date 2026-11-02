@@ -26,6 +26,8 @@ def local_directory(value: str | Path) -> Path:
     path = Path(raw).expanduser()
     if not raw.strip() or "\0" in raw or not path.is_absolute() or raw.startswith(("\\\\", "//")):
         raise ValueError("Choose an absolute local directory path")
+    # Resolve the existing directory before checking its drive type on Windows.
+    # A mapped network drive must satisfy the same local-only boundary as a UNC path.
     path = path.resolve(strict=True)
     if not path.is_dir():
         raise ValueError("Choose an existing directory, not a file")
