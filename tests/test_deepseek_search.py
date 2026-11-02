@@ -232,7 +232,7 @@ async def test_native_search_includes_auxiliary_requests_and_tokens_in_run_budge
 
 async def test_official_catalogue_uses_native_path_under_tun_but_compatible_still_pins_dns(tmp_path, monkeypatch):
     native_calls, public_calls = [], []
-    async def tun_address(value):
+    async def tun_address(value, *, dns_fallback="off", dns_client_factory=None):
         public_calls.append(value)
         raise ProviderError("Fixture TUN DNS returned non-public 198.18.1.1", category="endpoint")
     def native(timeout):
