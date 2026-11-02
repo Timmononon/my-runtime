@@ -35,6 +35,8 @@ class Skill:
             if not candidate.is_relative_to(self.path.parent.resolve()):
                 raise ValueError("Skill reference escapes its directory")
             name = candidate.relative_to(self.path.parent.resolve()).as_posix()
+            # A captured skill reads references from its immutable source snapshot.
+            # Missing entries must not fall through to subsequently changed disk files.
             content = dict(self.files).get(name)
             if content is None:
                 raise ValueError("Reference is absent from this skill's source snapshot")
