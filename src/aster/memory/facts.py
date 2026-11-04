@@ -60,6 +60,8 @@ class StructuredMemory:
         return data
 
     def _get(self, db, fact_id, scope):
+        # Bind the identity lookup to the requested scope and its owning agent/project.
+        # Knowing a fact ID alone does not permit reading it across scope boundaries.
         row = db.execute("SELECT * FROM memory_facts WHERE id=? AND scope=? AND agent_id=? AND project_id=?",
                          (fact_id, *self._scope(scope))).fetchone()
         if row is None:
