@@ -45,6 +45,8 @@ def inspect_image(raw: bytes, mime_type: str | None = None) -> dict:
             mime = SUPPORTED_IMAGE_MIMES.get(source.format)
             if not mime:
                 raise ImagePreparationError("Use a PNG, JPEG, GIF or WebP image")
+            # Check the pixel budget from image metadata before decoding the pixels.
+            # Compressed byte size alone cannot bound the decoder memory requirement.
             if width <= 0 or height <= 0 or width * height > MAX_IMAGE_PIXELS:
                 raise ImagePreparationError("Image exceeds 64 megapixels; split it into smaller images")
             if mime_type and mime_type != mime:
