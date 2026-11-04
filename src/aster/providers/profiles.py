@@ -94,6 +94,8 @@ class PublicProviderTransport(httpx.AsyncBaseTransport):
             raise ProviderError("Provider request origin differs from its saved profile", category="endpoint")
         address = await verify_public_endpoint(str(self.base), dns_fallback=self.dns_fallback,
                                                dns_client_factory=self.dns_client_factory)
+        # Connect to the verified address while retaining the profile Host and TLS SNI.
+        # The destination socket must not trigger another hostname lookup.
         headers = request.headers.copy()
         headers["Host"] = self.base.netloc.decode()
         pinned = httpx.Request(request.method, request.url.copy_with(host=address), headers=headers,
