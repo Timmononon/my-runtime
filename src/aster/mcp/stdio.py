@@ -43,6 +43,8 @@ async def managed_windows_stdio(parameters, *, max_message_bytes: int = 16 * 102
                 creationflags=0x00000004 | 0x08000000,
             )
             try:
+                # Establish ownership while the child is still suspended.
+                # A failed assignment must terminate this launch before it can run freely.
                 job.assign_and_resume(child.pid)
             except BaseException:
                 child.kill()  # This unassigned process is still suspended and belongs to this launch.
