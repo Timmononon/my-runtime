@@ -60,6 +60,8 @@ class MCPServerConfig:
                 or endpoint.fragment
             ):
                 raise ValueError("MCP URL must not contain credentials, query parameters or a fragment")
+            # Plain HTTP is limited to explicit loopback names and addresses.
+            # Remote endpoints require TLS even when no credential headers are configured.
             if endpoint.scheme == "http" and endpoint.hostname not in {"127.0.0.1", "localhost", "::1"}:
                 raise ValueError("Remote MCP endpoints require HTTPS")
         timings = (self.timeout_seconds, self.discovery_timeout_seconds,
