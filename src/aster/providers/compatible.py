@@ -25,6 +25,8 @@ from aster.providers.images import enforce_image_budget
 
 def response_input(messages, artifact_root=None, artifact_resolver=None):
     # Validate complete function exchanges using the common canonical fields.
+    # Strip opaque fields on a private projection before canonical exchange validation.
+    # The original history remains available for protocol-specific serialization.
     clean = copy.deepcopy(messages)
     for message in clean:
         message.provider_items = []
