@@ -54,6 +54,8 @@ class ProviderError(RuntimeError):
 def _context_category(error) -> str | None:
     """Classify only protocol error identifiers; echoed prose is untrusted."""
     if isinstance(error, dict):
+        # Match structured identifiers rather than searching the provider message prose.
+        # Echoed user text must not select the context-overflow recovery path.
         for field in ("code", "type"):
             value = error.get(field)
             if isinstance(value, str) and value in {"context_length", "context_length_exceeded", "context_overflow"}:
