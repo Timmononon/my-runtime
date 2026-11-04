@@ -38,6 +38,8 @@ def create_mcp_server(registry, execute: Callable[[str, dict], Awaitable[ToolRes
             return types.CallToolResult(
                 isError=True, content=[types.TextContent(type="text", text="Unknown tool")]
             )
+        # Delegate to the supplied governed executor after checking catalogue membership.
+        # Calling the registered implementation here would bypass dispatcher admission.
         result = await execute(name, arguments)
         return types.CallToolResult(
             isError=result.is_error,
