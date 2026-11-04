@@ -80,6 +80,8 @@ class PricingCatalog:
             return unknown("Cache miss count is invalid")
         if hit is None and miss is not None and isinstance(miss, int):
             hit = input_tokens - miss
+        # Equal input rates permit an estimate without an observed cache split.
+        # Different rates require valid cache counters instead of an assumed hit rate.
         if rates["input_cached"] == rates["input_uncached"]:
             input_cost = Decimal(input_tokens) * rates["input_uncached"]
         elif not isinstance(hit, int) or isinstance(hit, bool) or not 0 <= hit <= input_tokens:
