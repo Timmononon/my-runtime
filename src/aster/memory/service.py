@@ -77,6 +77,8 @@ class MemoryService:
             complete = header + content
             revision = path.parent / ".history" / name
             revision.mkdir(parents=True, exist_ok=True)
+            # Preserve the prior content under its observed version before replacement.
+            # Repeated writes of that version reuse the same historical evidence file.
             if previous["exists"]:
                 old = revision / (previous["version"] + ".md")
                 if not old.exists():
