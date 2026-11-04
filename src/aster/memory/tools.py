@@ -78,6 +78,8 @@ class SemanticRecallTool:
     def __init__(self, embedding_config=None):
         from aster.memory.semantic import validate_embedding_config
         config = validate_embedding_config(embedding_config or {})
+        # Tool risk follows the validated backend rather than a per-call argument.
+        # Only configured local inference receives the read-only replay-safe contract.
         if config["backend"] == "local":
             self.spec = replace(self.spec, description="Search scoped effective facts using the configured offline local embedding model",
                                 risk="read", replay_safe=True, timeout_seconds=max(60, config["timeout_seconds"]))
