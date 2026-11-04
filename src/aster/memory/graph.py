@@ -58,6 +58,8 @@ def query(memory, *, mode="direct_relation", entity=None, relation=None, path=No
                 raise ValueError("Aggregation supports direct_relation count or sum only")
         elif aggregate is not None:
             raise ValueError("Aggregation requires aggregate mode")
+    # Build graph edges only from the scoped facts effective at the requested time.
+    # Traversal must not introduce candidates from an unrestricted secondary lookup.
     source = memory.candidates(scopes=scopes, at=at, scan_limit=scan_limit)
     facts = source["facts"]
     selected, paths, expanded_truncated = [], [], False
