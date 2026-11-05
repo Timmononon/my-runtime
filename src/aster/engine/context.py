@@ -72,6 +72,8 @@ def _json(value):
 
 
 def _unique_last(values):
+    # Deduplicate from the tail so the latest occurrence determines requirement order.
+    # Earlier repetition must not move a later user correction ahead of other constraints.
     return list(reversed(dict.fromkeys(reversed([value for value in values if isinstance(value, str) and value]))))
 
 
