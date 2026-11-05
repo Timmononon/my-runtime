@@ -40,5 +40,7 @@ SYSTEM_PREAMBLE = (
 
 def policy_identity():
     """Public identity of the exact prefix, excluding user instructions and data."""
+    # Hash only the fixed UTF-8 prompt bytes used for this policy prefix.
+    # Source comments and surrounding runtime instructions do not enter its identity.
     return {"policy": POLICY,
             "prompt_sha256": hashlib.sha256(SYSTEM_PREAMBLE.encode("utf-8")).hexdigest()}
