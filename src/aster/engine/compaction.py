@@ -85,6 +85,8 @@ class CompactionController:
 
     async def _event(self, kind, payload):
         self._check_control()
+        # Emission may yield while a new direction or cancellation arrives.
+        # Recheck control after the await before continuing compaction work.
         await self.emit(kind, payload)
         self._check_control()
 
