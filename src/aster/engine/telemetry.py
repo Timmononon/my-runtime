@@ -21,6 +21,8 @@ TOKEN_FIELDS = ("input_tokens", "output_tokens", "reasoning_tokens", "cache_hit_
 
 
 def _number(value):
+    # Exact numeric types exclude booleans despite their integer subclass relationship.
+    # Missing, nonfinite and negative measurements stay unknown in the projection.
     return value if type(value) in {int, float} and math.isfinite(value) and value >= 0 else None
 
 
