@@ -8,6 +8,8 @@ def context_usage_basis(system, tools, config, *, session_id, model="", overhead
     # system and tool components do not count the same framing twice.
     system_tokens = max(0, estimate_tokens([], system=system) - envelope)
     tools_tokens = max(0, estimate_tokens([], tools, system) - envelope - system_tokens)
+    # Report component counts and capacity without copying prompt or tool bodies.
+    # Consumers combine this basis with the current model-live history estimate.
     return {"version": 1, "session_id": session_id, "model": model,
             "context_window": config.context_tokens, "reserved_output_tokens": config.reserve_tokens,
             "system_tokens": system_tokens, "tools_tokens": tools_tokens,
