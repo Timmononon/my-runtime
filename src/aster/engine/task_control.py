@@ -146,6 +146,8 @@ def _redact(value, secrets):
 
 def _object(pairs):
     result = {}
+    # Reject duplicate fields before JSON pairs collapse into an ordinary mapping.
+    # Otherwise a later value could silently replace an earlier control decision.
     for key, value in pairs:
         if key in result:
             raise TaskControlError("Task control response contains duplicate fields")
