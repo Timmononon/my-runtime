@@ -104,6 +104,8 @@ class ReadinessGate:
                 self.current = self.checks[-1] if self.checks else None
 
     def prepare(self, messages, tools, usage):
+        # Generated summaries and reanchors cannot stand in for a new human turn.
+        # The gate identity follows the latest original user message instead.
         latest = next((message for message in reversed(messages) if message.role == "user"
                        and not message.metadata.get("compaction_summary")
                        and not message.metadata.get("compaction_reanchor")), None)
