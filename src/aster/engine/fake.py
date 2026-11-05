@@ -16,6 +16,8 @@ class FakeModel:
     async def generate(self, messages, tools, *, system, emit=None, cancel=None):
         if cancel and cancel.is_set():
             raise asyncio.CancelledError
+        # Snapshot inputs before scripted callbacks can mutate their objects.
+        # Assertions about earlier requests must remain independent of later turns.
         self.calls.append({"messages": copy.deepcopy(messages), "tools": copy.deepcopy(tools), "system": system})
         if not self.turns:
             raise RuntimeError("FakeModel exhausted its scripted responses")
