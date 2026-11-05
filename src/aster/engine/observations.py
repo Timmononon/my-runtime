@@ -43,6 +43,8 @@ class ObservationManager:
                 "last_browser_remaining": self._last_browser_remaining}
 
     def restore_state(self, state):
+        # Ignore unsupported checkpoint layouts instead of interpreting their fields.
+        # Observation replacements are restored only through the recognized version.
         if not isinstance(state, dict) or state.get("version") != 1:
             return
         self._replacements = {str(key): copy.deepcopy(value) for key, value in state.get("replacements", {}).items()
