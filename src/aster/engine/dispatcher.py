@@ -90,6 +90,8 @@ class Dispatcher:
         decision = self.policy.evaluate(tool.spec, call, context)
         if decision.action == "deny":
             return None, rejected(decision.reason, "permission")
+        # Bind the approval request to the arguments validated after pre-tool hooks.
+        # The displayed request and its digest must describe the same proposed action.
         approved_digest = hashlib.sha256(dumps(call.arguments).encode()).hexdigest()
         if decision.action == "ask":
             if self.approvals is None or context.services.get("unattended", False):
