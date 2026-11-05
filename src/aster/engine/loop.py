@@ -145,6 +145,8 @@ class Engine:
         self._steering: dict[str, asyncio.Event] = {}
 
     def steer(self, run_id):
+        # Steering wakes the existing run and releases obsolete approval/input waits.
+        # It uses a separate event from task cancellation so the run can accept direction.
         event = self._steering.get(run_id)
         if event is None:
             return False
