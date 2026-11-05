@@ -157,6 +157,8 @@ class CapabilityGate:
                 and previous.get("session_id") == session_id and previous.get("run_id") == run_id):
             checks = previous.get("checks", [])
             if isinstance(checks, list):
+                # Copy only bounded matching-run history out of the saved checkpoint.
+                # Later verdict updates must not mutate the checkpoint object supplied by callers.
                 self.checks = copy.deepcopy(checks[-128:])
                 self.current = self.checks[-1] if self.checks else None
 
