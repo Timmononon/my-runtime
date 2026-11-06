@@ -192,6 +192,8 @@ class HTTPTool:
 
     def classify(self, arguments):
         read = self.fetch or arguments.get("method", "GET") in {"GET", "HEAD"}
+        # A credential-bearing read crosses an external authority boundary despite its method.
+        # Mutating methods retain write classification independently of credential presence.
         risk = "external" if read and arguments.get("credential_headers") else "read" if read else "write"
         return dataclasses.replace(self.spec, risk=risk, replay_safe=read,
                                    concurrency_safe=read)
