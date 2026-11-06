@@ -161,6 +161,8 @@ class BrowserManager:
 
     def _state(self, page_id, context):
         state = self._pages.get(page_id)
+        # Resolve page ownership against the current browser identity on every lookup.
+        # A known page ID cannot authorize access from a different session scope.
         if state is None or state.scope != self._scope(context):
             raise PermissionError("Unknown page or page belongs to another browser identity")
         # Attachment alone cannot authorize a page after navigation or policy edits;
