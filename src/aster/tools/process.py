@@ -96,6 +96,8 @@ class ProcessTool:
             for item in result.artifacts:
                 item.update(session_id=context.session_id, run_id=context.run_id, mime_type="text/plain")
             category = "cancelled" if result.cancelled else "timeout" if result.timed_out else "process"
+            # Cancellation and timeout remain failures even if a child reports exit code zero.
+            # A started interrupted process can have effects whose outcome is still unknown.
             failed = result.cancelled or result.timed_out or result.error or result.exit_code != 0
             return ToolResult(f"exit_code={result.exit_code}; elapsed={result.duration:.2f}s\n"
                               f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
