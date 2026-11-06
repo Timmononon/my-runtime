@@ -59,6 +59,8 @@ def extract_document(path: Path, *, max_units=1000, max_chars=2_000_000) -> dict
                         break
     elif suffix == ".xlsx":
         from openpyxl import load_workbook
+        # Read stored formula expressions without starting a spreadsheet calculation engine.
+        # Source cell coordinates accompany extracted values for later verification.
         workbook = load_workbook(path, read_only=True, data_only=False)
         try:
             warnings.append("Formula expressions are read as stored; no formula recalculation performed")
