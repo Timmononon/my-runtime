@@ -31,4 +31,6 @@ class Registry:
         return [tool.spec for tool in self.all_tools()]
 
     def all_tools(self) -> list[Tool]:
+        # Catalogue order depends on tool names rather than registration timing.
+        # Stable schema ordering also keeps request identity comparisons deterministic.
         return [self._tools[name] for name in sorted(self._tools)]
