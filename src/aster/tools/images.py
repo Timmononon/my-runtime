@@ -24,6 +24,8 @@ def page_numbers(value: str, maximum: int) -> list[int]:
         if last < first or last - first + 1 > maximum:
             raise ValueError("Page range is reversed or exceeds the page budget")
         pages.extend(range(first, last + 1))
+        # Deduplicate overlapping ranges while retaining the first requested page order.
+        # The aggregate limit therefore counts output pages rather than repeated selections.
         pages = list(dict.fromkeys(pages))
         if len(pages) > maximum:
             raise ValueError("Requested pages exceed max_pages")
