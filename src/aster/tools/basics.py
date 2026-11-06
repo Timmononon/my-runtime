@@ -56,6 +56,8 @@ def calculate(expression, settings=None):
         if isinstance(node, ast.BinOp) and type(node.op) in {ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow}:
             left, right = evaluate(node.left), evaluate(node.right)
             if isinstance(node.op, ast.Pow):
+                # Reject excessive powers before evaluating them, not only after allocation.
+                # The estimated bit bound complements the final checked result budget.
                 if abs(right) > budget["exponent"]:
                     raise ValueError("Arithmetic exponent exceeds configured budget")
                 if abs(left) > 1 and right > 0 and math.log2(abs(left)) * right > budget["result_bits"]:
