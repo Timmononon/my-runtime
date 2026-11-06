@@ -212,6 +212,8 @@ class FileTool:
                     if path.stat().st_size > 25_000_000:
                         raise ValueError("File exceeds 25 MB editing budget; use a scoped script")
                     original = path.read_bytes().decode(encoding)
+                    # Count matches in the observed content before computing an edit.
+                    # Ambiguous replacements require an explicit replace_all choice.
                     occurrences = original.count(args["old_text"])
                     if not occurrences or (occurrences != 1 and not args.get("replace_all", False)):
                         raise ValueError(f"old_text has {occurrences} matches; must be unique unless replace_all")
