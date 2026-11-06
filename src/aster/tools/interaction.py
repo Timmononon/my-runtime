@@ -48,6 +48,8 @@ class SetWorkPlanTool:
             steps = arguments["steps"]
             if not isinstance(steps, list) or not 2 <= len(steps) <= 8:
                 raise ValueError("Plan needs two to eight steps")
+            # Validate the complete replacement before persisting any plan snapshot.
+            # Duplicate IDs or multiple active steps cannot produce a partial plan update.
             ids = [step["id"] for step in steps]
             if len(set(ids)) != len(ids) or sum(step["status"] == "in_progress" for step in steps) > 1:
                 raise ValueError("Step IDs must be unique and at most one step may be in progress")
