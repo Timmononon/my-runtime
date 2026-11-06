@@ -44,6 +44,8 @@ class DeliverableTool:
             target = directory / source.name
             before = digest(source)
             atomic_write(target, source.read_bytes())
+            # Verify both sides against the pre-copy identity before accepting the deliverable.
+            # A source changed during copying cannot be treated as the verified original.
             if digest(source) != before or digest(target) != before:
                 raise ValueError("Deliverable changed while being copied")
             records = [artifact(target, context, mimetypes.guess_type(source.name)[0] or "application/octet-stream",
