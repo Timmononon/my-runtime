@@ -8,6 +8,7 @@ import tempfile
 from contextlib import closing
 from pathlib import Path
 
+import httpx
 from fastapi.testclient import TestClient
 
 import aster
@@ -52,7 +53,21 @@ def check():
             assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='session_lifecycle'").fetchone()
             assert "created_at" not in {row[1] for row in db.execute("PRAGMA table_info(automation_triggers)")}
         CredentialStore(data_dir=home).set("synthetic-seeded-upgrade","synthetic-seeded-upgrade-secret")
-        second = RunCoordinator(home, tools=[], credentials=CredentialStore(data_dir=home))
+        github_network_calls = []
+
+        def forbid_github_network(request):
+            github_network_calls.append(request.method)
+            raise AssertionError("Installed management reads must never contact GitHub")
+
+        second = RunCoordinator(home, tools=[], credentials=CredentialStore(data_dir=home),
+                                github_client_factory=lambda: httpx.AsyncClient(transport=httpx.MockTransport(forbid_github_network)))
+        triage_model_calls = []
+
+        def forbid_triage_model(*args):
+            triage_model_calls.append(True)
+            raise AssertionError("Installed management reads must never request a triage model")
+
+        second.task_triage_model_factory = forbid_triage_model
         assert [tuple(row) for row in second.store.connection.execute("SELECT * FROM messages ORDER BY seq")] == original
         assert second.store.connection.execute("PRAGMA user_version").fetchone()[0] == 2
         assert second.automation.get_job(job_id)["config"]["session_mode"] == "source"
@@ -73,7 +88,58 @@ def check():
                 assert response.status_code == 200 and response.content == asset.read_bytes()
             assert client.get("/sessions").status_code == 401
             assert client.get("/health").json()["provider_configured"] is False
-            assert client.get("/capabilities", headers=headers).json()["capabilities"]
+            capabilities = client.get("/capabilities", headers=headers).json()["capabilities"]
+            assert "local_tasks_v1" in capabilities
+            assert "github_sources_v1" in capabilities
+            assert "task_triage_v1" in capabilities
+            assert "github_tool_sources_v1" in capabilities
+            assert "task_worker_interactions_v1" in capabilities
+            assert client.get("/tasks/triage/settings").status_code == 401
+            triage_settings = client.get("/tasks/triage/settings", headers=headers)
+            assert triage_settings.status_code == 200
+            triage_config = triage_settings.json()
+            assert triage_config["provider_id"] == "deepseek" and triage_config["model"] == "deepseek-flash"
+            assert triage_config["reasoning_effort"] == "none"
+            assert client.get("/tasks/triage/decisions", headers=headers).json()["decisions"] == []
+            triage_patch = {"expected_revision": triage_config["revision"],
+                            "processing_scope": "Handle actionable changes within the configured repository."}
+            saved_triage = client.patch("/tasks/triage/settings", headers=headers, json=triage_patch)
+            assert saved_triage.status_code == 200
+            assert saved_triage.json()["processing_scope"] == triage_patch["processing_scope"]
+            assert client.patch("/tasks/triage/settings", headers=headers, json=triage_patch).status_code == 409
+            assert not triage_model_calls
+            assert client.get("/github/sources").status_code == 401
+            sources = client.get("/github/sources", headers=headers)
+            assert sources.status_code == 200 and sources.json()["sources"] == []
+            github_source = client.post("/github/sources", headers=headers, json={
+                "source_session_id": sid, "repository": "Timmononon/my-runtime",
+            })
+            assert github_source.status_code == 201
+            github_record = github_source.json()
+            assert not github_record["enabled"] and github_record["mode"] == "read_only"
+            assert not github_record["allow_writes"] and not github_record["configured"]
+            assert "credential_ref" not in github_record and "token" not in github_record
+            source_id = github_record["id"]
+            assert client.get(f"/github/sources/{source_id}/events", headers=headers).json()["events"] == []
+            assert client.get(f"/github/sources/{source_id}/drafts", headers=headers).json()["drafts"] == []
+            assert not github_network_calls
+            assert client.get("/tasks").status_code == 401
+            task_settings = client.get("/tasks/settings", headers=headers)
+            assert task_settings.status_code == 200 and task_settings.json()["mode"] == "observe"
+            policy = client.patch("/tasks/settings", headers=headers, json={
+                "expected_revision": task_settings.json()["revision"], "mode": "observe",
+                "rules": [{"id": "installed-probe", "enabled": True, "contains": ["installed-probe"]}],
+            })
+            assert policy.status_code == 200
+            candidate_body = {"source_session_id": sid, "text": "installed-probe observation only",
+                              "request_id": "installed-task-observation"}
+            candidate = client.post("/tasks/candidates", headers=headers, json=candidate_body)
+            assert candidate.status_code == 201 and candidate.json()["decision"] == "observed"
+            replay = client.post("/tasks/candidates", headers=headers, json=candidate_body)
+            assert replay.json()["id"] == candidate.json()["id"]
+            overview = client.get("/tasks/overview", headers=headers)
+            assert overview.status_code == 200 and overview.json()["counts"]["total"] == 0
+            assert second.store.connection.execute("SELECT COUNT(*) FROM usage").fetchone()[0] == 0
             management = client.get("/management", headers=headers)
             assert management.status_code == 200 and management.json()["agents"][0]["id"] == "default"
             assert client.get(f"/browser-control/sessions/{sid}", headers=headers).status_code == 200
@@ -98,7 +164,10 @@ def check():
     print(json.dumps({"installed_static_http": "passed", "all_lazy_asset_http": len(assets),
         "missing_provider_not_faked": True, "installed_management_memory_browser_routes": "passed",
         "installed_legacy_schema_upgrade": "passed", "raw_upgrade_history_preserved": True,
-        "installed_project_instructions": "passed", "synthetic_file_credentials_write_only": "passed"}))
+        "installed_project_instructions": "passed", "synthetic_file_credentials_write_only": "passed",
+        "installed_local_task_observation": "passed", "installed_model_calls": 0,
+        "installed_github_offline_management": "passed", "installed_github_network_calls": len(github_network_calls),
+        "installed_task_triage_offline_management": "passed", "installed_task_triage_model_calls": len(triage_model_calls)}))
 
 
 if __name__ == "__main__":

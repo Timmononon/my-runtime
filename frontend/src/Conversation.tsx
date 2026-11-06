@@ -3,6 +3,7 @@ import { Icon, Star } from "./icons";
 import { Markdown, Popup } from "./ui";
 import { branchBoundaries, displayContent, groupConversation } from "./state";
 import type { MessageRecord } from "./types";
+import { toolErrorSummary } from "./toolErrors";
 
 export default function Conversation({
   records,
@@ -104,26 +105,40 @@ export default function Conversation({
                               (item) =>
                                 item.record.message.tool_call_id === call.id,
                             )?.record.message;
+                            const error = toolErrorSummary(result, call.name);
                             return (
-                              <div key={call.id}>
-                                <Icon
-                                  name={
-                                    result?.metadata.is_error
-                                      ? "info"
-                                      : result
-                                        ? "check"
-                                        : "clock"
-                                  }
-                                  size={14}
-                                />
-                                <code>{call.name}</code>
-                                <span>
-                                  {result
-                                    ? result.metadata.is_error
-                                      ? "返回错误"
-                                      : "已返回"
-                                    : "等待结果"}
-                                </span>
+                              <div className="tool-result-row" key={call.id}>
+                                <div className="tool-result-header">
+                                  <Icon
+                                    name={
+                                      error
+                                        ? "info"
+                                        : result
+                                          ? "check"
+                                          : "clock"
+                                    }
+                                    size={14}
+                                  />
+                                  <code>{call.name}</code>
+                                  <span>
+                                    {result
+                                      ? result.metadata.outcome === "unknown"
+                                        ? "结果待核验"
+                                        : result.metadata.is_error
+                                          ? "返回错误"
+                                          : "已返回"
+                                      : "等待结果"}
+                                  </span>
+                                </div>
+                                {error && (
+                                  <div
+                                    className="tool-result-error"
+                                    aria-label={`${call.name} 错误原因`}
+                                  >
+                                    <strong>{error.title}</strong>
+                                    <p>{error.detail}</p>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}

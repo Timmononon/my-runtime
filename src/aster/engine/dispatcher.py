@@ -12,7 +12,7 @@ from jsonschema import Draft202012Validator
 
 from aster.domain import ToolCall, ToolContext, ToolResult, ToolSpec, to_dict
 from aster.policy import ApprovalBroker, PermissionPolicy
-from aster.state import Store
+from aster.state import StateError, Store
 from aster.state.store import dumps
 from aster.tools.registry import Registry
 
@@ -45,6 +45,24 @@ class Dispatcher:
         self._resources: dict[str, asyncio.Lock] = {}
         self.background_tasks: set[asyncio.Task] = set()
 
+    @staticmethod
+    def _task_denial(context: ToolContext, tool=None):
+        guard = context.services.get("task_guard")
+        if guard is None:
+            return None
+        try:
+            # The closure reads the durable binding again; model arguments and
+            # captured metadata alone never confer Worker authority.
+            binding = guard()
+        except (StateError, KeyError, ValueError, TypeError, OSError):
+            return rejected("The supervising task is stopped or requires reconciliation", "permission")
+        if binding and tool is not None:
+            if tool.spec.name in {"task_delegate", "task_cancel"}:
+                return rejected("Workers cannot delegate recursively or cancel their supervising task", "permission")
+            if binding.get("role") == "reader" and tool.spec.risk != "read":
+                return rejected("Reader Workers can only execute read operations", "permission")
+        return None
+
     async def _admit(self, call: ToolCall, context: ToolContext):
         if context.cancel.is_set():
             return None, rejected("Cancelled before execution", "cancelled")
@@ -52,6 +70,8 @@ class Dispatcher:
             return None, rejected("New user instructions are waiting; this call was not executed", "steered")
         if self.store.has_unresolved(context.session_id):
             return None, rejected("An earlier operation needs reconciliation before further dispatch", "permission")
+        if denial := self._task_denial(context):
+            return None, denial
         tool = self.registry.get(call.name)
         if tool is None:
             return None, rejected(f"Unknown tool: {call.name}", "permission")
@@ -66,6 +86,8 @@ class Dispatcher:
             if not isinstance(spec, ToolSpec) or spec.name != tool.spec.name or spec.parameters != tool.spec.parameters:
                 return None, rejected("Tool classifier returned an invalid execution contract", "permission")
             tool = EffectiveTool(tool, spec)
+        if denial := self._task_denial(context, tool):
+            return None, denial
         decision = self.policy.evaluate(tool.spec, call, context)
         if decision.action == "deny":
             return None, rejected(decision.reason, "permission")
@@ -87,6 +109,8 @@ class Dispatcher:
             if not isinstance(spec, ToolSpec) or spec.name != original_tool.spec.name or spec.parameters != original_tool.spec.parameters:
                 return None, rejected("Tool classifier returned an invalid post-hook execution contract", "permission")
             tool = EffectiveTool(original_tool, spec)
+        if denial := self._task_denial(context, tool):
+            return None, denial
         decision = self.policy.evaluate(tool.spec, call, context)
         if decision.action == "deny":
             return None, rejected(decision.reason, "permission")
@@ -94,19 +118,32 @@ class Dispatcher:
         # The displayed request and its digest must describe the same proposed action.
         approved_digest = hashlib.sha256(dumps(call.arguments).encode()).hexdigest()
         if decision.action == "ask":
-            if self.approvals is None or context.services.get("unattended", False):
+            task_interaction = context.services.get("task_interaction_guard")
+            if self.approvals is None or (context.services.get("unattended", False) and not callable(task_interaction)):
                 return None, rejected("Approval is required but no attended approval channel is available", "permission")
+            if callable(task_interaction):
+                try:
+                    task_interaction()
+                except (StateError, KeyError, ValueError, TypeError, OSError):
+                    return None, rejected("The supervising task cannot receive this approval", "permission")
             approved = await self.approvals.approve({"tool_name": call.name, "tool_call_id": call.id,
                                                    "arguments": call.arguments, "arguments_hash": approved_digest,
                                                    "reason": decision.reason}, context)
             if not approved:
                 return None, rejected("Approval was denied, cancelled or expired", "permission")
+            if callable(task_interaction):
+                try:
+                    task_interaction()
+                except (StateError, KeyError, ValueError, TypeError, OSError):
+                    return None, rejected("The supervising task changed while approval was pending", "permission")
         if context.cancel.is_set():
             return None, rejected("Cancelled before dispatch", "cancelled")
         if steering(context):
             return None, rejected("New user instructions arrived before dispatch", "steered")
         if hashlib.sha256(dumps(call.arguments).encode()).hexdigest() != approved_digest:
             return None, rejected("Arguments changed after approval", "permission")
+        if denial := self._task_denial(context, tool):
+            return None, denial
         return tool, None
 
     async def execute(self, calls: list[ToolCall], context: ToolContext) -> list[ToolResult]:
@@ -190,6 +227,8 @@ class Dispatcher:
             return rejected("Cancelled while waiting for a resource", "cancelled")
         if steering(context):
             return rejected("New user instructions arrived before dispatch", "steered")
+        if denial := self._task_denial(context, tool):
+            return denial
         # Other concurrently running calls may legitimately be dispatching. Only
         # terminal unknown entries are a barrier here; admission checks pre-batch state.
         if any(item["state"] == "outcome_unknown" for item in self.store.tool_executions(context.run_id)):
@@ -210,10 +249,16 @@ class Dispatcher:
         if context.emit:
             await context.emit("tool.started", {"tool_call_id": call.id, "name": call.name})
         child_cancel = asyncio.Event()
-        child = dataclasses.replace(context, cancel=child_cancel)
+        child = dataclasses.replace(context, cancel=child_cancel, services={
+            **context.services, "tool_execution_id": entry["id"], "tool_call_id": call.id,
+        })
         async def invoke():
+            if denial := self._task_denial(child, tool):
+                return denial
             observer = context.services.get("read_observer")
             cached = await observer.cached(call) if observer and tool.spec.risk == "read" else None
+            if denial := self._task_denial(child, tool):
+                return denial
             return cached if cached is not None else await tool.execute(call.arguments, child)
 
         task = asyncio.create_task(invoke(), name=f"aster-tool-{call.id}")

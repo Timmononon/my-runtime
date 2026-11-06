@@ -94,7 +94,7 @@ class AutomationService:
                 CREATE TABLE IF NOT EXISTS automation_consumers(name TEXT PRIMARY KEY,last_event_id INTEGER NOT NULL);
             """)
             version = db.execute("SELECT version FROM automation_meta").fetchone()[0]
-            if version not in {1, 2, 3}:
+            if version not in {1, 2, 3, 4}:
                 raise ValueError("Unsupported automation schema version")
             columns = {row[1] for row in db.execute("PRAGMA table_info(automation_triggers)")}
             if "created_at" not in columns:
@@ -102,7 +102,11 @@ class AutomationService:
                 db.execute("UPDATE automation_triggers SET created_at=scheduled_at WHERE created_at=0")
             if "execution_json" not in columns:
                 db.execute("ALTER TABLE automation_triggers ADD COLUMN execution_json TEXT")
-            db.execute("UPDATE automation_meta SET version=3")
+            for name, definition in (("delivery", "TEXT NOT NULL DEFAULT 'run'"),
+                                     ("candidate_id", "TEXT"), ("ticket_id", "TEXT")):
+                if name not in columns:
+                    db.execute(f"ALTER TABLE automation_triggers ADD COLUMN {name} {definition}")
+            db.execute("UPDATE automation_meta SET version=4")
             for row in db.execute("SELECT id,session_id,config_json FROM automation_jobs").fetchall():
                 config = json.loads(row["config_json"])
                 changed = False
@@ -157,6 +161,9 @@ class AutomationService:
 
     def _validate(self, kind: str, config: dict) -> dict:
         result = dict(config)
+        result.setdefault("delivery", "run")
+        if result["delivery"] not in {"run", "task"}:
+            raise ValueError("delivery must be run or task")
         result.setdefault("session_mode", "fresh")
         if result["session_mode"] not in {"fresh", "sticky", "source"}:
             raise ValueError("session_mode must be fresh, sticky, or source (legacy)")
@@ -405,7 +412,7 @@ class AutomationService:
             ).fetchone():
                 return
             pending = db.execute(
-                "SELECT COUNT(*) FROM automation_triggers WHERE job_id=? AND state IN ('prepared','submitted')",
+                "SELECT COUNT(*) FROM automation_triggers WHERE job_id=? AND state IN ('prepared','submitted','task_submitted')",
                 (job["id"],),
             ).fetchone()[0]
             daily = db.execute(
@@ -419,7 +426,7 @@ class AutomationService:
                 reason = "overlap"
             trigger_id = "trigger_" + uuid.uuid4().hex
             db.execute(
-                "INSERT INTO automation_triggers(id,job_id,trigger_key,scheduled_at,state,prompt,error,created_at,execution_json) VALUES(?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO automation_triggers(id,job_id,trigger_key,scheduled_at,state,prompt,error,created_at,execution_json,delivery) VALUES(?,?,?,?,?,?,?,?,?,?)",
                 (
                     trigger_id,
                     job["id"],
@@ -430,6 +437,7 @@ class AutomationService:
                     reason,
                     now,
                     _json(self._capture_execution(job["session_id"], config)) if not reason else None,
+                    config.get("delivery", "run"),
                 ),
             )
 
@@ -572,6 +580,12 @@ class AutomationService:
                 with self.store.transaction() as db:
                     row = db.execute("SELECT execution_json FROM automation_triggers WHERE id=?", (receipt["id"],)).fetchone()
                     execution = json.loads(row[0]) if row[0] else None
+                if receipt.get("delivery", "run") == "task":
+                    # The receipt pins both delivery mode and execution choices.
+                    # A crash after candidate commit reuses its durable identity;
+                    # no ordinary run is fabricated for observed/ignored work.
+                    self._deliver_task(receipt, job, execution)
+                    continue
                 mode = execution.get("session_mode", job["config"]["session_mode"]) if execution else job["config"]["session_mode"]
                 pinned = self.store.automation_execution_session(job["session_id"], job["id"], receipt["id"], mode)
                 execution_session = pinned["session_id"]
@@ -624,6 +638,50 @@ class AutomationService:
                      "source_session_id": job["session_id"], "session_mode": pinned["session_mode"]},
                 )
 
+    def _deliver_task(self, receipt, job, execution):
+        service = self.coordinator.tasks
+        candidate = service.evaluate_candidate(
+            job["session_id"], receipt["prompt"], request_id=receipt["id"],
+            source=job["kind"], execution_snapshot=execution,
+        )
+        ticket_id = candidate.get("ticket_id")
+        with self.store.transaction() as db:
+            db.execute("UPDATE automation_triggers SET candidate_id=?,ticket_id=?,state=?,last_status=?,"
+                       "attempts=attempts+1,error=NULL WHERE id=?",
+                       (candidate["id"], ticket_id, "task_submitted" if ticket_id else "completed",
+                        candidate["decision"], receipt["id"]))
+            self.store._event(db, job["session_id"], None, "automation.task_evaluated", {
+                "job_id": job["id"], "trigger_id": receipt["id"], "candidate_id": candidate["id"],
+                "ticket_id": ticket_id, "decision": candidate["decision"],
+            })
+
+    def _task_result(self, receipt, now):
+        ticket = self.coordinator.tasks.get_ticket(receipt["ticket_id"])
+        status = ticket["state"]
+        if status == receipt["last_status"]:
+            return
+        terminal = status in {"completed", "cancelled", "failed", "needs_reconciliation"}
+        job = self.get_job(receipt["job_id"])
+        digest = hashlib.sha256(_json({"status": status, "answer": ticket.get("summary", ""),
+                                      "error": ticket.get("attention")}).encode()).hexdigest()
+        with self.store.transaction() as db:
+            db.execute("UPDATE automation_triggers SET last_status=?,state=? WHERE id=?",
+                       (status, "completed" if terminal else "task_submitted", receipt["id"]))
+            kind = ("automation.action_required" if ticket.get("attention") else
+                    "automation.result" if terminal and (job["kind"] != "heartbeat" or digest != job["result_hash"]) else None)
+            if kind:
+                self.store._event(db, job["session_id"], None, kind, {
+                    "job_id": job["id"], "trigger_id": receipt["id"], "ticket_id": ticket["id"],
+                    "status": status, "summary": ticket.get("summary", ""),
+                    "answer": ticket.get("summary", ""), "error": ticket.get("attention"),
+                })
+            if terminal:
+                db.execute("UPDATE automation_jobs SET result_hash=? WHERE id=?", (digest, job["id"]))
+        if terminal:
+            for worker in ticket.get("workers", []):
+                if worker.get("run_id"):
+                    self._mark_self_outputs(job, worker["run_id"], now)
+
     def _mark_self_outputs(self, job: dict, run_id: str, now: float):
         if job["kind"] != "watcher":
             return
@@ -655,6 +713,9 @@ class AutomationService:
             "needs_reconciliation",
         }
         for receipt in self.receipts():
+            if receipt["state"] == "task_submitted" and receipt.get("ticket_id"):
+                self._task_result(receipt, now)
+                continue
             if receipt["state"] != "submitted" or not receipt["run_id"]:
                 continue
             run = self.store.get_run(receipt["run_id"])

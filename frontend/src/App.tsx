@@ -46,11 +46,13 @@ import type {
   Skill,
 } from "./types";
 import Management from "./Management";
+import TaskBoard from "./TaskBoard";
 import Conversation from "./Conversation";
 import PendingCard from "./PendingCard";
 import SideChatPanel from "./SideChatPanel";
 import { readSideChats } from "./sideChats";
 const ProviderSettings = lazy(() => import("./ProviderSettings"));
+const GitHubPanel = lazy(() => import("./GitHubPanel"));
 import ExecutionTimeline from "./ExecutionTimeline";
 import ContextMeter from "./ContextMeter";
 import type { ManagedAgent, RuntimeManagement } from "./types";
@@ -64,7 +66,11 @@ import {
 } from "./SessionLifecycle";
 import type { SessionAction } from "./SessionLifecycle";
 import { readSessionSnapshot } from "./sessionSnapshot";
-import { findEmptyProjectSession } from "./projectSession";
+import {
+  findEmptyProjectSession,
+  projectTaskPresence,
+  projectGithubPresence,
+} from "./projectSession";
 import { workspaceSessions } from "./workspaceTree";
 import { ComposerMenu, ModelOptions, SkillPicker } from "./ComposerOptions";
 export { branchBoundaries } from "./state";
@@ -81,6 +87,8 @@ export default function App() {
   const [boot, setBoot] = useState<Bootstrap | null>(null),
     [connecting, setConnecting] = useState(true),
     [connectError, setConnectError] = useState("");
+  const [runtimeCapabilities, setRuntimeCapabilities] = useState<string[]>([]);
+  const capabilityRef = useRef<string[] | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]),
     [selected, setSelected] = useState<string | null>(null),
     [detail, setDetail] = useState<SessionDetail | null>(null);
@@ -111,6 +119,8 @@ export default function App() {
   const [drafts, setDrafts] = useState<Record<string, string>>({}),
     [draftFiles, setDraftFiles] = useState<Record<string, Artifact[]>>({});
   const [view, setView] = useState("chat"),
+    [taskFocus, setTaskFocus] = useState<string | null>(null),
+    [githubFocus, setGithubFocus] = useState<string | null>(null),
     [sidebar, setSidebar] = useState(false),
     [search, setSearch] = useState(""),
     [searchOpen, setSearchOpen] = useState(false);
@@ -218,6 +228,18 @@ export default function App() {
       run?.id === compactionFlight.current?.runId,
     closed = !!lineage?.closed_at,
     readOnly = sessionState(detail) !== "active",
+    localTask =
+      (
+        detail as
+          | (SessionDetail & {
+              local_task?: {
+                ticket_id: string;
+                worker_id: string;
+                role: string;
+              } | null;
+            })
+          | null
+      )?.local_task || null,
     writeLocked =
       readOnly ||
       identityLoading ||
@@ -318,8 +340,20 @@ export default function App() {
   const startConnection = useCallback(async () => {
     setConnecting(true);
     setConnectError("");
+    capabilityRef.current = null;
+    setRuntimeCapabilities([]);
     try {
       const value = await connect();
+      const supported = await request<{ capabilities: string[] }>(
+        "/capabilities",
+      );
+      if (
+        !Array.isArray(supported.capabilities) ||
+        supported.capabilities.some((value) => typeof value !== "string")
+      )
+        throw new Error("无法读取当前服务能力，请重新连接。");
+      capabilityRef.current = supported.capabilities;
+      setRuntimeCapabilities(supported.capabilities);
       setBoot(value);
       setNewWorkspace(value.cwd);
       const profiles = value.providers
@@ -523,6 +557,9 @@ export default function App() {
     creation.current = (async () => {
       let session: Session | null | undefined = null;
       if (newProject) {
+        const supported = capabilityRef.current;
+        if (!supported)
+          throw new Error("当前服务能力尚未确认，请重新连接后再创建项目对话。");
         const project = projects.find((item) => item.id === newProject);
         if (!project) throw new Error("项目已更新，请重新选择项目。");
         session = await findEmptyProjectSession({
@@ -555,12 +592,26 @@ export default function App() {
                   `/automations?session_id=${enc(id)}`,
                 ),
               ]);
+            const [hasTasks, hasGithubSources] = await Promise.all([
+              projectTaskPresence(value, supported, (sessionId) =>
+                request<{ tickets: unknown[] }>(
+                  `/tasks?source_session_id=${enc(sessionId)}`,
+                ),
+              ),
+              projectGithubPresence(value, supported, (sessionId) =>
+                request<{ sources: unknown[] }>(
+                  `/github/sources?source_session_id=${enc(sessionId)}`,
+                ),
+              ),
+            ]);
             return {
               detail: value,
               hasAttachments: !!files.attachments.length,
               hasMailbox: !!messages.messages.length,
               hasLineage: ancestry.lineage !== null,
               hasAutomation: !!automation.jobs.length,
+              hasTasks,
+              hasGithubSources,
             };
           },
         });
@@ -826,6 +877,7 @@ export default function App() {
       submitting.current ||
       compactionActive ||
       writeLocked ||
+      !!localTask ||
       closed ||
       (!busy && !providerReady) ||
       run?.status === "needs_reconciliation"
@@ -912,6 +964,7 @@ export default function App() {
       !files.length ||
       closed ||
       writeLocked ||
+      !!localTask ||
       uploading ||
       (lifecycleFlight.current === selectedRef.current && !!selectedRef.current)
     )
@@ -1523,6 +1576,30 @@ export default function App() {
             <Icon name="clock" />
             自动化
           </button>
+          {runtimeCapabilities.includes("local_tasks_v1") && (
+            <button
+              className={view === "tasks" ? "nav-item active" : "nav-item"}
+              onClick={() => {
+                setView("tasks");
+                setSidebar(false);
+              }}
+            >
+              <Icon name="grid" />
+              任务
+            </button>
+          )}
+          {runtimeCapabilities.includes("github_sources_v1") && (
+            <button
+              className={view === "github" ? "nav-item active" : "nav-item"}
+              onClick={() => {
+                setView("github");
+                setSidebar(false);
+              }}
+            >
+              <Icon name="branch" />
+              GitHub
+            </button>
+          )}
         </nav>
         <div className="workspace-browser">
           <Projects
@@ -1673,7 +1750,11 @@ export default function App() {
                   ? "Skills"
                   : view === "memory"
                     ? "长期记忆"
-                    : "自动化"}
+                    : view === "tasks"
+                      ? "任务"
+                      : view === "github"
+                        ? "GitHub"
+                        : "自动化"}
             </button>
             {lineage?.kind === "side_chat" && view === "chat" && (
               <span className="small-tag">侧边聊天</span>
@@ -1737,8 +1818,45 @@ export default function App() {
         <div
           className={`workspace ${view === "chat" && right && right !== "side-chat" ? "with-inspector" : ""} ${view === "chat" && right === "side-chat" && currentSide ? "with-side-chat" : ""}`}
         >
-          {view !== "chat" &&
-          (readOnly || (lifecycleTarget === selected && !!selected)) ? (
+          {view === "github" ? (
+            <Suspense
+              fallback={
+                <div className="loading-history">
+                  <Spinner />
+                  正在打开仓库来源
+                </div>
+              }
+            >
+              <GitHubPanel
+                sourceWritable={!writeLocked && !readOnly && !localTask}
+                ensureSession={ensureSession}
+                onOpenSession={(id) => void openWorkspaceSession(id)}
+                onOpenTicket={(id) => {
+                  setTaskFocus(id);
+                  setView("tasks");
+                }}
+                initialSourceId={githubFocus}
+              />
+            </Suspense>
+          ) : view === "tasks" ? (
+            <TaskBoard
+              selected={selected}
+              sourceWritable={!writeLocked && !readOnly && !localTask}
+              ensureSession={ensureSession}
+              onOpenSession={(id) => void openWorkspaceSession(id)}
+              agents={agents}
+              initialTicketId={taskFocus}
+              onOpenGithub={
+                runtimeCapabilities.includes("github_sources_v1")
+                  ? (id) => {
+                      setGithubFocus(id);
+                      setView("github");
+                    }
+                  : undefined
+              }
+            />
+          ) : view !== "chat" &&
+            (readOnly || (lifecycleTarget === selected && !!selected)) ? (
             <div className="management-scroll">
               <div className="management-page">
                 <Empty
@@ -1765,6 +1883,7 @@ export default function App() {
               selected={selected}
               ensureSession={ensureSession}
               report={report}
+              localTasksEnabled={runtimeCapabilities.includes("local_tasks_v1")}
             />
           ) : (
             <>
@@ -1775,6 +1894,7 @@ export default function App() {
                   e.preventDefault();
                   if (
                     !writeLocked &&
+                    !localTask &&
                     !closed &&
                     e.dataTransfer.types.includes("Files")
                   )
@@ -1787,7 +1907,7 @@ export default function App() {
                 onDrop={(e) => {
                   e.preventDefault();
                   setDragging(false);
-                  if (!closed && !writeLocked)
+                  if (!closed && !writeLocked && !localTask)
                     void upload(e.dataTransfer.files);
                 }}
               >
@@ -1979,7 +2099,7 @@ export default function App() {
                       </button>
                     </div>
                   )}
-                  {busy && (
+                  {busy && !localTask && (
                     <div className="next-run-note">
                       模型、推理和 Skill
                       选择仅用于下一次新请求；本次补充沿用正在执行的配置。
@@ -2036,7 +2156,29 @@ export default function App() {
                       ))}
                     </details>
                   ) : null}
+                  {localTask && (
+                    <div className="task-bound-notice" role="note">
+                      <Icon name="grid" size={18} />
+                      <div>
+                        <strong>这是任务的工作对话</strong>
+                        <p>
+                          在任务看板补充要求或取消工作；这里保留执行过程、批准和提问。
+                        </p>
+                        <button
+                          className="text-button"
+                          onClick={() => {
+                            setTaskFocus(localTask.ticket_id);
+                            setView("tasks");
+                          }}
+                        >
+                          返回所属任务
+                          <Icon name="chevron" size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <form
+                    hidden={!!localTask}
                     className={`composer ${closed || writeLocked ? "disabled" : ""}`}
                     onSubmit={submit}
                   >
@@ -2254,7 +2396,7 @@ export default function App() {
                       </div>
                     </div>
                   </form>
-                  <div className="composer-footer">
+                  <div className="composer-footer" hidden={!!localTask}>
                     {readOnly ? (
                       <span>对话与附件保留，可随时恢复。</span>
                     ) : busy ? (

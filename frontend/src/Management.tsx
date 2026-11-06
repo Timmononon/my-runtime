@@ -14,6 +14,7 @@ type Props = {
   report: (error: unknown) => void;
   providers: ModelProvider[];
   selection: RunSelection;
+  localTasksEnabled?: boolean;
 };
 type ToolResponse = {
   is_error: boolean;
@@ -805,6 +806,7 @@ function AutomationPanel({
   report,
   providers,
   selection,
+  localTasksEnabled = false,
 }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]),
     [loading, setLoading] = useState(true),
@@ -822,6 +824,7 @@ function AutomationPanel({
     [interval, setIntervalValue] = useState(300),
     [limit, setLimit] = useState(3);
   const [selectionMode, setSelectionMode] = useState("fixed"),
+    [delivery, setDelivery] = useState("run"),
     [fixedSelection, setFixedSelection] = useState<RunSelection>(selection),
     [skills, setSkills] = useState<Skill[]>([]),
     [triggers, setTriggers] = useState<
@@ -865,6 +868,7 @@ function AutomationPanel({
     setIntervalValue(Number(config.interval_seconds || 300));
     setLimit(Number(config.max_runs_per_day || 3));
     setSelectionMode(String(config.selection_mode || "fixed"));
+    setDelivery(String(config.delivery || "run"));
     setFixedSelection((config.selection as RunSelection) || selection);
   };
   const action = async (fn: () => Promise<unknown>) => {
@@ -887,6 +891,7 @@ function AutomationPanel({
           : original),
         timezone,
         selection_mode: selectionMode,
+        ...(localTasksEnabled ? { delivery } : {}),
         ...(selectionMode === "fixed" ? { selection: fixedSelection } : {}),
         max_runs_per_day: limit,
         ...(kind === "schedule"
@@ -993,6 +998,7 @@ function AutomationPanel({
                       : `每 ${job.config.interval_seconds} 秒检查`}
                 </p>
                 <small>
+                  {job.config.delivery === "task" ? "按接单规则评估 · " : ""}
                   {job.enabled && job.next_fire
                     ? `下次触发 ${dateLabel(job.next_fire)}`
                     : job.last_fire
@@ -1154,6 +1160,25 @@ function AutomationPanel({
               onChange={(e) => setLimit(Number(e.target.value))}
             />
           </label>
+          {localTasksEnabled && (
+            <label className="field">
+              触发后如何处理
+              <select
+                aria-label="触发后如何处理"
+                value={delivery}
+                onChange={(event) => setDelivery(event.target.value)}
+              >
+                <option value="run">直接执行预设任务</option>
+                <option value="task">交给接单规则评估</option>
+              </select>
+              {delivery === "task" && (
+                <small>
+                  使用“任务 →
+                  接单规则”：观察模式只记录判断，自动模式匹配后才创建工单。
+                </small>
+              )}
+            </label>
+          )}
           <label className="field">
             自动化模型选择
             <select

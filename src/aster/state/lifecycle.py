@@ -64,6 +64,12 @@ class SessionLifecycle:
         placeholders = ",".join("?" for _ in ids)
         if not ids:
             return
+        tasks = getattr(self, "_task_service", None)
+        if tasks is not None:
+            tasks.check_lifecycle(ids, "archive")
+        github = getattr(self, "_github_service", None)
+        if github is not None:
+            github.check_lifecycle(ids, "archive")
         if db.execute(f"SELECT 1 FROM runs WHERE session_id IN ({placeholders}) AND status IN "
                       "('queued','running','waiting_approval','waiting_input','cancelling') LIMIT 1", ids).fetchone():
             raise SessionBusy("Finish or cancel active and queued work in this conversation or its related branches first")
@@ -161,6 +167,15 @@ class SessionLifecycle:
                 # Copy branch receipts and surviving artifact grants before their
                 # source rows disappear; the copies do not authorize replay.
                 self._preserve_branch_evidence(db, session_id, records)
+                github = getattr(self, "_github_service", None)
+                if github is not None:
+                    github.cleanup_session(session_id, db=db)
+                tasks = getattr(self, "_task_service", None)
+                if tasks is not None:
+                    tasks.cleanup_session(session_id, db=db)
+                triage = getattr(self, "_task_triage_service", None)
+                if triage is not None:
+                    triage.cleanup_session(session_id, db=db)
                 tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
                 if "automation_jobs" in tables:
                     jobs = [row[0] for row in db.execute("SELECT id FROM automation_jobs WHERE session_id=?", (session_id,))]

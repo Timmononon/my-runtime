@@ -288,7 +288,7 @@ async def test_engine_honors_retry_after_and_can_cancel_the_wait(tmp_path):
     requests = []
 
     def handler(request):
-        requests.append(time.monotonic())
+        requests.append(time.perf_counter())
         requested.set()
         return httpx.Response(429, headers={"retry-after": "0.04"}) if len(requests) < 2 else success("openai_chat")
 
@@ -309,6 +309,47 @@ async def test_engine_honors_retry_after_and_can_cancel_the_wait(tmp_path):
             assert engine.cancel(rid)
             assert (await asyncio.wait_for(work, 1)).status == "cancelled"
             assert len(requests) == 1
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("cancel_wait", [False, True])
+async def test_retry_after_early_timeout_keeps_deadline_and_cancellation(tmp_path, monkeypatch, cancel_wait):
+    requests, early_wakeups = [], []
+    early_seen = asyncio.Event()
+    original_wait_for = asyncio.wait_for
+
+    async def early_timeout(awaitable, timeout):
+        if (not early_wakeups and 0 < timeout <= 0.04
+                and getattr(awaitable, "cr_code", None) is asyncio.Event.wait.__code__):
+            early_wakeups.append(time.perf_counter())
+            early_seen.set()
+            awaitable.close()
+            raise TimeoutError
+        return await original_wait_for(awaitable, timeout)
+
+    monkeypatch.setattr(asyncio, "wait_for", early_timeout)
+
+    def handler(request):
+        requests.append(time.perf_counter())
+        return httpx.Response(429, headers={"retry-after": "0.04"}) if len(requests) == 1 else success("openai_chat")
+
+    store = Store(tmp_path / "runtime.db")
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+            engine = Engine(model("openai_chat", http), Registry(), store, config=RunConfig(retry_base_seconds=0))
+            sid = store.create_session(tmp_path)["id"]
+            work = asyncio.create_task(engine.run(sid, "Respect the minimum retry delay"))
+            await asyncio.wait_for(early_seen.wait(), 1)
+            if cancel_wait:
+                assert engine.cancel(store.list_runs(sid)[0]["id"])
+            result = await asyncio.wait_for(work, 1)
+        assert len(early_wakeups) == 1
+        if cancel_wait:
+            assert result.status == "cancelled" and len(requests) == 1
+        else:
+            assert result.status == "completed" and len(requests) == 2
+            assert requests[1] - requests[0] >= 0.04
     finally:
         store.close()
 

@@ -7,7 +7,54 @@ export type ProjectSessionSnapshot = {
   hasMailbox: boolean;
   hasLineage: boolean;
   hasAutomation: boolean;
+  hasTasks: boolean;
+  hasGithubSources: boolean;
 };
+
+// A task source can still have no messages or runs. Only the advertised
+// observational API may prove that it has no retained work; a failed lookup is
+// never permission to silently recycle the conversation.
+export async function projectTaskPresence(
+  detail: SessionDetail,
+  capabilities: readonly string[],
+  readTasks: (id: string) => Promise<{ tickets: unknown[] }>,
+) {
+  if ((detail as SessionDetail & { local_task?: unknown }).local_task)
+    return true;
+  if (!capabilities.includes("local_tasks_v1")) return false;
+  let result: { tickets: unknown[] };
+  try {
+    result = await readTasks(detail.id);
+  } catch (error) {
+    // Only a missing session may be skipped by the caller. An advertised task
+    // endpoint returning404 is a failed verification, not an empty candidate.
+    if (error instanceof ApiError && error.status === 404)
+      throw new Error("任务关联查询不可用，请重新连接后再试。");
+    throw error;
+  }
+  if (!Array.isArray(result.tickets))
+    throw new Error("无法确认对话关联的任务，请重新读取后再试。");
+  return result.tickets.length > 0;
+}
+
+export async function projectGithubPresence(
+  detail: SessionDetail,
+  capabilities: readonly string[],
+  readSources: (id: string) => Promise<{ sources: unknown[] }>,
+) {
+  if (!capabilities.includes("github_sources_v1")) return false;
+  let result: { sources: unknown[] };
+  try {
+    result = await readSources(detail.id);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404)
+      throw new Error("GitHub 来源查询不可用，请重新连接后再试。");
+    throw error;
+  }
+  if (!Array.isArray(result.sources))
+    throw new Error("无法确认对话关联的 GitHub 来源，请重新读取后再试。");
+  return result.sources.length > 0;
+}
 
 function matchesProject(session: Session, project: Project, agent: string) {
   return (
@@ -63,7 +110,9 @@ export async function findEmptyProjectSession({
       !value.hasAttachments &&
       !value.hasMailbox &&
       !value.hasLineage &&
-      !value.hasAutomation
+      !value.hasAutomation &&
+      !value.hasTasks &&
+      !value.hasGithubSources
       ? detail
       : null;
   };

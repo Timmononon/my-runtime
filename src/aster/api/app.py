@@ -32,7 +32,8 @@ from aster.state import StateError
 MANAGEMENT_CAPABILITIES = ("management_v1", "mcp_health_v1", "automation_selection_v1", "performance_timeline_v1",
                            "browser_handoff_v1", "web_search_v1", "web_search_deepseek_v1", "memory_graph_v1", "memory_semantic_recall_v1",
                            "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1",
-                           "memory_auto_capture_v1")
+                           "memory_auto_capture_v1", "local_tasks_v1", "github_sources_v1", "task_triage_v1",
+                           "task_triage_binary_v1", "github_tool_sources_v1", "task_worker_interactions_v1")
 
 
 def load_api_token(data_dir: Path) -> str:
@@ -147,15 +148,19 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     from aster.api.browser_control import create_browser_control_router
     from aster.api.content import create_content_router
     from aster.api.customization import create_customization_router
+    from aster.api.github import create_github_router
     from aster.api.management import create_management_router
     from aster.api.providers import create_provider_router
     from aster.api.runtime import create_runtime_router
+    from aster.api.tasks import create_tasks_router
     from aster.api.workbench import create_workbench_router
     app.include_router(create_content_router(coordinator))
     app.include_router(create_browser_control_router(coordinator))
     app.include_router(create_customization_router(coordinator))
     app.include_router(create_management_router(coordinator))
     app.include_router(create_runtime_router(coordinator))
+    app.include_router(create_tasks_router(coordinator))
+    app.include_router(create_github_router(coordinator))
     app.include_router(create_provider_router(coordinator))
     app.include_router(create_workbench_router(coordinator))
     app.include_router(create_web_router(coordinator, browser_auth, static_root))
@@ -223,6 +228,23 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     @app.exception_handler(ProviderError)
     async def provider_error(request, error):
         return JSONResponse({"error": "provider", "category": error.category}, status_code=502)
+
+    from aster.github.transport import GithubHTTPError
+
+    @app.exception_handler(GithubHTTPError)
+    async def github_error(request, error):
+        category = error.category if error.category in {
+            "rate_limited", "rejected", "invalid_json", "invalid_body", "response_too_large",
+            "invalid_repository_url", "invalid_actor", "invalid_timestamp", "invalid_thread", "network",
+            "invalid_repository_body", "invalid_account_body", "invalid_collection", "pagination_loop",
+            "pagination_origin", "pagination_page", "invalid_publish_body", "invalid_publish_thread",
+        } else "unavailable"
+        detail = ("GitHub 请求受到频率限制，请稍后重试。" if category == "rate_limited" else
+                  "GitHub 拒绝了请求，请检查仓库访问权限和令牌。" if category == "rejected" else
+                  "GitHub 暂时无法连接，请稍后重试。" if category == "network" else
+                  "GitHub 返回的数据未通过校验，请稍后重试。")
+        return JSONResponse({"error": "github", "category": category, "detail": detail},
+                            status_code=429 if category == "rate_limited" else 503 if category == "network" else 502)
 
     @app.exception_handler(FileNotFoundError)
     async def missing_file(request, error):
@@ -300,9 +322,13 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
 
     @app.get("/sessions/{session_id}")
     async def get_session(session_id: str):
+        binding = coordinator.tasks.worker_binding(session_id)
+        github_sources = coordinator.github.list_sources(source_session_id=session_id)
         return {**coordinator.store.get_session(session_id), "runs": coordinator.store.list_runs(session_id),
                 "messages": coordinator.store.history_records(session_id), "plan": coordinator.store.get_plan(session_id),
-                "selection": coordinator.session_selection(session_id)}
+                "selection": coordinator.session_selection(session_id),
+                "local_task": {key: binding[key] for key in ("ticket_id", "worker_id", "role")} if binding else None,
+                "github_sources": {"count": len(github_sources), "enabled": sum(bool(item["enabled"]) for item in github_sources)}}
 
     @app.patch("/sessions/{session_id}")
     async def rename_session(session_id: str, body: SessionPatch):

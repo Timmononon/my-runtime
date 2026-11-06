@@ -127,6 +127,9 @@ def test_current_package_inventory_includes_audit_modules():
     static = Path(os.environ.get("ASTER_WEB_STATIC_ROOT", root / "src/aster/web/static"))
     inventory = checker.source_inventory(root, static)
     for name in ("aster/paths.py", "aster/state/lifecycle.py", "aster/customization/management.py",
-                 "aster/memory/semantic.py", "aster/service/browser_control.py"):
+                 "aster/memory/semantic.py", "aster/service/browser_control.py",
+                 "aster/tasks/service.py", "aster/tasks/policy.py", "aster/tasks/triage.py", "aster/api/tasks.py", "aster/tools/tasks.py",
+                 "aster/github/service.py", "aster/github/normalize.py", "aster/github/transport.py",
+                 "aster/api/github.py", "aster/tools/github.py"):
         assert name in inventory
     assert sys.version_info >= (3, 12)

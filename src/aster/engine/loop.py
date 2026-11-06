@@ -248,6 +248,11 @@ class Engine:
         tool_services.setdefault("agent_id", session["agent_id"])
         tool_services.setdefault("project_id", session["project_id"])
         tool_services.setdefault("questions", QuestionBroker(self.store))
+        if task_context := tool_services.get("task_runtime_context"):
+            # This is current Runtime routing context, not another transcript
+            # entry or a rewrite of the immutable captured run/snapshot. Using
+            # the same effective system below keeps it present after compaction.
+            run = {**run, "system": run["system"] + "\n\nTrusted task routing context (permissions remain unchanged):\n" + dumps(task_context)}
         from functools import partial
 
         from aster.service.artifact_access import read_registered_artifact
@@ -779,14 +784,23 @@ class Engine:
                 if not getattr(error, "retryable", False) or attempt >= config.model_retries:
                     raise
                 await context.emit("model.retry", {"attempt": attempt + 1, "category": getattr(error, "category", "unknown")})
-                try:
-                    delay = getattr(error, "retry_after", None)
-                    if delay is None:
-                        delay = min(30, config.retry_base_seconds * 2 ** attempt)
-                    await asyncio.wait_for(context.cancel.wait(), min(60, max(0, delay)))
+                delay = getattr(error, "retry_after", None)
+                if delay is None:
+                    delay = min(30, config.retry_base_seconds * 2 ** attempt)
+                retry_at = time.perf_counter() + min(60, max(0, delay))
+                while True:
+                    if context.cancel.is_set():
+                        raise asyncio.CancelledError
+                    remaining = retry_at - time.perf_counter()
+                    if remaining <= 0:
+                        break
+                    try:
+                        await asyncio.wait_for(context.cancel.wait(), remaining)
+                    except TimeoutError:
+                        # Timers may fire a clock tick early. Retry-After is a
+                        # minimum delay, so recheck a high-resolution deadline.
+                        continue
                     raise asyncio.CancelledError
-                except TimeoutError:
-                    pass
             finally:
                 cancelled.cancel()
                 if steered:

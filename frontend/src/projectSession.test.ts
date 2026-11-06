@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "./api";
 import {
   findEmptyProjectSession,
+  projectTaskPresence,
+  projectGithubPresence,
   type ProjectSessionSnapshot,
 } from "./projectSession";
 import type { Project, Session, SessionDetail } from "./types";
@@ -38,6 +40,8 @@ const snapshot = (
   hasMailbox: false,
   hasLineage: false,
   hasAutomation: false,
+  hasTasks: false,
+  hasGithubSources: false,
   ...fields,
 });
 const defaults = {
@@ -163,6 +167,133 @@ describe("empty project conversation reuse", () => {
         },
       }),
     ).toBeNull();
+  });
+
+  it("preserves message-empty sources with retained tasks and Worker bindings", async () => {
+    const source = session("task-source"),
+      worker = session("task-worker"),
+      pristine = session("pristine");
+    const readTasks = vi.fn(async () => ({
+      tickets: [{ id: "completed-retained-task" }],
+    }));
+    const bound = {
+      ...detail(worker),
+      local_task: { ticket_id: "ticket", worker_id: "worker" },
+    };
+    expect(
+      await projectTaskPresence(bound, ["local_tasks_v1"], readTasks),
+    ).toBe(true);
+    expect(readTasks).not.toHaveBeenCalled();
+    const sourceUsed = await projectTaskPresence(
+      detail(source),
+      ["local_tasks_v1"],
+      readTasks,
+    );
+    expect(sourceUsed).toBe(true);
+    const found = await findEmptyProjectSession({
+      ...defaults,
+      listPage: async () => [source, worker, pristine],
+      readSession: async (id) =>
+        snapshot(session(id), { hasTasks: id !== pristine.id }),
+    });
+    expect(found?.id).toBe(pristine.id);
+  });
+
+  it("gates task reads on capability and fails closed on unverified task presence", async () => {
+    const item = detail(session("candidate"));
+    const unavailable = vi.fn(async () => {
+      throw new ApiError(503, "Task lookup failed");
+    });
+    expect(await projectTaskPresence(item, ["runs_v1"], unavailable)).toBe(
+      false,
+    );
+    expect(unavailable).not.toHaveBeenCalled();
+    await expect(
+      projectTaskPresence(item, ["local_tasks_v1"], unavailable),
+    ).rejects.toThrow("Task lookup failed");
+    await expect(
+      projectTaskPresence(item, ["local_tasks_v1"], async () => ({
+        tickets: null as unknown as unknown[],
+      })),
+    ).rejects.toThrow("无法确认");
+    await expect(
+      findEmptyProjectSession({
+        ...defaults,
+        listPage: async () => [item],
+        readSession: async () => ({
+          ...snapshot(item),
+          hasTasks: await projectTaskPresence(
+            item,
+            ["local_tasks_v1"],
+            async () => {
+              throw new ApiError(404, "Missing task endpoint");
+            },
+          ),
+        }),
+      }),
+    ).rejects.toThrow("任务关联查询不可用");
+    await expect(
+      findEmptyProjectSession({
+        ...defaults,
+        listPage: async () => [item],
+        readSession: async () => {
+          const hasTasks = await projectTaskPresence(
+            item,
+            ["local_tasks_v1"],
+            unavailable,
+          );
+          return snapshot(item, { hasTasks });
+        },
+      }),
+    ).rejects.toThrow("Task lookup failed");
+  });
+
+  it("preserves disabled GitHub source bindings and gates observational lookups on capability", async () => {
+    const used = session("github-bound"),
+      blank = session("blank");
+    const readSources = vi.fn(async () => ({
+      sources: [{ enabled: false, mode: "read_only" }],
+    }));
+    expect(
+      await projectGithubPresence(detail(used), ["runs_v1"], readSources),
+    ).toBe(false);
+    expect(readSources).not.toHaveBeenCalled();
+    expect(
+      await projectGithubPresence(
+        detail(used),
+        ["github_sources_v1"],
+        readSources,
+      ),
+    ).toBe(true);
+    expect(
+      await findEmptyProjectSession({
+        ...defaults,
+        listPage: async () => [used, blank],
+        readSession: async (id) =>
+          snapshot(session(id), { hasGithubSources: id === used.id }),
+      }),
+    ).toEqual(detail(blank));
+    await expect(
+      findEmptyProjectSession({
+        ...defaults,
+        listPage: async () => [used],
+        readSession: async () => ({
+          ...snapshot(used),
+          hasGithubSources: await projectGithubPresence(
+            detail(used),
+            ["github_sources_v1"],
+            async () => {
+              throw new ApiError(404, "missing source endpoint");
+            },
+          ),
+        }),
+      }),
+    ).rejects.toThrow("GitHub 来源查询不可用");
+    await expect(
+      projectGithubPresence(detail(used), ["github_sources_v1"], async () => ({
+        sources: null as unknown as unknown[],
+      })),
+    ).rejects.toThrow("无法确认");
   });
 
   it("discards delayed lookup results after navigation without selecting or creating", async () => {
