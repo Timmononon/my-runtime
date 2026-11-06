@@ -59,6 +59,8 @@ def native_usage(raw, identity):
     miss = None
     if "cache_read_input_tokens" in raw or "cache_creation_input_tokens" in raw:
         if all(value is not None for value in (input_tokens, hit, creation)):
+            # Native input excludes cache creation here; include it in uncached input first.
+            # Add cache reads once when forming the canonical total input count.
             miss = input_tokens + creation
             input_tokens = miss + hit
         else:
