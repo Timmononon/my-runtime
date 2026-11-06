@@ -35,6 +35,8 @@ class ToolFactory:
                 "preview_manager": self.preview}
 
     async def close(self):
+        # Retire preview and browser resources before closing the shared process supervisor.
+        # These application-owned services keep their cleanup within the factory lifetime.
         await self.preview.close()
         if self.browser:
             await self.browser.close()
