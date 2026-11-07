@@ -43,6 +43,8 @@ def create_workbench_router(coordinator):
     @router.delete("/workbench/projects/{project_id}")
     async def remove(project_id: str, permanent: bool = False):
         if not permanent:
+            # Require the explicit permanent flag so older recoverable-delete clients fail closed.
+            # A stale client must not silently request the stronger deletion semantics.
             raise HTTPException(status_code=409, detail="Refresh the client before confirming permanent project deletion")
         return actions.projects.remove(project_id)
 
