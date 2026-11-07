@@ -184,6 +184,8 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         public = (request.url.path == "/health" and request.method in {"GET", "HEAD"}) or public_web_request(request)
         request.state.auth_method = None
         if not public:
+            # An explicit Authorization header selects the bearer authentication path.
+            # Invalid bearer credentials must not fall back to an unrelated browser cookie.
             supplied = request.headers.get("authorization")
             if supplied is not None:
                 if not hmac.compare_digest(supplied, "Bearer " + token):
