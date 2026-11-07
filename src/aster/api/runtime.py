@@ -39,6 +39,8 @@ def create_runtime_router(coordinator):
     @router.get("/sessions/{session_id}/lineage")
     async def lineage(session_id: str):
         coordinator.store.get_session(session_id)
+        # Resolve saved lineage from the store without starting a conversation runner.
+        # Inspecting ancestry is a management read rather than a recovery request.
         return {"lineage": coordinator.store.lineage(session_id), "ancestors": coordinator.store.session_ancestors(session_id)}
 
     @router.get("/sessions/{session_id}/mailbox")
