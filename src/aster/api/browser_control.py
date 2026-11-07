@@ -34,6 +34,8 @@ def create_browser_control_router(coordinator):
             raise HTTPException(404, "Unknown browser control operation")
         if not body.approved:
             raise HTTPException(403, "Explicit operator approval is required for these browser arguments")
+        # These controls operate on the existing lease rather than accepting new targets.
+        # Reject extra arguments before handing the request to durable browser control.
         if operation in {"pause", "resume", "detach"} and body.arguments:
             raise HTTPException(422, "This operation does not accept extra browser arguments")
         result = await coordinator.browser_controls().execute(session_id, operation, body.arguments,
