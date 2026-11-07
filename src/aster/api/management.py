@@ -57,6 +57,8 @@ def create_management_router(coordinator):
                 previous_embedding = validate_embedding_config(read_yaml(coordinator.data_dir / "config.yaml").get("embedding", {}))
             except (ValueError, TypeError):
                 pass  # A valid replacement may repair an invalid previous value.
+        # Commit against the revision observed by the operator instead of blind replacement.
+        # Only explicitly supplied fields participate in this configuration patch.
         manager.update(body.expected_revision, values)
         if "mcp_servers" in values:
             await coordinator.invalidate_mcp()
