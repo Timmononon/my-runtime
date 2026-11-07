@@ -29,6 +29,8 @@ class CandidateRequest(TaskBody):
     source_session_id: str = Field(min_length=1, max_length=200)
     text: str = Field(min_length=1, max_length=100_000)
     request_id: str = Field(min_length=1, max_length=200)
+    # Local candidate submission cannot claim the identity of a remote event source.
+    # GitHub actor identity and admission belong to the separately validated source path.
     source: Literal["local"] = "local"
 
 
