@@ -29,6 +29,8 @@ def create_content_router(coordinator) -> APIRouter:
         if size and (not size.isdigit() or int(size) > MAX_ATTACHMENT_BYTES):
             raise HTTPException(413, "Attachment exceeds 25 MiB")
         content = bytearray()
+        # Enforce the byte limit while streaming even when Content-Length is absent.
+        # A declared size never replaces checking the actual received body.
         async for chunk in request.stream():
             if len(content) + len(chunk) > MAX_ATTACHMENT_BYTES:
                 raise HTTPException(413, "Attachment exceeds 25 MiB")
