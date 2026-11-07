@@ -40,6 +40,8 @@ def create_customization_router(coordinator):
     async def mutate(session_id: str, operation: str, body: Mutation):
         read_only = {"memory_recall", "memory_history", "memory_query", "skill_package_preview"}
         allowed = read_only | {"memory_record", "memory_update", "memory_forget", "memory_semantic_recall", "skill_package_install", "skill_package_uninstall"}
+        # Limit this route to the explicit customization catalogue before dispatch.
+        # An arbitrary tool name cannot become callable through this management endpoint.
         if operation not in allowed:
             raise HTTPException(404, "Unknown customization operation")
         # The dispatcher still classifies the captured backend and applies its
