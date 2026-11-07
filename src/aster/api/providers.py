@@ -55,6 +55,8 @@ def _fields(body):
     values = body.model_dump(exclude_unset=True)
     if "api_key" in values:
         if body.api_key is None:
+            # An omitted key preserves the saved credential; explicit null is not deletion.
+            # Disconnecting uses its dedicated revision-checked operation.
             raise ValueError("Omit API key to keep it; use the key deletion endpoint to disconnect")
         values["api_key"] = body.api_key.get_secret_value()
     return values
