@@ -74,6 +74,8 @@ class UIAuth:
         if len(self._sessions) >= self.max_sessions:
             raise HTTPException(429, "Too many active browser logins; sign out or wait for expiry")
         # No await separates lookup/consumption: concurrent redeems have one winner.
+        # Consume the ticket only after validating its origin and available session capacity.
+        # A rejected redemption must not destroy an otherwise valid login opportunity.
         del self._tickets[key]
         credential = secrets.token_urlsafe(32)
         self._sessions[self._key(credential)] = BrowserGrant(origin, self.clock() + self.session_ttl, grant.cwd)
