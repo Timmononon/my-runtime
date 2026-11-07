@@ -24,6 +24,8 @@ class SourceFields(GithubBody):
     repository: str = Field(min_length=3, max_length=200)
     enabled: bool = False
     mode: Literal["read_only", "tasks"] = "read_only"
+    # Source creation starts with publishing disabled independently of its task mode.
+    # Enabling observation or task admission alone does not authorize GitHub writes.
     allow_writes: bool = False
     poll_seconds: int = Field(default=300, ge=30, le=86400)
     allowed_actors: list[str] = Field(default_factory=list, max_length=1000)
