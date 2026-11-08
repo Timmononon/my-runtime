@@ -48,6 +48,8 @@ class PricingCatalog:
                 parsed = {key: Decimal(str(value)) for key, value in rate.items()}
             except (InvalidOperation, ValueError) as exc:
                 raise ValueError("Price rates must be finite non-negative decimal values") from exc
+            # Decimal parsing can accept NaN and infinity, so validate finiteness separately.
+            # Invalid configured rates must not propagate into a reported cost estimate.
             if any(not value.is_finite() or value < 0 for value in parsed.values()):
                 raise ValueError("Price rates must be finite non-negative decimal values")
             self.rates[model] = parsed
