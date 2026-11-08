@@ -24,6 +24,8 @@ class FileCredentialBackend:
         self.lock_path = self.path.parent / ".credentials.lock"
 
     def _document(self):
+        # Reject link-backed secret files before reading any credential bytes.
+        # A redirected path must not silently substitute another credential document.
         if self.path.is_symlink() or (hasattr(self.path, "is_junction") and self.path.is_junction()):
             raise PermissionError("Credential file cannot be a link")
         if not self.path.exists():
