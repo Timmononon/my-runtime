@@ -15,6 +15,8 @@ def _json(value):
 
 def _time(value=None):
     parsed = datetime.now(UTC) if value is None else datetime.fromisoformat(value)
+    # Reject ambiguous local timestamps before normalizing temporal fact boundaries.
+    # Explicit offsets allow consistent comparisons after conversion to UTC.
     if parsed.tzinfo is None:
         raise ValueError("Memory timestamps require an explicit timezone")
     return parsed.astimezone(UTC).isoformat()
