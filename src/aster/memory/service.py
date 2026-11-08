@@ -33,6 +33,8 @@ class MemoryService:
             directory = self.root / "projects" / self.project_id
         else:
             raise ValueError("Scope must be global, current agent, or current project")
+        # Check the resolved directory so a link cannot escape the configured memory root.
+        # Scope naming alone is insufficient to establish filesystem containment.
         if not directory.resolve().is_relative_to(self.root):
             raise ValueError("Memory scope escapes root")
         return directory
