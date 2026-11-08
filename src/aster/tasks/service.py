@@ -31,6 +31,8 @@ def _narrow_permissions(parent, target):
     left, right = parent.get("allowed_tools"), target.get("allowed_tools")
     result["allowed_tools"] = (sorted(set(left) & set(right)) if left is not None and right is not None
                                else copy.deepcopy(left if left is not None else right))
+    # Restrictions accumulate across source and target while grants intersect above.
+    # A delegated worker cannot discard either side's denial or approval requirement.
     for name in ("denied_tools", "ask_tools"):
         result[name] = sorted(set(parent.get(name, [])) | set(target.get(name, [])))
     auto = set(parent.get("auto_approve_tools", [])) & set(target.get("auto_approve_tools", []))
