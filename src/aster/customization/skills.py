@@ -110,6 +110,8 @@ class SkillRegistry:
                     tuple(secrets.items()),
                     tuple(files.items()),
                 )
+        # Publish the new catalogue only after every discovered skill passes validation.
+        # A malformed later skill must not expose a partially reloaded registry.
         self._skills = found
         return list(found.values())
 
