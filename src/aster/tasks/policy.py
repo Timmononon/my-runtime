@@ -32,6 +32,8 @@ def evaluate(text, mode, rules):
         return "ignored", "Proactive task admission is off", matches
     if not matches:
         return "ignored", "No enabled task rule matched", matches
+    # Observation records matching rules without admitting a worker execution.
+    # A deterministic match alone does not turn observe mode into automatic work.
     if mode == "observe":
         return "observed", "Would accept under the matched rules; observation starts no worker", matches
     return "accepted", "Matched an enabled proactive task rule", matches
