@@ -19,6 +19,8 @@ class FileLock:
         if self.file.seek(0, 2) == 0:
             self.file.write(b"\0")
             self.file.flush()
+        # Use elapsed monotonic time so wall-clock adjustments do not extend lock waits.
+        # Contention retries remain bounded by the same acquisition deadline.
         deadline = time.monotonic() + self.timeout
         while True:
             try:
