@@ -79,6 +79,8 @@ class HookManager:
                             False, str(answer.get("reason", "Denied by pre-tool hook")), decision.outputs
                         )
                     # allow=true is only a hook opinion; it cannot override policy.
+                # Pre-tool hook failures deny admission; later hook failures remain recorded.
+                # A failed post-tool hook cannot retroactively undo an executed action.
                 except (TimeoutError, ValueError, TypeError, OSError) as exc:
                     decision.outputs.append({"event": event, "error": type(exc).__name__})
                     if event == "PreToolUse":
