@@ -158,6 +158,8 @@ class ProcessSupervisor:
         captures = {}
         result = ProcessResult(None)
         try:
+            # Windows children start suspended until the owning Job can contain them.
+            # POSIX children instead start a separate session for owned group cleanup.
             options = {"creationflags": 0x00000004 | 0x08000000} if job else {"start_new_session": True}
             process = subprocess.Popen(argv, cwd=cwd, env=merged_env, stdin=subprocess.DEVNULL,
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, **options)
