@@ -68,6 +68,8 @@ def prepare_model_image(raw: bytes, mime_type: str | None = None) -> PreparedIma
     """Return the original bytes or a bounded derivative, never an in-place edit."""
     info = inspect_image(raw, mime_type)
     if len(raw) <= TARGET_RAW_IMAGE_BYTES and max(info["width"], info["height"]) <= MODEL_IMAGE_DIMENSION:
+        # Already bounded images keep their validated original encoding and bytes.
+        # A model projection does not require recompressing every source image.
         return PreparedImage(raw, info["mime_type"], info["width"], info["height"], False)
     with Image.open(io.BytesIO(raw)) as source:
         image = ImageOps.exif_transpose(source).convert("RGBA")
