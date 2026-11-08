@@ -37,6 +37,8 @@ def repo_url(value, repo):
 def event(kind, row, repo, *, thread=None):
     if not isinstance(row, dict) or type(row.get("id")) is not int or row["id"] <= 0:
         raise GithubHTTPError("invalid_body")
+    # Actor authority comes from API metadata rather than names quoted in body text.
+    # Normalize that identity separately from the untrusted event content.
     actor = row.get("user") or row.get("actor") or {}
     if not isinstance(actor, dict) or not isinstance(actor.get("login"), str):
         raise GithubHTTPError("invalid_actor")
