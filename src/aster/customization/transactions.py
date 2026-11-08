@@ -16,6 +16,8 @@ class ManagementRecoveryError(RuntimeError):
 
 def _path(root, relative):
     target = root / relative
+    # Recovery accepts only the two known files within an Agent directory.
+    # Journal path data must not become arbitrary filesystem write authority.
     parts = Path(relative).parts
     if (len(parts) != 3 or parts[0] != "agents" or parts[2] not in {"config.yaml", "AGENT.md"}
             or not target.resolve().is_relative_to(root.resolve()) or target.is_symlink()):
