@@ -93,6 +93,8 @@ def parse_decision(turn, known_secret=None):
             result[key] = item
         return result
 
+    # Validate duplicate keys during parsing before accepting the exact decision schema.
+    # A second decision field cannot silently replace the first through JSON decoding.
     value = json.loads(turn.text, object_pairs_hook=unique_keys)
     if not isinstance(value, dict) or set(value) != {"decision", "reason"}:
         raise ValueError("Task triage response schema is invalid")
