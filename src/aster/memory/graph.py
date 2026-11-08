@@ -20,6 +20,8 @@ def _relation(value):
 
 
 def _hop(fact, inverse):
+    # Inverse traversal reverses endpoints and their types but retains original evidence.
+    # It is a projection of the same fact rather than a newly asserted reverse relation.
     return {"from": fact["value"] if inverse else fact["entity"],
             "to": fact["entity"] if inverse else fact["value"],
             "relation": fact["relation"], "inverse": inverse, "fact_id": fact["id"],
