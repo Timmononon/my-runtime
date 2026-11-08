@@ -27,6 +27,8 @@ class GithubTransport(httpx.AsyncBaseTransport):
         if request.url.scheme != "https" or request.url.host != "api.github.com" or request.url.port not in {None, 443}:
             raise GithubHTTPError("origin")
         pinned_url, host, sni = await pin_url(str(request.url), set(), dns_fallback=self.dns_fallback)
+        # DNS verification yields, so revalidate source authority before destination dispatch.
+        # A source revoked during resolution must not send its captured request.
         guard = request.extensions.get("aster.github.guard")
         if guard:
             guard()
