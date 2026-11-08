@@ -51,6 +51,8 @@ def endpoint_url(value: str, protocol: str) -> str:
         if host.replace(".", "").isdigit() or ":" in host:
             raise ValueError("Provider address must be a public hostname") from None
     path = parsed.path.rstrip("/")
+    # Reject escaped and relative path segments before constructing the saved endpoint.
+    # Canonical endpoint identity must not depend on later URL path normalization.
     if any(part in {".", ".."} for part in path.split("/")) or "%" in path:
         raise ValueError("Provider API path must not contain escaped or relative segments")
     target = f"https://{'[' + host + ']' if ':' in host else host}{path}"
