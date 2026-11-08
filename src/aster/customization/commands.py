@@ -14,6 +14,8 @@ class CommandRegistry:
         for name, template in commands.items():
             if not isinstance(template, str):
                 raise TypeError("Custom command templates must be strings")
+            # Validate placeholder syntax when loading the registry rather than on first use.
+            # Invalid command definitions cannot remain as latent expansion failures.
             if not string.Template(template).is_valid():
                 raise ValueError(f"Invalid placeholders in custom command: {name}")
             self.commands[safe_identifier(name)] = template
