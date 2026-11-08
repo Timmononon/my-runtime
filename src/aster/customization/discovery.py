@@ -16,6 +16,8 @@ def _tokens(text: str) -> list[str]:
 def search_tools(specs: list[ToolSpec], query: str, limit: int = 8) -> list[dict]:
     if not query.strip() or limit < 1:
         return []
+    # Explicit selection follows catalogue name order rather than query token order.
+    # Sorting here also makes corpus construction independent of registration timing.
     specs = sorted(specs, key=lambda spec: spec.name)
     if query.startswith("select:"):
         names = set(re.split(r"[\s,]+", query[7:].strip()))
