@@ -53,6 +53,8 @@ def _iso(value):
 
 
 def _insert(db, table, values):
+    # Reuse one ordered key list for both column names and bound parameter values.
+    # Building these sequences independently could associate a value with the wrong column.
     columns = list(values)
     db.execute(f"INSERT INTO {table} (" + ",".join(columns) + ") VALUES(" + ",".join("?" for _ in columns) + ")",
                tuple(values[key] for key in columns))
