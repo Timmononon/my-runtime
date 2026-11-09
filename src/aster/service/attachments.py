@@ -122,6 +122,8 @@ class AttachmentService:
                   "session_id": session_id, "kind": "attachment", "type": info["mime_type"], **info}
         derivative, model_record = None, None
         if info["mime_type"].startswith("image/"):
+            # Build a separate model projection while retaining the original uploaded bytes.
+            # The source attachment remains the evidence for download and later verification.
             derivative = prepare_model_image(content, info["mime_type"])
             if derivative.changed:
                 model_path = path.parent / "model" / "preview.jpg"
