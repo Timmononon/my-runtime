@@ -14,6 +14,8 @@ def initialize_lifecycle(db):
 
 
 def managed_project_id(value):
+    # Recognize only generated project registration IDs, not arbitrary legacy scope names.
+    # Matching a familiar prefix alone cannot establish managed-project identity.
     return isinstance(value, str) and re.fullmatch(r"project_[0-9a-f]{32}", value) is not None
 
 
