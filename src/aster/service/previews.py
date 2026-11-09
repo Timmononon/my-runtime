@@ -52,6 +52,8 @@ class PreviewManager:
             if self._closed:
                 raise RuntimeError("Preview manager is closed")
             self._start()
+            # Allocate a fresh unguessable capability for this session-scoped lease.
+            # A filesystem path alone is never the public preview access token.
             token = secrets.token_urlsafe(32)
             relative = path.relative_to(root).as_posix() if root else path.name
             self._leases[token] = {"path": path, "root": root, "entry": relative, "session_id": session_id,
