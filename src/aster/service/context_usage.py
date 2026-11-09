@@ -25,6 +25,8 @@ def context_usage(store, session_id):
                 payload = store.run_request(checkpoint["run_id"]) or {}
             except KeyError:
                 payload = {}
+            # Recover display identity from the request that produced this checkpoint.
+            # Current UI selections cannot relabel an older model-live context basis.
             snapshot = payload.get("snapshot", {})
             pin = snapshot.get("_provider", {}) or {}
             model = basis.get("model") or pin.get("model") or snapshot.get("model") or None
