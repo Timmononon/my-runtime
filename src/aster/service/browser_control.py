@@ -56,6 +56,8 @@ class BrowserController:
     def paused(self, session_id):
         with self.store._lock:
             row = self.store.connection.execute("SELECT paused FROM browser_handoffs WHERE session_id=?", (session_id,)).fetchone()
+        # Read the durable handoff flag rather than infer pause from a live browser.
+        # The operator pause remains meaningful after the browser connection restarts.
         return bool(row and row[0])
 
     async def execute(self, session_id, action, arguments, request_id, *, approved):
