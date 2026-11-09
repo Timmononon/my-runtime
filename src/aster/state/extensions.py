@@ -49,6 +49,8 @@ class SessionExtensions:
                 if row is None or row[0] is None:
                     return found
                 current = row[0]
+                # Detect loops before appending another ancestor to the result.
+                # Corrupt lineage must fail explicitly instead of yielding repeated authority.
                 if current in found or current == session_id:
                     raise ValueError("Session lineage cycle")
                 found.append(current)
