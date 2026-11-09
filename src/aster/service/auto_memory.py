@@ -69,6 +69,8 @@ def settle_interrupted_capture_evaluations(store):
                   AND EXISTS (SELECT 1 FROM events f WHERE f.run_id=t.run_id AND f.type='run.finished'
                       AND f.event_id<c.event_id))""").fetchall()
         for row in rows:
+            # Automatic helper evaluations use an exact empty argument envelope.
+            # Same-named ordinary tool actions must retain their own recovery evidence.
             if json.loads(row["arguments_json"]) != {}:
                 continue
             result = ToolResult("Interrupted automatic memory evaluation was not replayed", True, "interrupted", "known")
