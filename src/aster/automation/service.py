@@ -44,6 +44,8 @@ def _next_cron(expression: str, timezone: str, after: float) -> float:
     while True:
         candidate = iterator.get_next(datetime)
         instant = candidate.replace(tzinfo=zone, fold=0).timestamp()
+        # Round-trip the proposed local time to reject nonexistent daylight-saving gaps.
+        # The strict timestamp comparison also prevents reusing the previous trigger instant.
         roundtrip = datetime.fromtimestamp(instant, zone).replace(tzinfo=None)
         if roundtrip == candidate and instant > after:
             return instant
