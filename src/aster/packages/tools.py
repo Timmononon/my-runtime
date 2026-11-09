@@ -21,6 +21,8 @@ class PackageTool:
             if self.action == "preview" and not args["source"].startswith("bundled:"):
                 args["source"] = str(scoped_path(args["source"], context, must_exist=True))
             if self.action == "install":
+                # Recheck the planned source against this invocation's current path scope.
+                # A saved installation plan does not carry filesystem access permission.
                 source = manager.plan_source(args["plan_id"])
                 if not source.startswith("bundled:"):
                     scoped_path(source, context, must_exist=True)
