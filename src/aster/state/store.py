@@ -74,6 +74,8 @@ class Store(SessionExtensions, SessionLifecycle, CompactionPersistence):
             self.connection.execute("BEGIN IMMEDIATE")
             try:
                 yield self.connection
+            # Roll back interruption as well as ordinary application exceptions.
+            # A cancelled writer must not leave its partial transaction pending.
             except BaseException:
                 self.connection.rollback()
                 raise
