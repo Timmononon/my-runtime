@@ -59,6 +59,8 @@ def _safe_text(text):
     if result.lstrip().startswith(("{", "[")):
         try:
             parsed = json.loads(result)
+        # Malformed JSON-looking text keeps the already filtered textual projection.
+        # Parser diagnostics must not become an alternate way to return source content.
         except (ValueError, RecursionError):
             return result
         projected = _sanitize(parsed)
