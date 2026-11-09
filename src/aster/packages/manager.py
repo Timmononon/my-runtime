@@ -21,6 +21,8 @@ from aster.platform.filesystem import FileLock, atomic_write
 
 def tree_digest(files):
     digest = hashlib.sha256()
+    # Include sorted paths as well as content hashes in the package identity.
+    # Renaming a file must change the digest even when its bytes remain identical.
     for name, content in sorted(files.items()):
         digest.update(name.encode("utf-8") + b"\0" + hashlib.sha256(content).digest())
     return digest.hexdigest()
