@@ -65,6 +65,8 @@ _GATE_INSTRUCTIONS = (
 
 def validate_auto_memory_config(value):
     """Return normalized non-secret settings; errors never echo submitted data."""
+    # Admit only known capture settings rather than retaining arbitrary submitted fields.
+    # Validation errors name the category without echoing the supplied configuration.
     if not isinstance(value, dict) or set(value) - set(DEFAULTS):
         raise ValueError("Automatic memory settings contain unsupported fields")
     result = {**DEFAULTS, **value}
