@@ -55,6 +55,8 @@ def _narrow_settings(parent, target):
     parent["allowed_roots"] = sorted({str(root) for root in left if any(root.is_relative_to(base) for base in right)}
                                      | {str(root) for root in right if any(root.is_relative_to(base) for base in left)})
     parent["http_allowed_hosts"] = sorted(set(parent.get("http_allowed_hosts", [])) & set(target.get("http_allowed_hosts", [])))
+    # Either authority can disable DNS fallback for the delegated worker.
+    # Narrowing must never reactivate a network path disabled by source or target policy.
     if parent.get("http_dns_fallback") == "off" or target.get("http_dns_fallback") == "off":
         parent["http_dns_fallback"] = "off"
     original, current = parent.get("http_credential_origins", {}), target.get("http_credential_origins", {})
