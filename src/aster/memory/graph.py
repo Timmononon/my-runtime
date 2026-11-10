@@ -42,6 +42,8 @@ def query(memory, *, mode="direct_relation", entity=None, relation=None, path=No
         _text(entity, "entity")
         if relation is not None or candidate_type is not None or aggregate is not None:
             raise ValueError("path_query accepts path rather than relation, type or aggregation")
+        # Bound the requested hop count before scanning facts or expanding graph frontiers.
+        # A path query must provide its full explicit relation sequence up front.
         if not isinstance(path, list) or not 1 <= len(path) <= 32:
             raise ValueError("path_query requires 1-32 explicit relation hops")
         hops = [_relation(item) for item in path]
