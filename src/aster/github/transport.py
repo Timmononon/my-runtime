@@ -76,6 +76,8 @@ def next_page(headers, path):
             continue
         raw = link.strip().split(">", 1)[0].removeprefix("<")
         url = urlsplit(raw)
+        # A pagination link may advance the page but cannot change the endpoint authority.
+        # Require the same API path before accepting any continuation page number.
         if url.scheme != "https" or url.netloc != "api.github.com" or url.path != path or url.fragment:
             raise GithubHTTPError("pagination_origin")
         values = parse_qs(url.query).get("page", [])
