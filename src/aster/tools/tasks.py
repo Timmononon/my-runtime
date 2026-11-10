@@ -56,6 +56,8 @@ class TaskTool:
             binding = service.worker_binding(context.session_id)
             if self.action == "delegate":
                 if binding:
+                    # A Worker may inspect its task but cannot create another delegation layer.
+                    # New worker admission remains with the source conversation and its ledger.
                     raise PermissionError("Workers cannot recursively delegate tasks")
                 execution_id = context.services.get("tool_execution_id")
                 store = context.services["store"]
