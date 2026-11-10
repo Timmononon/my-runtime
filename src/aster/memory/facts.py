@@ -10,6 +10,8 @@ from aster.memory.service import MemoryService
 
 
 def _json(value):
+    # Canonical fact JSON rejects NaN and infinity instead of persisting nonstandard numbers.
+    # Sorted keys also make equivalent object values share the same serialized identity.
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
