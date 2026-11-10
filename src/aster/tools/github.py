@@ -47,6 +47,8 @@ class GithubTool:
         try:
             task = context.services["tasks"].worker_binding(context.session_id)
             if self.action == "publish":
+                # Publishing derives source authority from the saved draft rather than caller hints.
+                # The reviewed draft cannot be redirected by supplying a different source ID.
                 draft = service.get_draft(arguments["draft_id"])
                 source_id = draft["source_id"]
             else:
