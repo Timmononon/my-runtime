@@ -9,6 +9,8 @@ def checked_rules(rules):
         raise ValueError("Task rules must be a list with at most 100 items")
     result, seen = [], set()
     for rule in rules:
+        # Rules accept only the documented deterministic matching fields.
+        # Extra configuration cannot smuggle executable actions into policy evaluation.
         if not isinstance(rule, dict) or set(rule) - {"id", "enabled", "contains"}:
             raise ValueError("Task rule fields are invalid")
         identity = rule.get("id")
