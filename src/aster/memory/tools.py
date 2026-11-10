@@ -27,6 +27,8 @@ class FactTool:
             args = dict(arguments)
             action = self.spec.name.removeprefix("memory_")
             if action in {"record", "update"}:
+                # Runtime context supplies evidence ownership for writes to structured memory.
+                # Model arguments cannot choose another conversation or run as their source.
                 args.update(session_id=context.session_id, run_id=context.run_id)
             if action == "update":
                 action = "supersede"
