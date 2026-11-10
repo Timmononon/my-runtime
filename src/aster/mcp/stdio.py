@@ -70,6 +70,8 @@ async def managed_windows_stdio(parameters, *, max_message_bytes: int = 16 * 102
             try:
                 async with read_sender:
                     while True:
+                        # Read one extra byte so an oversized frame is detected before parsing.
+                        # Partial oversized JSON must not be admitted as a complete protocol message.
                         line = await asyncio.to_thread(process.stdout.readline, max_message_bytes + 1)
                         if not line:
                             return
