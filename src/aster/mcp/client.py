@@ -47,6 +47,8 @@ class MCPServerConfig:
 
     def __post_init__(self):
         safe_identifier(self.name)
+        # Select exactly one transport before attempting any connection.
+        # Ambiguous command and URL settings must not trigger an implicit fallback launch.
         if bool(self.command) == bool(self.url):
             raise ValueError("Configure exactly one MCP stdio command or HTTP URL")
         if self.url:
