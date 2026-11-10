@@ -50,6 +50,8 @@ class PendingBroker:
                 if context.cancel.is_set():
                     self.cancel(pid)
                     return None
+                # Use the persisted expiry rather than restarting a timeout on each wakeup.
+                # Polling or unrelated notifications must not extend an approval request lifetime.
                 remaining = pending["expires_at"] - time.time()
                 if remaining <= 0:
                     self.store.resolve_pending(pid, None, state="expired")
