@@ -61,6 +61,8 @@ def _insert(db, table, values):
 
 
 def _text(value, label, limit):
+    # Reject oversized source fields rather than silently truncating reviewed content.
+    # Whitespace normalization applies only after the complete value passes admission.
     if not isinstance(value, str) or not value.strip() or len(value) > limit:
         raise ValueError(label + " is invalid")
     return value.strip()
