@@ -44,6 +44,8 @@ def create_mcp_server(registry, execute: Callable[[str, dict], Awaitable[ToolRes
         return types.CallToolResult(
             isError=result.is_error,
             content=[types.TextContent(type="text", text=result.content)],
+            # Preserve Runtime outcome and error category alongside the MCP error flag.
+            # Consumers must distinguish uncertain execution from a known tool failure.
             structuredContent={
                 "outcome": result.outcome,
                 "error_category": result.error_category,
