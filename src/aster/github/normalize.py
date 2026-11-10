@@ -18,6 +18,8 @@ def repository(value):
 
 
 def number(value):
+    # JSON booleans are not valid thread numbers despite Python treating them as integers.
+    # Require the exact integer type before constructing repository thread references.
     if type(value) is not int or value < 1:
         raise ValueError("GitHub thread number must be a positive integer")
     return value
