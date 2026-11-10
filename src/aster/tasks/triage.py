@@ -61,6 +61,8 @@ def _digest(value):
 def checked_settings(value):
     if not isinstance(value, dict) or set(value) - set(DEFAULTS):
         raise ValueError("Task triage settings fields are invalid")
+    # Normalize into an independent settings object before validating individual fields.
+    # Callers retain their input and cannot mutate shared defaults through the result.
     result = copy.deepcopy({**DEFAULTS, **value})
     if type(result["enabled"]) is not bool:
         raise ValueError("Task triage enabled must be boolean")
