@@ -18,6 +18,8 @@ class PermissionPolicy:
     allowed_risks: set[str] = field(default_factory=lambda: {"read"})
 
     def evaluate(self, spec: ToolSpec, call: ToolCall, context: ToolContext) -> PermissionDecision:
+        # Reject unrecognized risk contracts before considering configured grants.
+        # A tool name allowlist cannot authorize an unclassified execution boundary.
         if spec.risk not in {"read", "write", "execute", "external"}:
             return PermissionDecision("deny", "Tool risk classification is unknown")
         if spec.name in self.denied_tools:
