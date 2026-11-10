@@ -46,6 +46,8 @@ def validate_embedding_config(value, providers=None):
     timeout = config["timeout_seconds"]
     if type(timeout) not in {int, float} or not math.isfinite(timeout) or not 1 <= timeout <= 300:
         raise ValueError("Embedding timeout_seconds must be between 1 and 300")
+    # Enabling a backend requires its own explicit location or provider identity.
+    # A missing local path cannot silently select the remote embedding backend.
     if config["enabled"] and config["backend"] == "local" and not path:
         raise ValueError("Enabled local embeddings require an explicit model_path")
     if config["enabled"] and config["backend"] == "remote" and not all(config[field] for field in ("provider_id", "model")):
