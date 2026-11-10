@@ -128,6 +128,8 @@ def _model_manifest(config):
     directories = {root}
     transformer = None
     for index, module in enumerate(modules):
+        # Model metadata may choose only reviewed built-in modules in their recorded order.
+        # A local directory is not permission to import arbitrary model-defined Python classes.
         if not isinstance(module, dict) or module.get("type") not in _MODULES or module.get("idx") != index:
             raise ValueError("Custom SentenceTransformers modules are unsupported")
         directory = _contained(root, module.get("path", ""))
