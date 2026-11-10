@@ -29,6 +29,8 @@ def _load(pin):
     dtype = torch.float16 if device == "cuda" else torch.float32
     # Keep CPU embedding batches from occupying every core of the workbench host.
     torch.set_num_threads(max(1, min(8, os.cpu_count() or 1)))
+    # Load only the pinned local model with remote code and credential use disabled.
+    # Missing model assets must fail locally rather than trigger a download fallback.
     model = SentenceTransformer(pin["model_path"], device=device, local_files_only=True,
                                 trust_remote_code=False, token=False, backend="torch",
                                 model_kwargs={"use_safetensors": True, "torch_dtype": dtype,
