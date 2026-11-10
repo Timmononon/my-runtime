@@ -31,6 +31,8 @@ def read_registered_artifact(store, data_dir, session_id, raw):
             continue
         try:
             path = resolve_artifact(data_dir, artifact_id=identity, path=original)
+            # Skip stale or invalid registrations without treating their paths as grants.
+            # Access still requires another valid matching record within this conversation.
         except (ValueError, KeyError, OSError):
             continue
         if raw in {identity, original, str(path)} and Path(path).is_file():
