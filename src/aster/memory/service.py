@@ -56,6 +56,8 @@ class MemoryService:
             "scope": scope,
             "name": name,
             "content": content,
+            # Version the exact stored text, including its provenance header.
+            # A provenance-only edit must still invalidate a previously observed write version.
             "version": hashlib.sha256(content.encode()).hexdigest(),
             "exists": True,
         }
