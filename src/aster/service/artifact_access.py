@@ -27,6 +27,8 @@ def read_registered_artifact(store, data_dir, session_id, raw):
     # Merely placing a file beside registered evidence does not grant access.
     for record in records:
         identity, original = record.get("artifact_id"), record.get("path")
+            # Require both the artifact identity and its original registered path.
+            # An incomplete metadata object cannot establish file access authority.
         if not identity or not original:
             continue
         try:
