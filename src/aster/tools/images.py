@@ -44,6 +44,8 @@ def render_worker(kind: str, source: Path, target: Path, options: dict) -> dict:
         path = target / f"{uuid.uuid4().hex}.jpg"
         image.save(path, "JPEG", quality=88, optimize=True)
         if path.stat().st_size > 8 * 1024 * 1024:
+            # Remove an oversized derivative before it enters the returned image catalogue.
+            # Failed rendering must not advertise an artifact that violates the wire budget.
             path.unlink()
             raise ValueError("Rendered image exceeds the 8 MiB wire budget")
         images.append({"path": str(path), "width": image.width, "height": image.height, **location})
