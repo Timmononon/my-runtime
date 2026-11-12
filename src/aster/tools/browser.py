@@ -180,6 +180,8 @@ class BrowserManager:
         self._pages[identity] = state
 
         def navigated(frame):
+            # Only top-level navigation invalidates the page-wide element reference version.
+            # Unrelated subframe navigation must not advance the main page snapshot counter.
             if frame == page.main_frame:
                 state.version += 1
 
