@@ -30,6 +30,8 @@ class DeliverableTool:
                     risk="read", replay_safe=True, concurrency_safe=False)
 
     def classify(self, arguments):
+        # Interactive preview changes the execution risk before dispatcher authorization.
+        # A static deliverable grant cannot implicitly authorize active page scripts.
         return dataclasses.replace(self.spec, risk="external" if arguments.get("interactive") else "read")
 
     async def execute(self, arguments, context):
