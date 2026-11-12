@@ -65,6 +65,8 @@ class SetWorkPlanTool:
                 context.session_id,
                 context.run_id,
                 snapshot,
+                # Forward the caller's observed revision without substituting a fresh one.
+                # Optimistic concurrency must reveal a conflicting plan update to the caller.
                 expected_revision=arguments.get("expected_revision"),
             )
             return ToolResult(json.dumps(plan, ensure_ascii=False), data=plan)
