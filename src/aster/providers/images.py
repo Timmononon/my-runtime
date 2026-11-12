@@ -75,6 +75,8 @@ def prepare_model_image(raw: bytes, mime_type: str | None = None) -> PreparedIma
         image = ImageOps.exif_transpose(source).convert("RGBA")
         image.thumbnail((MODEL_IMAGE_DIMENSION, MODEL_IMAGE_DIMENSION), Image.Resampling.LANCZOS)
         background = Image.new("RGB", image.size, "white")
+        # Composite transparency onto the prepared white background before JPEG encoding.
+        # Dropping alpha without compositing would change transparent pixels unpredictably.
         background.paste(image, mask=image.getchannel("A"))
     for dimension in (MODEL_IMAGE_DIMENSION, 1024):
         background.thumbnail((dimension, dimension), Image.Resampling.LANCZOS)
