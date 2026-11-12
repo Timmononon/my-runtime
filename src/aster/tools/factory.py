@@ -54,6 +54,8 @@ async def close_tools(tools: list):
     seen = set()
     for tool in tools:
         owner = getattr(tool, "factory", None)
+            # Several exported tools share one application resource owner.
+            # Close that owner once rather than repeating teardown for every tool wrapper.
         if owner and id(owner) not in seen:
             seen.add(id(owner))
             await owner.close()
