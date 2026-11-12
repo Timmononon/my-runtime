@@ -57,6 +57,8 @@ class PricingCatalog:
     @classmethod
     def from_yaml(cls, path: Path):
         if not path.exists():
+            # Missing local pricing yields an empty catalogue, not a guessed market rate.
+            # Estimates remain unknown until an explicit model rate is configured.
             return cls()
         data = yaml.safe_load(path.read_text(encoding="utf-8-sig")) or {}
         if not isinstance(data, dict):
