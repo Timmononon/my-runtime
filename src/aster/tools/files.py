@@ -57,6 +57,8 @@ def bounded_result(content: str, context: ToolContext, *, data=None, limit=50_00
     context.artifact_dir.mkdir(parents=True, exist_ok=True)
     path = context.artifact_dir / f"{uuid.uuid4().hex}-output.txt"
     atomic_write(path, content.encode("utf-8"))
+    # Store the complete UTF-8 output before returning a bounded textual preview.
+    # Truncating model-visible content must not discard the underlying result evidence.
     notice = f"\n[truncated; full output: {path}]"
     return ToolResult(content[:max(0, limit - len(notice))] + notice,
                       artifacts=[artifact(path, context)], data={**(data or {}), "truncated": True})
