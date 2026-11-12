@@ -94,6 +94,8 @@ def to_dict(value: Any) -> Any:
         return [to_dict(v) for v in value]
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
+    # Reject unsupported live objects instead of serializing their attributes implicitly.
+    # Persisted domain data must cross the explicit supported-value boundary.
     raise TypeError(f"Not a JSON-safe domain value: {type(value).__name__}")
 
 
