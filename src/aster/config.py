@@ -72,6 +72,8 @@ def read_yaml(path: Path | None) -> dict:
 def _merge(base: dict, overlay: dict) -> dict:
     result = copy.deepcopy(base)
     for key, value in overlay.items():
+        # Permission narrowing has its own rules rather than ordinary overlay replacement.
+        # Generic nested configuration merging must not widen grants through this path.
         if key == "permissions":
             continue
         if isinstance(value, dict) and isinstance(result.get(key), dict):
