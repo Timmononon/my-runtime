@@ -256,6 +256,8 @@ def _usage(raw: dict | None) -> Usage:
     raw = copy.deepcopy(raw) if isinstance(raw, dict) else {}
 
     def count(value):
+        # Missing or invalid usage stays unknown rather than becoming a measured zero.
+        # Booleans are rejected even though they satisfy Python integer checks.
         return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
 
     hit = count((raw.get("input_tokens_details") or {}).get("cached_tokens"))
