@@ -35,6 +35,8 @@ def safe_text(value, secret):
     if not isinstance(value, str):
         return ""
     if secret:
+        # Check common URL encodings as well as literal text for the known credential.
+        # Encoding a secret in a returned snippet must not bypass response redaction.
         for decode in (lambda text: text, unquote, unquote_plus):
             decoded = decode(value)
             if secret in decoded:
