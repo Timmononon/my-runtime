@@ -47,6 +47,8 @@ def _filesystem_path(path: Path) -> Path:
 def _read_json(path: Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
+        # Persisted management documents require mappings before any field lookup.
+        # A valid JSON scalar or list is still an invalid document for this reader.
         raise ValueError(f"Expected JSON object in {path.name}")  # noqa: TRY004 - malformed persisted data
     return value
 
