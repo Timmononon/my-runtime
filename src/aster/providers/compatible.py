@@ -61,6 +61,8 @@ def chat_input(messages, system, artifact_root=None, artifact_resolver=None):
         message.provider_items = []
         message.reasoning = None
     encode_messages(canonical, artifact_root, artifact_resolver)
+    # Place the current system prompt ahead of the canonical chat history.
+    # Provider-specific opaque fields were removed from the private projection above.
     result = [{"role": "system", "content": system}]
     images, pending = [], set()
     for message in canonical:
