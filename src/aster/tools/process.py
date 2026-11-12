@@ -36,6 +36,8 @@ class ProcessTool:
         try:
             validate(arguments, self.spec.parameters)
             cwd = scoped_path(arguments.get("cwd", str(context.cwd)), context, must_exist=True)
+            # Resolve the scoped working path before validating it as a directory.
+            # A readable file path is not a valid child process working directory.
             if not cwd.is_dir():
                 raise ValueError("cwd must be a directory")
             on_cancel = None
