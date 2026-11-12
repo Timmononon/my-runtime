@@ -22,6 +22,8 @@ def extract_document(path: Path, *, max_units=1000, max_chars=2_000_000) -> dict
                 warnings.append("Extraction budget reached")
             return False
         text = str(text)
+        # Preserve source coordinates even when the final extracted unit is clipped.
+        # The remaining character budget is shared across every document unit.
         available = max_chars - used
         units.append({"location": location, "text": text[:available]})
         used += min(len(text), available)
