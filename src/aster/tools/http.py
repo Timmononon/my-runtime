@@ -112,6 +112,8 @@ async def pin_url(raw: str, allowed_hosts: set[str], *, dns_fallback="off", dns_
     if url.scheme not in {"http", "https"} or not url.host or url.username or url.password:
         raise ValueError("Only HTTP(S) URLs without embedded credentials are supported")
     if any(SECRET_NAME.search(key) for key, _ in parse_qsl(url.query.decode(), keep_blank_values=True)):
+        # Reject credential-bearing query fields before hostname resolution or dispatch.
+        # Public destination validation does not make URL-carried secrets acceptable.
         raise ValueError("Credentials in URL query strings are forbidden; use credential_headers")
     addresses = await asyncio.wait_for(asyncio.get_running_loop().getaddrinfo(
         url.host, url.port or (443 if url.scheme == "https" else 80), type=socket.SOCK_STREAM), 10)
