@@ -10,6 +10,8 @@ from aster.tools.base import Tool
 class Registry:
     def __init__(self, tools: list[Tool] | None = None):
         self._tools: dict[str, Tool] = {}
+        # Initial tools pass through the same collision and schema checks as later additions.
+        # Constructor order cannot silently turn duplicate names into last-writer wins.
         for tool in tools or []:
             self.register(tool)
 
