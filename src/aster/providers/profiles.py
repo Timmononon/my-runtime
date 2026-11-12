@@ -56,6 +56,8 @@ def endpoint_url(value: str, protocol: str) -> str:
     if any(part in {".", ".."} for part in path.split("/")) or "%" in path:
         raise ValueError("Provider API path must not contain escaped or relative segments")
     target = f"https://{'[' + host + ']' if ':' in host else host}{path}"
+        # The native protocol is bound to its canonical service address.
+        # A different compatible endpoint must not inherit native credential routing.
     if protocol == "deepseek_responses" and target != "https://api.deepseek.com":
         raise ValueError("DeepSeek protocol is pinned to https://api.deepseek.com")
     return target
