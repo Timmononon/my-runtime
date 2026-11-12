@@ -45,6 +45,8 @@ def calculate(expression, settings=None):
         return value
 
     def evaluate(node):
+        # Recheck elapsed time on each recursive AST visit using a monotonic clock.
+        # Nested expressions share one execution budget instead of resetting per subtree.
         if time.monotonic() - began > budget["seconds"]:
             raise ValueError("Arithmetic exceeds configured execution budget")
         if isinstance(node, ast.Constant) and type(node.value) in {int, float}:
