@@ -36,6 +36,8 @@ async def handle_command(args, coordinator):
             value = to_dict(await coordinator.execute_session_tool(args.session, "skill_package_" + args.skill_action,
                 arguments, unattended=True, approved=True))
     elif args.command == "memory":
+        # Parse CLI memory arguments as data before choosing a governed operation.
+        # The following object check rejects valid JSON arrays and scalar payloads.
         arguments = json.loads(args.arguments)
         if not isinstance(arguments, dict):
             raise ValueError("Memory arguments must be a JSON object")
