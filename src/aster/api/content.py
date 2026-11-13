@@ -80,6 +80,8 @@ def create_content_router(coordinator) -> APIRouter:
         manager = getattr(coordinator.factory, "preview", None)
         if manager is None:
             raise HTTPException(503, "Preview service is unavailable")
+        # Grant a containing asset directory only when the registration declares preview assets.
+        # Ordinary attachment previews retain a single-file lease instead of sibling access.
         url = manager.register(path, session_id, root=path.parent if record.get("preview_assets") else None,
                                interactive=body.interactive)
         return {"artifact_id": body.artifact_id, "preview_url": url,
