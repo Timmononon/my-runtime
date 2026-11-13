@@ -60,6 +60,8 @@ def create_management_router(coordinator):
         # Commit against the revision observed by the operator instead of blind replacement.
         # Only explicitly supplied fields participate in this configuration patch.
         manager.update(body.expected_revision, values)
+        # Invalidate connection state after the configuration update has committed.
+        # Subsequent dispatch must not reuse extensions captured under the previous settings.
         if "mcp_servers" in values:
             await coordinator.invalidate_mcp()
         if "embedding" in values and previous_embedding != validate_embedding_config(values["embedding"]):
