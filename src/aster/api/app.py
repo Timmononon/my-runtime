@@ -212,6 +212,8 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
 
     @app.exception_handler(KeyError)
     async def missing(request, error):
+        # Normalize missing-resource errors without serializing the original exception key.
+        # Internal identifiers and rejected lookup values stay out of this public response.
         return JSONResponse({"error": "not_found"}, status_code=404)
 
     @app.exception_handler(RequestValidationError)
