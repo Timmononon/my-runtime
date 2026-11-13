@@ -95,6 +95,8 @@ def create_tasks_router(coordinator):
 
     @router.patch("/tasks/triage/settings")
     async def update_triage_settings(body: TriageSettings):
+        # Omitted optional settings leave the saved values intact.
+        # Explicit false remains in the patch so disabling triage is not lost as an empty value.
         return coordinator.task_triage.update_settings(**body.model_dump(exclude_none=True))
 
     @router.get("/tasks/triage/decisions")
