@@ -53,6 +53,8 @@ class UIAuth:
     def _prune(self):
         now = self.clock()
         for entries in (self._tickets, self._sessions):
+            # Iterate a snapshot so expired grants can be removed during this pass.
+            # Pruning covers pending login tickets and active browser sessions together.
             for key, grant in list(entries.items()):
                 if grant.expires_at <= now:
                     del entries[key]
