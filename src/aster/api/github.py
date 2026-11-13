@@ -125,6 +125,8 @@ def create_github_router(coordinator):
     async def events(source_id: str, after: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=500)):
         values = service.events(source_id, after=after, limit=limit)
         tail = values[-1]["seq"] if values else after
+        # Probe one stored event beyond the tail rather than infer more data from page length.
+        # Pagination metadata is computed locally and does not poll GitHub.
         has_more = bool(values and service.events(source_id, after=tail, limit=1))
         return {"events": values, "has_more": has_more, "next_after": tail if has_more else None}
 
