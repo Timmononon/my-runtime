@@ -91,6 +91,8 @@ def create_provider_router(coordinator):
         try:
             return await coordinator.providers.fetch_models(provider_id, body.expected_revision)
         except ProviderError as error:
+            # Return bounded failure classification instead of a raw provider response body.
+            # Catalogue errors must not echo credentials or text returned by the endpoint.
             return JSONResponse({"error": "provider", "category": error.category,
                                  "status_code": error.status_code}, status_code=502)
 
