@@ -101,6 +101,8 @@ def to_dict(value: Any) -> Any:
 
 def message_from_dict(value: dict) -> Message:
     data = dict(value)
+    # Rebuild typed calls on a new mapping while leaving the persisted input untouched.
+    # Loading a transcript must not replace nested call dictionaries in its source record.
     data["tool_calls"] = [ToolCall(**item) for item in data.get("tool_calls", [])]
     return Message(**data)
 
