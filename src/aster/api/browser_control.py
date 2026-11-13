@@ -24,6 +24,8 @@ def create_browser_control_router(coordinator):
         if manager:
             return {**manager.status(session_id, config), "paused": coordinator.browser_controls().paused(session_id),
                     "receipts": coordinator.browser_controls().receipts(session_id)}
+        # Report browser availability without creating a manager or attaching a page.
+        # Configuring a CDP endpoint alone must not make this status read open a connection.
         return {"mode": config["mode"], "paused": False, "pages": [], "attached": False,
                 "bridge_configured": bool(config["cdp_endpoint"]), "headed": False, "available": False}
 
