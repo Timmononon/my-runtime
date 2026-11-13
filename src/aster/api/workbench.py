@@ -67,6 +67,8 @@ def create_workbench_router(coordinator):
 
     @router.post("/sessions/{session_id}/compact")
     async def compact(session_id: str, body: CompactRequest | None = None):
+        # An omitted request body selects local deterministic compaction.
+        # Model-backed summary work requires an explicitly selected semantic method.
         method = body.method if body else "deterministic"
         try:
             return await coordinator.manual_compact(session_id, method=method)
