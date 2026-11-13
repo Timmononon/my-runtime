@@ -15,6 +15,8 @@ class Mutation(BaseModel):
 
 
 def scoped_memory(coordinator, session_id):
+    # Derive memory ownership from the saved conversation rather than request parameters.
+    # A query cannot switch to another Agent or project by supplying a different scope owner.
     session = coordinator.store.get_session(session_id)
     return StructuredMemory(coordinator.store, MemoryService(coordinator.data_dir / "memory",
         agent_id=session["agent_id"], project_id=session["project_id"], history_search=coordinator.store.search_messages))
