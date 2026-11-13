@@ -27,6 +27,8 @@ def create_runtime_router(coordinator):
     @router.post("/sessions/{session_id}/side-chat", status_code=201)
     async def side_chat(session_id: str, body: SideChat):
         child = coordinator.branch(session_id, side_chat=True, **body.model_dump(exclude={"text", "attachments"}))
+        # Create the child first, then submit any initial content to its own session.
+        # Opening an empty side chat must not start a model run in either conversation.
         if body.text or body.attachments:
             child["run"] = await coordinator.submit(child["id"], body.text or "", attachments=body.attachments)
         return child
