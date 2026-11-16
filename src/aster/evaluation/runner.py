@@ -33,6 +33,8 @@ from aster.tools.registry import Registry
 class ProtocolDriver:
     """A known call sequence for testing the Runtime, not a language model."""
     def __init__(self, task):
+        # Keep answer and evidence expectations outside the scripted tool-call driver.
+        # Offline call sequences exercise Runtime behavior without consulting the answer oracle.
         self.task = {key: copy.deepcopy(value) for key, value in task.items() if key != "oracle"}
         self.step = 0
 
