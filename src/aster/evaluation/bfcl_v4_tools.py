@@ -61,6 +61,8 @@ def _literal(node):
         value = ast.literal_eval(node)
     except (SyntaxError, ValueError, TypeError, MemoryError, RecursionError) as error:
         raise BFCLExecutionUnsupported("Function arguments must be literals") from error
+    # Literal parsing alone does not bound nesting, collection size or floating-point overflow.
+    # Apply those data budgets before passing arguments to the isolated simulator.
     _finite(value)
     return value
 
