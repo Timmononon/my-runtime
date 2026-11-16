@@ -61,6 +61,8 @@ def _rows(path):
         if not line.strip():
             continue
         try:
+            # Reject duplicate keys and nonfinite constants before accepting a record identity.
+            # Silent JSON coercion could otherwise change a task or its expected arguments.
             row = json.loads(line, object_pairs_hook=_object, parse_constant=_constant)
             json.dumps(row, allow_nan=False)
         except (ValueError, RecursionError) as error:
