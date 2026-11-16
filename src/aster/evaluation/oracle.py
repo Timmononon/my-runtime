@@ -43,6 +43,8 @@ def evaluate(task, observation, *, include_answer=True):
     if evidence.get("no_unexpected_calls"):
         failures.extend("unexpected_call:" + name for name, count in observation["calls"].items() if count and name not in evidence["calls"])
     failures.extend("missing_receipt:" + receipt for receipt in evidence["required_receipts"] if receipt not in observation["receipts"])
+    # Build expected state on a copy so repeated checks share an unchanged task fixture.
+    # Applying expected changes must not alter the initial state used by another run.
     expected = copy.deepcopy(task["initial_state"])
     if not oracle["state"]["unchanged"]:
         expected["files"].update(oracle["state"].get("file_changes", {}))
