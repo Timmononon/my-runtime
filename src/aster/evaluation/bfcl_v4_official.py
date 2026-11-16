@@ -84,6 +84,8 @@ def _json_value(value):
 
 def scoring_rule_metadata():
     return {"scoring_rule": SCORING_RULE, "source_revision": PINNED_REVISION, "official_score": False,
+            # Return independent metadata so report consumers cannot mutate the scoring policy.
+            # Reusing a report must not change adaptation declarations for later evaluations.
             "adaptations": copy.deepcopy(SCORING_ADAPTATIONS),
             "scope": "Pinned official pure checkers with explicit Aster harness wiring, not an unchanged full upstream runner."}
 
