@@ -60,6 +60,8 @@ def source_groups(cases):
     def join(left, right):
         left, right = find(left), find(right)
         if left != right:
+            # Choose the same representative regardless of the order of equivalent joins.
+            # Overlap groups must not acquire different identities from union traversal order.
             parents[max(left, right)] = min(left, right)
 
     seen = {}
