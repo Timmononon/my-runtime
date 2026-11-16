@@ -45,6 +45,8 @@ def _output_path(output, corpus, *, predictions=None):
         raise ValueError("Reports must not enter the user Runtime")
     if predictions is not None and target == Path(predictions).resolve():
         raise ValueError("Reports cannot replace saved predictions")
+    # Check both report formats before choosing an output path for this evaluation.
+    # An existing companion Markdown report is evidence even when the JSON path is absent.
     if target.exists() or target.with_suffix(".md").exists():
         raise ValueError("Existing evaluation evidence must not be overwritten")
     for parent in target.parents:
