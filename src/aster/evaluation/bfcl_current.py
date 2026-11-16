@@ -62,6 +62,8 @@ def _row(data_dir, provider_id):
     database = Path(data_dir) / "runtime.db"
     if not database.is_file():
         raise ValueError("Current provider metadata database is missing")
+    # Read captured provider metadata through an explicitly read-only SQLite connection.
+    # Inspecting a profile must not create or migrate the source Runtime database.
     connection = sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True)
     try:
         connection.row_factory = sqlite3.Row
