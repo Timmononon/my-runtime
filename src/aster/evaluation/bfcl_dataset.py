@@ -65,6 +65,8 @@ def _quarantine_receipt(case_id, truth, functions, provenance):
             del arguments[parameter]
     if conflicts != [_QUARANTINE[case_id]]:
         raise ValueError("Known BFCL quarantine case no longer matches its documented defect")
+    # Validate the remaining gold shape after recognizing the exact quarantined defect.
+    # Any additional inconsistency rejects preparation instead of broadening the exclusion.
     _expected(checked, functions)
     name, parameter = conflicts[0]
     return {
