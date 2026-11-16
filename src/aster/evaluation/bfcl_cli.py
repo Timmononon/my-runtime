@@ -46,6 +46,8 @@ def inspect_inputs(data_path, answers_path, *, category=None, case_ids=None):
         selected = set(case_ids)
         if len(selected) != len(case_ids) or not selected or not selected <= {case["id"] for case in cases}:
             raise ValueError("Unknown, duplicate or empty BFCL case selection")
+        # Preserve corpus order while filtering an explicitly validated selection.
+        # Reordering CLI case flags must not change the resulting inspection sequence.
         cases = [case for case in cases if case["id"] in selected]
     return {
         "schema_version": 1,
