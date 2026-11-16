@@ -51,6 +51,8 @@ def _object(pairs):
 
 def _number(value):
     number = float(value)
+    # Finite-looking JSON exponents can overflow when converted to a Python float.
+    # Reject that overflow here rather than admit infinity into pinned scoring inputs.
     if not math.isfinite(number):
         raise ValueError("Non-finite JSON number")
     return number
