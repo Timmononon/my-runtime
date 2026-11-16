@@ -21,6 +21,8 @@ async def handle_command(args, coordinator=None):
     report = await run_evaluation(args.output, mode="live" if args.live else "offline", case_ids=args.case_ids,
                                   max_requests=args.max_requests, max_output_tokens=args.max_output_tokens)
     print(json.dumps({"output": str(args.output), "mode": report["mode"], "totals": report["totals"]}, indent=2))
+    # Exit status reports failed checks; unsupported quality remains a separate report field.
+    # A successful offline command does not establish language-model answer quality.
     return 2 if report["totals"].get("fail") else 0
 
 
