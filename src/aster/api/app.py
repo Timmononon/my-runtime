@@ -33,7 +33,8 @@ MANAGEMENT_CAPABILITIES = ("management_v1", "mcp_health_v1", "automation_selecti
                            "browser_handoff_v1", "web_search_v1", "web_search_deepseek_v1", "memory_graph_v1", "memory_semantic_recall_v1",
                            "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1",
                            "memory_auto_capture_v1", "local_tasks_v1", "github_sources_v1", "task_triage_v1",
-                           "task_triage_binary_v1", "github_tool_sources_v1", "task_worker_interactions_v1")
+                           "task_triage_binary_v1", "github_tool_sources_v1", "task_worker_interactions_v1",
+                           "feishu_cli_status_v1")
 
 
 def load_api_token(data_dir: Path) -> str:
@@ -148,6 +149,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     from aster.api.browser_control import create_browser_control_router
     from aster.api.content import create_content_router
     from aster.api.customization import create_customization_router
+    from aster.api.feishu import create_feishu_router
     from aster.api.github import create_github_router
     from aster.api.management import create_management_router
     from aster.api.providers import create_provider_router
@@ -161,6 +163,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     app.include_router(create_runtime_router(coordinator))
     app.include_router(create_tasks_router(coordinator))
     app.include_router(create_github_router(coordinator))
+    app.include_router(create_feishu_router(coordinator))
     app.include_router(create_provider_router(coordinator))
     app.include_router(create_workbench_router(coordinator))
     app.include_router(create_web_router(coordinator, browser_auth, static_root))

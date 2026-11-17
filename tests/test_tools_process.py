@@ -24,6 +24,25 @@ async def test_dual_stream_bounded_capture(tmp_path):
     assert all(Path(item["path"]).stat().st_size == 4096 for item in result.artifacts)
 
 
+@pytest.mark.parametrize("mode", ["success", "error", "timeout"])
+async def test_sensitive_process_output_never_opens_raw_capture_files(tmp_path, mode):
+    supervisor = ProcessSupervisor(preview_bytes=128)
+    script = "import sys,time;print('synthetic-sensitive-output',flush=True);print('synthetic-error',file=sys.stderr,flush=True);"
+    script += "time.sleep(30)" if mode == "timeout" else "sys.exit(3)" if mode == "error" else "sys.exit(0)"
+    try:
+        result = await supervisor.run([sys.executable, "-c", script], cwd=tmp_path,
+                                      artifact_dir=tmp_path / "output", timeout=2 if mode == "timeout" else 10,
+                                      persist_output=False)
+        assert "synthetic-sensitive-output" in result.stdout
+        assert "synthetic-error" in result.stderr
+        assert not result.artifacts and not list((tmp_path / "output").iterdir())
+        assert result.timed_out == (mode == "timeout")
+        if mode != "timeout":
+            assert result.exit_code == (3 if mode == "error" else 0)
+    finally:
+        await supervisor.close()
+
+
 @pytest.mark.windows
 @pytest.mark.skipif(os.name != "nt", reason="Windows Job Object integration")
 async def test_job_cancels_child_and_grandchild(tmp_path):

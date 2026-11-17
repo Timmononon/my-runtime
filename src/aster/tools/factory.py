@@ -6,6 +6,7 @@ from aster.tools.basics import build_basic_tools
 from aster.tools.browser import BrowserManager, build_browser_tools
 from aster.tools.deliverables import DeliverableTool
 from aster.tools.documents import DocumentTool
+from aster.tools.feishu import FeishuCLITool
 from aster.tools.files import build_file_tools
 from aster.tools.http import HTTPTool
 from aster.tools.images import ImageTool
@@ -25,7 +26,7 @@ class ToolFactory:
                                                       for kind in ("pdf", "docx", "xlsx", "pptx")]
         self.tools += [ImageTool(self.supervisor), ImageTool(self.supervisor, pdf=True),
                        HTTPTool(), HTTPTool(fetch=True), DeliverableTool()]
-        self.tools += build_basic_tools(self.supervisor) + [SearchTool()]
+        self.tools += build_basic_tools(self.supervisor) + [SearchTool(), FeishuCLITool(self.supervisor, data_dir)]
         if self.browser:
             self.tools += build_browser_tools(self.browser)
 

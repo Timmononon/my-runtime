@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import ctypes
 import os
 import signal
@@ -13,6 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import psutil
+
+MEMORY_CAPTURE_LIMIT_ERROR = "Process output exceeded the bounded in-memory capture limit"
 
 
 class WindowsJob:
@@ -120,18 +123,22 @@ class ProcessSupervisor:
     async def run(self, argv: list[str], *, cwd: Path, artifact_dir: Path,
                   cancel: asyncio.Event | None = None, env: dict[str, str] | None = None,
                   timeout: float = 60, encoding: str = "utf-8",
-                  on_cancel: Callable[[], None] | None = None, session_id: str | None = None) -> ProcessResult:
+                  on_cancel: Callable[[], None] | None = None, session_id: str | None = None,
+                  persist_output: bool = True) -> ProcessResult:
         if not argv or not all(isinstance(arg, str) and "\0" not in arg for arg in argv):
             raise ValueError("argv must be a non-empty string list without NUL")
         if timeout <= 0:
             raise ValueError("timeout must be positive")
+        if type(persist_output) is not bool:
+            raise ValueError("persist_output must be a boolean")
         stopped = threading.Event()
         with self._lock:
             if self._closed:
                 raise RuntimeError("Process supervisor is closed")
             self._pending.add(stopped)
         task = asyncio.create_task(asyncio.to_thread(
-            self._run, argv, Path(cwd), Path(artifact_dir), cancel, stopped, env, timeout, encoding, on_cancel, session_id
+            self._run, argv, Path(cwd), Path(artifact_dir), cancel, stopped, env, timeout, encoding, on_cancel, session_id,
+            persist_output
         ))
         try:
             return await asyncio.shield(task)
@@ -143,7 +150,8 @@ class ProcessSupervisor:
             with self._lock:
                 self._pending.discard(stopped)
 
-    def _run(self, argv, cwd, artifact_dir, cancel, stopped, env, timeout, encoding, on_cancel, session_id):
+    def _run(self, argv, cwd, artifact_dir, cancel, stopped, env, timeout, encoding, on_cancel, session_id,
+             persist_output=True):
         start = time.monotonic()
         if stopped.is_set() or (cancel and cancel.is_set()):
             return ProcessResult(None, cancelled=True)
@@ -177,13 +185,17 @@ class ProcessSupervisor:
 
                 def drain(stream=pipe, data=capture, target=path):
                     try:
-                        with target.open("wb") as output:
+                        # Sensitive CLI envelopes remain in bounded memory when
+                        # persistence is disabled. No raw stream file is opened.
+                        with target.open("wb") if persist_output else contextlib.nullcontext() as output:
                             while block := stream.read(8192):
                                 data["size"] += len(block)
                                 remaining = max(0, self.output_bytes - data["written"])
-                                output.write(block[:remaining])
+                                if output is not None:
+                                    output.write(block[:remaining])
                                 data["written"] += len(block[:remaining])
-                                space = max(0, self.preview_bytes - len(data["preview"]))
+                                capture_limit = self.preview_bytes if persist_output else self.output_bytes
+                                space = max(0, capture_limit - len(data["preview"]))
                                 data["preview"].extend(block[:space])
                     except Exception as exc:  # noqa: BLE001 - reader failure must terminate its owner
                         data["error"] = str(exc)
@@ -234,12 +246,15 @@ class ProcessSupervisor:
                     result.error = "Output reader did not finish after process-tree cleanup"
             for name, (capture, path, identity) in captures.items():
                 setattr(result, name, bytes(capture["preview"]).decode(encoding, errors="replace"))
-                result.artifacts.append({"artifact_id": identity, "path": str(path), "type": "text/plain",
-                                         "size": capture["written"], "stream": name,
-                                         "total_bytes": capture["size"],
-                                         "truncated": capture["size"] > capture["written"]})
+                if persist_output:
+                    result.artifacts.append({"artifact_id": identity, "path": str(path), "type": "text/plain",
+                                             "size": capture["written"], "stream": name,
+                                             "total_bytes": capture["size"],
+                                             "truncated": capture["size"] > capture["written"]})
                 if capture["error"]:
                     result.error = capture["error"]
+                elif not persist_output and capture["size"] > self.output_bytes:
+                    result.error = MEMORY_CAPTURE_LIMIT_ERROR
             if process:
                 with self._lock:
                     self._active.pop(process.pid, None)

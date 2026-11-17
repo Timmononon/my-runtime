@@ -1,12 +1,14 @@
 """Installed-package probe launched only inside verify_web_wheel's temporary cwd."""
 from __future__ import annotations
 
+import asyncio
 import json
 import sqlite3
 import sys
 import tempfile
 from contextlib import closing
 from pathlib import Path
+from unittest.mock import patch
 
 import httpx
 from fastapi.testclient import TestClient
@@ -15,8 +17,10 @@ import aster
 from aster.api import create_app
 from aster.config import load_config
 from aster.customization.credentials import CredentialStore
+from aster.domain import ToolContext
 from aster.paths import resolve_data_dir
 from aster.service import RunCoordinator
+from aster.tools.factory import ToolFactory
 
 
 def check():
@@ -53,6 +57,25 @@ def check():
             assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='session_lifecycle'").fetchone()
             assert "created_at" not in {row[1] for row in db.execute("PRAGMA table_info(automation_triggers)")}
         CredentialStore(data_dir=home).set("synthetic-seeded-upgrade","synthetic-seeded-upgrade-secret")
+
+        async def probe_optional_feishu():
+            # Use the installed Factory with disposable state; neither catalogue
+            # construction nor a missing optional CLI may start a subprocess.
+            factory = ToolFactory(home, browser_enabled=False)
+            try:
+                feishu, = [tool for tool in factory.tools if tool.spec.name == "feishu_cli"]
+                assert Path(sys.modules["aster.tools.feishu"].__file__).resolve().is_relative_to(target)
+                context = ToolContext(sid, "installed-feishu-probe", cwd, home / "feishu-probe", asyncio.Event())
+                missing = await feishu.execute({"argv": ["calendar", "+agenda"]}, context)
+                assert missing.is_error and missing.error_category == "configuration"
+                assert missing.outcome == "not_executed"
+                assert not (home / "tools" / "feishu-cli").exists()
+                assert not (home / "feishu-cli").exists()
+            finally:
+                await factory.close()
+
+        with patch("subprocess.Popen", side_effect=AssertionError("Installed Feishu catalogue must stay offline")):
+            asyncio.run(probe_optional_feishu())
         github_network_calls = []
 
         def forbid_github_network(request):
@@ -166,6 +189,7 @@ def check():
         "installed_legacy_schema_upgrade": "passed", "raw_upgrade_history_preserved": True,
         "installed_project_instructions": "passed", "synthetic_file_credentials_write_only": "passed",
         "installed_local_task_observation": "passed", "installed_model_calls": 0,
+        "installed_feishu_cli_catalogue": "passed", "installed_feishu_cli_missing_dependency": "passed",
         "installed_github_offline_management": "passed", "installed_github_network_calls": len(github_network_calls),
         "installed_task_triage_offline_management": "passed", "installed_task_triage_model_calls": len(triage_model_calls)}))
 
