@@ -29,6 +29,8 @@ frontend/coverage/
 /docs/*
 !/docs/feishu-cli.md
 !/docs/service-api.md
+!/docs/feishu-task-sources.md
+!/docs/task-triage.md
 /AGENTS.md
 /HANDOFF.md
 /STATUS.md

@@ -72,6 +72,9 @@ class SessionLifecycle:
         github = getattr(self, "_github_service", None)
         if github is not None:
             github.check_lifecycle(ids, "archive")
+        feishu = getattr(self, "_feishu_service", None)
+        if feishu is not None:
+            feishu.check_lifecycle(ids, "archive")
         if db.execute(f"SELECT 1 FROM runs WHERE session_id IN ({placeholders}) AND status IN "
                       "('queued','running','waiting_approval','waiting_input','cancelling') LIMIT 1", ids).fetchone():
             raise SessionBusy("Finish or cancel active and queued work in this conversation or its related branches first")
@@ -172,6 +175,9 @@ class SessionLifecycle:
                 github = getattr(self, "_github_service", None)
                 if github is not None:
                     github.cleanup_session(session_id, db=db)
+                feishu = getattr(self, "_feishu_service", None)
+                if feishu is not None:
+                    feishu.cleanup_session(session_id, db=db)
                 tasks = getattr(self, "_task_service", None)
                 if tasks is not None:
                     tasks.cleanup_session(session_id, db=db)

@@ -20,6 +20,10 @@ import Conversation from "./Conversation";
 import PendingCard from "./PendingCard";
 import { Icon } from "./icons";
 import { readSessionSnapshot } from "./sessionSnapshot";
+import {
+  RECONCILIATION_NOTICE,
+  runRequiresReconciliation,
+} from "./reconciliation";
 import { sessionState } from "./SessionLifecycle";
 import { StreamCache, SubmissionLedger } from "./state";
 import { activeStatus, Markdown, sizeLabel, Spinner, Status } from "./ui";
@@ -41,6 +45,7 @@ export default function SideChatPanel({
   session,
   visible,
   providers,
+  runtimeCapabilities,
   lifecycleBusy,
   assistantName,
   options,
@@ -54,6 +59,7 @@ export default function SideChatPanel({
   session: Session;
   visible: boolean;
   providers: ModelProvider[];
+  runtimeCapabilities?: readonly string[];
   lifecycleBusy: boolean;
   assistantName: string;
   options: Session[];
@@ -99,6 +105,16 @@ export default function SideChatPanel({
     lastTop = useRef(0),
     firstScroll = useRef(true);
   const busy = activeStatus(run?.status),
+    requiresReconciliation = runRequiresReconciliation(
+      run,
+      runtimeCapabilities,
+      detail,
+    ),
+    resultStatus = requiresReconciliation
+      ? "needs_reconciliation"
+      : run?.status === "needs_reconciliation"
+        ? null
+        : run?.status,
     closed = !!detail?.lineage?.closed_at,
     locked =
       loading ||
@@ -313,7 +329,7 @@ export default function SideChatPanel({
       (!draft.trim() && !files.length) ||
       (!busy && !ready) ||
       !selection ||
-      run?.status === "needs_reconciliation"
+      requiresReconciliation
     )
       return;
     sendFlight.current = true;
@@ -515,7 +531,7 @@ export default function SideChatPanel({
             </div>
           ) : (
             <>
-              {!records.length && !busy && (
+              {!records.length && !busy && !requiresReconciliation && (
                 <div className="side-chat-empty">
                   <Icon name="chat" size={26} />
                   <h3>继续聊聊这一点</h3>
@@ -564,17 +580,17 @@ export default function SideChatPanel({
                   }
                 />
               ))}
-              {run && !busy && run.status !== "completed" && (
-                <div className={`run-result ${run.status}`}>
+              {!busy && resultStatus && resultStatus !== "completed" && (
+                <div className={`run-result ${resultStatus}`}>
                   <Icon name="info" size={16} />
                   <div>
-                    <Status status={run.status} />
+                    <Status status={resultStatus} />
                     <p>
-                      {run.status === "needs_reconciliation"
-                        ? "请先核对结果未知的操作，避免重复执行。"
-                        : run.status === "cancelled"
+                      {requiresReconciliation
+                        ? RECONCILIATION_NOTICE
+                        : run?.status === "cancelled"
                           ? "侧边任务已停止，记录已保留。"
-                          : run.error || "这次任务未完整完成。"}
+                          : run?.error || "这次任务未完整完成。"}
                     </p>
                   </div>
                 </div>
@@ -782,7 +798,7 @@ export default function SideChatPanel({
                   uploading ||
                   (!draft.trim() && !files.length) ||
                   (!busy && !ready) ||
-                  run?.status === "needs_reconciliation"
+                  requiresReconciliation
                 }
               >
                 {sending ? <Spinner /> : <Icon name="arrow" size={19} />}

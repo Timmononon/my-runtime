@@ -7,6 +7,7 @@ from aster.tools.browser import BrowserManager, build_browser_tools
 from aster.tools.deliverables import DeliverableTool
 from aster.tools.documents import DocumentTool
 from aster.tools.feishu import FeishuCLITool
+from aster.tools.feishu_webhook import FeishuWebhookTool
 from aster.tools.files import build_file_tools
 from aster.tools.http import HTTPTool
 from aster.tools.images import ImageTool
@@ -27,6 +28,9 @@ class ToolFactory:
         self.tools += [ImageTool(self.supervisor), ImageTool(self.supervisor, pdf=True),
                        HTTPTool(), HTTPTool(fetch=True), DeliverableTool()]
         self.tools += build_basic_tools(self.supervisor) + [SearchTool(), FeishuCLITool(self.supervisor, data_dir)]
+        webhook = FeishuWebhookTool.from_local_credentials(data_dir)
+        if webhook is not None:
+            self.tools.append(webhook)
         if self.browser:
             self.tools += build_browser_tools(self.browser)
 

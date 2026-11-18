@@ -1,13 +1,13 @@
 # Aster service API
 
-This page documents the Feishu CLI diagnostic endpoint.
+This page documents Feishu CLI diagnostics and group task sources.
 
 ## Authentication
 
 CLI/API clients use `Authorization: Bearer <local token>`. The token is generated
 in `<data_dir>/.api-token` and is separate from provider credentials. The service
 binds to loopback and validates Host and any supplied Origin. Cookie clients
-must send `X-Aster-UI: 1`; POST requests also require the exact same Origin.
+must send `X-Aster-UI: 1`; POST and PATCH requests also require the exact same Origin.
 Bearer clients need no browser Origin header, but any supplied Origin must be
 allowed. The diagnostic endpoint is an authenticated local-operator action.
 
@@ -51,3 +51,27 @@ URLs. The adapter never responds to an auth failure by switching `user` to `bot`
 initiating OAuth/login or retrying under another identity. The model tool permits only exact
 `argv=["auth","status"]` as a read-only management exception; login/config remain
 human setup. See [Feishu usage](feishu-cli.md).
+
+## Feishu group task sources (0.1.20)
+
+Capability `feishu_task_sources_v1` enables the Workbench’s Feishu management page.
+The application owns the native CLI event subscription. Incoming group messages
+enter the shared task triage and Worker pipeline through their verified app,
+group, sender and mention metadata. [Feishu task source setup](feishu-task-sources.md)
+
+| Method and path | Result |
+| --- | --- |
+| `POST /feishu/discover` | Verify the current bot and list joined groups through read-only Feishu calls |
+| `GET /feishu/sources` | List local sources, optionally filtered by `source_session_id` |
+| `POST /feishu/sources` | Create a disabled source with `source_session_id`, `chat_id`, optional `name`, `allowed_senders` and `required_keywords` |
+| `GET /feishu/sources/{id}` | Read a source and its connection status |
+| `PATCH /feishu/sources/{id}` | Edit `name`, `allowed_senders`, `required_keywords` or `enabled` using `expected_revision` |
+| `GET /feishu/sources/{id}/events` | Read newest-first receipts with `limit` and optional `before` pagination |
+| `GET /feishu/sources/{id}/tickets` | Read linked local task tickets |
+
+These routes use the existing local Runtime authentication. Management GETs
+read local state. A source retains its verified application and target group
+binding. The native event consumer supplies events to the Runtime, and SQLite
+ties each accepted receipt to its task and authorization. A ticket includes a
+bounded `feishu` origin projection for navigation and authorization state.
+The shared `/tasks/triage/settings` endpoint controls the classification model.

@@ -11,6 +11,8 @@ import yaml
 from aster.paths import resolve_data_dir
 from aster.platform.filesystem import FileLock, atomic_write
 
+FEISHU_WEBHOOK_CREDENTIAL_SERVICE = "aster-feishu-webhook"
+
 
 class CredentialError(RuntimeError):
     pass
@@ -138,6 +140,8 @@ class CredentialStore:
                 service, name = target.split("/", 1)
             else:
                 service, name = self.service, target
+            if service.casefold() == FEISHU_WEBHOOK_CREDENTIAL_SERVICE:
+                raise CredentialError("Credential reference is not configured")
             try:
                 value = self.backend.get_password(service, name)
             except Exception:  # noqa: BLE001 - Backend errors must never expose credential content.

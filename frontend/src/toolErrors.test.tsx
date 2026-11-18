@@ -23,7 +23,7 @@ function result(
   };
 }
 
-function records(message: ChatMessage): MessageRecord[] {
+function records(message: ChatMessage, tool = "github_read"): MessageRecord[] {
   return [
     {
       role: "assistant",
@@ -32,7 +32,7 @@ function records(message: ChatMessage): MessageRecord[] {
       tool_calls: [
         {
           id: "failed-call",
-          name: "github_read",
+          name: tool,
           arguments: { token: "secret argument marker" },
         },
         { id: "success-call", name: "directory_list", arguments: {} },
@@ -60,7 +60,380 @@ function records(message: ChatMessage): MessageRecord[] {
   }));
 }
 
+const feishuScopeData = {
+  ok: false,
+  identity: "user",
+  error: {
+    type: "authorization",
+    subtype: "missing_scope",
+    identity: "user",
+    missing_scopes: ["im:message.send_as_user"],
+    message: "private CLI output marker",
+    hint: "https://auth.example.invalid/authorize?device_code=synthetic",
+    human_recovery: "private recovery hint marker",
+    text: "private user text marker",
+  },
+};
+
+function feishuScopeMessage(extra: Record<string, unknown> = {}): ChatMessage {
+  return result("authorization", JSON.stringify(feishuScopeData), {
+    data: feishuScopeData,
+    ...extra,
+  });
+}
+
+const feishuBotData = {
+  ok: false,
+  identity: "bot",
+  error: {
+    type: "api",
+    subtype: "unknown",
+    code: 230002,
+    log_id: "private log marker",
+    message: "private remote message marker",
+    hint: "private remote hint marker",
+    chat_id: "private chat ID marker",
+    text: "private message body marker",
+  },
+};
+
+function feishuBotMessage({
+  metadata = {},
+  data = {},
+  error = {},
+}: {
+  metadata?: Record<string, unknown>;
+  data?: Record<string, unknown>;
+  error?: Record<string, unknown>;
+} = {}): ChatMessage {
+  const payload = {
+    ...feishuBotData,
+    ...data,
+    error: { ...feishuBotData.error, ...error },
+  };
+  return result("api", JSON.stringify(payload), { data: payload, ...metadata });
+}
+
+const feishuUserRejectionData = {
+  ok: false,
+  identity: "user",
+  error: {
+    type: "authorization",
+    subtype: "user_unauthorized",
+    code: 230027,
+    identity: "user",
+    log_id: "private send log marker",
+    message: "private send message marker",
+    hint: "private send hint marker",
+    chat_id: "private send chat marker",
+  },
+};
+
 describe("tool error explanations", () => {
+  it.each(["not_executed", "known", "unknown"])(
+    "renders a %s user 230027 result without upstream details",
+    (outcome) => {
+      const message = result(
+        "authorization",
+        JSON.stringify(feishuUserRejectionData),
+        {
+          outcome,
+          data: feishuUserRejectionData,
+        },
+      );
+      const html = renderToStaticMarkup(
+        <Conversation
+          records={records(message, "feishu_cli")}
+          stream=""
+          runId={null}
+          busy={false}
+          report={() => {}}
+        />,
+      );
+      if (outcome === "unknown") {
+        expect(html).toContain("结果待核验");
+        expect(html).toContain("操作可能已经发生");
+        expect(html).not.toContain("飞书拒绝本人发送（230027）");
+        expect(html).not.toContain("本次消息未发送");
+      } else {
+        expect(html).toContain("飞书拒绝本人发送（230027）");
+        expect(html).toContain(
+          "本次消息未发送。请核对应用权限和目标会话的发送限制。",
+        );
+      }
+      for (const marker of [
+        "private send log marker",
+        "private send message marker",
+        "private send hint marker",
+        "private send chat marker",
+        "缺少飞书权限",
+        "OAuth",
+        "加群",
+        "重试",
+      ])
+        expect(html).not.toContain(marker);
+    },
+  );
+
+  const otherUserResults: {
+    name: string;
+    tool?: string;
+    metadata?: Record<string, unknown>;
+    data?: Record<string, unknown>;
+    error?: Record<string, unknown>;
+    expected?: string | null;
+  }[] = [
+    { name: "another tool", tool: "shell_exec" },
+    { name: "another category", metadata: { error_category: "api" } },
+    { name: "a missing outcome", metadata: { outcome: undefined } },
+    { name: "a non-boolean error flag", metadata: { is_error: "true" } },
+    {
+      name: "a successful tool result",
+      metadata: { is_error: false },
+      expected: null,
+    },
+    { name: "raw output only", metadata: { data: undefined } },
+    { name: "a successful envelope", data: { ok: true } },
+    { name: "a bot envelope", data: { identity: "bot" } },
+    { name: "another error type", error: { type: "api" } },
+    { name: "another subtype", error: { subtype: "missing_scope" } },
+    { name: "another code", error: { code: 230002 } },
+    { name: "a string code", error: { code: "230027" } },
+    { name: "a missing error identity", error: { identity: undefined } },
+    { name: "a conflicting error identity", error: { identity: "bot" } },
+    { name: "a missing log ID", error: { log_id: undefined } },
+    { name: "a blank log ID", error: { log_id: " \t " } },
+    { name: "a non-string log ID", error: { log_id: 501 } },
+  ];
+  it.each(otherUserResults)(
+    "does not apply the 230027 explanation to $name",
+    ({
+      tool = "feishu_cli",
+      metadata,
+      data,
+      error,
+      expected = "工具调用未完成",
+    }) => {
+      const payload = {
+        ...feishuUserRejectionData,
+        ...data,
+        error: { ...feishuUserRejectionData.error, ...error },
+      };
+      const message = result("authorization", JSON.stringify(payload), {
+        data: payload,
+        ...metadata,
+      });
+      expect(toolErrorSummary(message, tool)?.title ?? null).toBe(expected);
+    },
+  );
+
+  it.each(["not_executed", "known"])(
+    "explains a %s bot 230002 response using fixed text only",
+    (outcome) => {
+      const message = feishuBotMessage({ metadata: { outcome } });
+      expect(toolErrorSummary(message, "feishu_cli")).toEqual({
+        title: "当前机器人不在目标聊天中",
+        detail:
+          "个人身份能看到该聊天，不代表机器人可以发送。请先核实发送身份与目标聊天。",
+      });
+      const html = renderToStaticMarkup(
+        <Conversation
+          records={records(message, "feishu_cli")}
+          stream=""
+          runId={null}
+          busy={false}
+          report={() => {}}
+        />,
+      );
+      expect(html).toContain("当前机器人不在目标聊天中");
+      expect(html).toContain("个人身份能看到该聊天");
+      for (const marker of [
+        "private log marker",
+        "private remote message",
+        "private remote hint",
+        "private chat ID",
+        "private message body",
+        "OAuth",
+        "加群",
+        "自动重试",
+      ])
+        expect(html).not.toContain(marker);
+    },
+  );
+
+  it("accepts a matching optional bot error identity", () => {
+    expect(
+      toolErrorSummary(
+        feishuBotMessage({ error: { identity: "bot" } }),
+        "feishu_cli",
+      )?.title,
+    ).toBe("当前机器人不在目标聊天中");
+  });
+
+  it("keeps unknown outcomes ahead of the bot 230002 explanation", () => {
+    const message = feishuBotMessage({ metadata: { outcome: "unknown" } });
+    const html = renderToStaticMarkup(
+      <Conversation
+        records={records(message, "feishu_cli")}
+        stream=""
+        runId={null}
+        busy={false}
+        report={() => {}}
+      />,
+    );
+    expect(html).toContain("结果待核验");
+    expect(html).toContain("操作可能已经发生");
+    expect(html).not.toContain("当前机器人不在目标聊天中");
+    expect(html).not.toContain("private log marker");
+    expect(html).not.toContain("private remote message");
+  });
+
+  const otherBotResults: {
+    name: string;
+    tool?: string;
+    metadata?: Record<string, unknown>;
+    data?: Record<string, unknown>;
+    error?: Record<string, unknown>;
+    expected?: string | null;
+  }[] = [
+    { name: "another code", error: { code: 230001 } },
+    { name: "string code", error: { code: "230002" } },
+    { name: "user identity", data: { identity: "user" } },
+    { name: "missing envelope identity", data: { identity: undefined } },
+    { name: "a successful envelope", data: { ok: true } },
+    { name: "missing envelope status", data: { ok: undefined } },
+    { name: "another error type", error: { type: "authorization" } },
+    { name: "another subtype", error: { subtype: "missing_scope" } },
+    { name: "missing code", error: { code: undefined } },
+    { name: "missing log ID", error: { log_id: undefined } },
+    { name: "blank log ID", error: { log_id: " \t " } },
+    { name: "conflicting error identity", error: { identity: "user" } },
+    { name: "another tool", tool: "shell_exec" },
+    { name: "another category", metadata: { error_category: "authorization" } },
+    { name: "missing outcome", metadata: { outcome: undefined } },
+    { name: "non-boolean error flag", metadata: { is_error: "true" } },
+    { name: "success", metadata: { is_error: false }, expected: null },
+  ];
+  it.each(otherBotResults)(
+    "does not apply the bot-membership explanation to $name",
+    ({
+      tool = "feishu_cli",
+      metadata,
+      data,
+      error,
+      expected = "工具调用未完成",
+    }) => {
+      expect(
+        toolErrorSummary(feishuBotMessage({ metadata, data, error }), tool)
+          ?.title ?? null,
+      ).toBe(expected);
+    },
+  );
+
+  it.each(["not_executed", "known"])(
+    "explains a %s user send scope failure with fixed safe text",
+    (outcome) => {
+      const message = feishuScopeMessage({ outcome });
+      expect(toolErrorSummary(message, "feishu_cli")).toEqual({
+        title: "缺少飞书权限",
+        detail:
+          "当前发送操作需要飞书“以本人身份发送消息”权限，请通过人工授权入口补充授权后再继续。",
+      });
+      const html = renderToStaticMarkup(
+        <Conversation
+          records={records(message, "feishu_cli")}
+          stream=""
+          runId={null}
+          busy={false}
+          report={() => {}}
+        />,
+      );
+      expect(html).toContain("缺少飞书权限");
+      expect(html).toContain("以本人身份发送消息");
+      for (const marker of [
+        "private CLI output",
+        "auth.example.invalid",
+        "synthetic",
+        "private recovery hint",
+        "private user text",
+      ])
+        expect(html).not.toContain(marker);
+    },
+  );
+
+  it("keeps a Feishu unknown outcome ahead of its scope metadata", () => {
+    const message = feishuScopeMessage({ outcome: "unknown" });
+    const html = renderToStaticMarkup(
+      <Conversation
+        records={records(message, "feishu_cli")}
+        stream=""
+        runId={null}
+        busy={false}
+        report={() => {}}
+      />,
+    );
+    expect(html).toContain("结果待核验");
+    expect(html).toContain("操作可能已经发生");
+    expect(html).not.toContain("缺少飞书权限");
+    expect(html).not.toContain("auth.example.invalid");
+    expect(html).not.toContain("private CLI output");
+  });
+
+  it.each([
+    { name: "another tool", tool: "shell_exec", metadata: {} },
+    {
+      name: "another category",
+      tool: "feishu_cli",
+      metadata: { error_category: "authentication" },
+    },
+    {
+      name: "another subtype",
+      tool: "feishu_cli",
+      metadata: {
+        data: {
+          ...feishuScopeData,
+          error: { ...feishuScopeData.error, subtype: "access_denied" },
+        },
+      },
+    },
+    {
+      name: "a scope prefix",
+      tool: "feishu_cli",
+      metadata: {
+        data: {
+          ...feishuScopeData,
+          error: {
+            ...feishuScopeData.error,
+            missing_scopes: ["im:message.send_as_user_extra"],
+          },
+        },
+      },
+    },
+    {
+      name: "raw output without structured data",
+      tool: "feishu_cli",
+      metadata: { data: undefined },
+    },
+    {
+      name: "bot identity",
+      tool: "feishu_cli",
+      metadata: {
+        data: {
+          ...feishuScopeData,
+          identity: "bot",
+          error: { ...feishuScopeData.error, identity: "bot" },
+        },
+      },
+    },
+  ])(
+    "does not apply the user-send explanation to $name",
+    ({ tool, metadata }) => {
+      expect(toolErrorSummary(feishuScopeMessage(metadata), tool)?.title).toBe(
+        "工具调用未完成",
+      );
+    },
+  );
+
   it("shows a precise GitHub source recovery hint without raw arguments or payloads", () => {
     const message = result(
       "validation",

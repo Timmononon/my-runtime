@@ -8,9 +8,11 @@ import { triageDecisionLabel, triageSettingsPayload } from "./taskTriageTypes";
 export default function TaskTriageSettingsModal({
   onClose,
   onSaved,
+  includesFeishu = false,
 }: {
   onClose: () => void;
   onSaved: () => void;
+  includesFeishu?: boolean;
 }) {
   const [value, setValue] = useState<TaskTriageSettings | null>(null);
   const [providers, setProviders] = useState<ModelProvider[]>([]);
@@ -77,9 +79,9 @@ export default function TaskTriageSettingsModal({
       }}
     >
       <p className="github-note">
-        适用于所有 GitHub
-        来源的新任务。来源和发送人通过规则检查后，由独立模型二选一判断“处理或忽略”；Worker
-        使用各自原有的模型配置。
+        {includesFeishu
+          ? "飞书和 GitHub 的新任务共用这项设置。消息通过来源规则后，独立模型判断处理或忽略，再决定是否创建任务。"
+          : "适用于所有 GitHub 来源的新任务。来源和发送人通过规则检查后，由独立模型二选一判断“处理或忽略”；Worker 使用各自原有的模型配置。"}
       </p>
       {loading ? (
         <p className="github-loading" role="status">
@@ -98,6 +100,7 @@ export default function TaskTriageSettingsModal({
               value={value}
               providers={providers}
               disabled={busy || conflict}
+              includesFeishu={includesFeishu}
               onChange={(changes) =>
                 setValue((current) => current && { ...current, ...changes })
               }
@@ -158,15 +161,20 @@ export function TaskTriageFields({
   providers,
   onChange,
   disabled,
+  includesFeishu = false,
 }: {
   value: TaskTriageSettings;
   providers: ModelProvider[];
   onChange: (changes: Partial<TaskTriageSettings>) => void;
   disabled: boolean;
+  includesFeishu?: boolean;
 }) {
   const provider = providers.find((item) => item.id === value.provider_id);
   const model = provider?.models.find((item) => item.id === value.model);
   const efforts = model?.effort_levels?.length ? model.effort_levels : ["none"];
+  const pollLimitLabel = includesFeishu
+    ? "GitHub 每轮询判断次数"
+    : "每轮询判断次数";
   return (
     <div className="task-triage-settings">
       <label className="github-checkbox">
@@ -179,8 +187,9 @@ export function TaskTriageFields({
         启用新任务判断
       </label>
       <p className="github-note">
-        关闭后暂停从 GitHub
-        创建新任务。只读来源不调用判断模型；已有任务的后续消息和停止指令继续按原规则处理。
+        {includesFeishu
+          ? "关闭后暂停从飞书和 GitHub 创建新任务。"
+          : "关闭后暂停从 GitHub 创建新任务。只读来源不调用判断模型；已有任务的后续消息和停止指令继续按原规则处理。"}
       </p>
       <div className="form-row">
         <label className="field">
@@ -292,7 +301,11 @@ export function TaskTriageFields({
           maxLength={8000}
           rows={4}
           disabled={disabled}
-          placeholder="例如：处理本仓库的缺陷检查、代码审查和功能修改请求。"
+          placeholder={
+            includesFeishu
+              ? "处理项目缺陷检查、代码审查和功能修改请求"
+              : "例如：处理本仓库的缺陷检查、代码审查和功能修改请求。"
+          }
           onChange={(event) =>
             onChange({ processing_scope: event.target.value })
           }
@@ -365,9 +378,9 @@ export function TaskTriageFields({
           </label>
         </div>
         <label className="field">
-          每轮询判断次数
+          {pollLimitLabel}
           <input
-            aria-label="每轮询判断次数"
+            aria-label={pollLimitLabel}
             type="number"
             min={1}
             max={100}

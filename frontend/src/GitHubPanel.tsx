@@ -36,6 +36,7 @@ type Props = {
   onOpenSession: (id: string) => void;
   onOpenTicket: (id: string) => void;
   initialSourceId?: string | null;
+  triageIncludesFeishu?: boolean;
 };
 type DraftForm = {
   id?: string;
@@ -71,6 +72,7 @@ export default function GitHubPanel({
   onOpenSession,
   onOpenTicket,
   initialSourceId = null,
+  triageIncludesFeishu = false,
 }: Props) {
   const [sources, setSources] = useState<GithubSource[]>([]),
     [loading, setLoading] = useState(true),
@@ -998,6 +1000,7 @@ export default function GitHubPanel({
         </div>
         {triageSettingsOpen && (
           <TaskTriageSettingsModal
+            includesFeishu={triageIncludesFeishu}
             onClose={() => setTriageSettingsOpen(false)}
             onSaved={() =>
               setNotice("已保存独立任务判断模型，仅对后续新事件生效。")

@@ -10,6 +10,7 @@ Aster 是面向 Windows 的本地 AI 助手，使用 Python 构建，支持 Deep
 - 保存带来源的记忆，按需开启自动记忆和语义检索。
 - 创建自动化任务、分配 Worker，并连接 GitHub 跟进 Issue、PR 和 CI。
 - 通过[飞书 CLI](docs/feishu-cli.md)操作文档、消息、日程和表格，写入按权限批准。
+- 飞书群成员可以通过 @ 应用机器人提交工作请求，通过判断后创建工单并派发 Worker。[配置飞书任务来源](docs/feishu-task-sources.md)
 
 ## 快速开始
 

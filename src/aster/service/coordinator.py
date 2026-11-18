@@ -30,6 +30,7 @@ from aster.providers.profiles import ProviderProfiles
 from aster.state import SessionBusy, StateError, Store
 from aster.state.store import ACTIVE, TERMINAL, dumps, identifier
 from aster.tools.factory import ToolFactory
+from aster.tools.feishu_webhook import FeishuWebhookTool
 from aster.tools.interaction import build_interaction_tools
 from aster.tools.registry import Registry
 
@@ -72,7 +73,7 @@ class RunCoordinator:
     def __init__(self, data_dir: Path, *, model_factory=None, tools=None, credentials=None,
                  instance_id: str | None = None, browser_enabled=True, max_parallel_runs=4,
                  max_queue_per_session=100, extra_tools_factory=None, local_embedding_factory=None,
-                 github_client_factory=None):
+                 github_client_factory=None, feishu_event_transport=None):
         self.data_dir = Path(data_dir).resolve()
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.store = Store(self.data_dir / "runtime.db")
@@ -124,6 +125,9 @@ class RunCoordinator:
         from aster.github import GithubService
         self.github = GithubService(self, client_factory=github_client_factory)
         self.store._github_service = self.github
+        from aster.feishu import FeishuTaskService
+        self.feishu = FeishuTaskService(self, transport=feishu_event_transport)
+        self.store._feishu_service = self.feishu
 
     def configured(self) -> bool:
         if self.model_factory:
@@ -148,6 +152,7 @@ class RunCoordinator:
             self._auto_task = asyncio.create_task(self._auto_recover(recovery), name="aster-auto-recovery")
         await self.tasks.start()
         await self.github.start()
+        await self.feishu.start()
         await self.automation.start()
 
     async def _auto_recover(self, policy):
@@ -196,6 +201,7 @@ class RunCoordinator:
         related = self.store.lifecycle_related_sessions(session_id)
         self.tasks.check_lifecycle(related, action)
         self.github.check_lifecycle(related, action)
+        self.feishu.check_lifecycle(related, action)
         browser_controls = self.browser_controls()
         if browser_controls.busy(related):
             raise SessionBusy("A browser operator control is settling; wait before changing conversation visibility")
@@ -205,6 +211,7 @@ class RunCoordinator:
         async with gate:
             self.tasks.check_lifecycle(related, action)
             self.github.check_lifecycle(related, action)
+            self.feishu.check_lifecycle(related, action)
             if browser_controls.busy(related):
                 raise SessionBusy("A browser operator control is settling; wait before changing conversation visibility")
             run_ids = [run["id"] for run in self.store.list_runs(session_id)] if action == "delete" else []
@@ -606,6 +613,11 @@ class RunCoordinator:
         base = {"directory_list", "glob", "text_search", "file_read", "tool_search", "use_skill",
                 "memory_read", "session_search", "ask_user_question", "set_work_plan"}
         services["active_tools"] = base & {spec.name for spec in registry.specs()}
+        webhook = registry.get("feishu_webhook_send")
+        if (isinstance(webhook, FeishuWebhookTool) and webhook.spec.name not in denied
+                and scope.check_tool(webhook.spec.name)
+                and (not task_binding or task_binding.get("role") != "reader")):
+            services["active_tools"].add(webhook.spec.name)
         run_config = self._run_config(settings)
         pin = settings.get("_provider")
         legacy_profile = pin is None
@@ -1055,6 +1067,7 @@ class RunCoordinator:
         self._closed = True
         if self.automation:
             await self.automation.close()
+        await self.feishu.close()
         await self.github.close()
         await self.task_triage.close()
         await self.tasks.close()

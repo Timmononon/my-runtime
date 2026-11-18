@@ -34,7 +34,7 @@ MANAGEMENT_CAPABILITIES = ("management_v1", "mcp_health_v1", "automation_selecti
                            "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1",
                            "memory_auto_capture_v1", "local_tasks_v1", "github_sources_v1", "task_triage_v1",
                            "task_triage_binary_v1", "github_tool_sources_v1", "task_worker_interactions_v1",
-                           "feishu_cli_status_v1")
+                           "feishu_cli_status_v1", "feishu_task_sources_v1", "execution_reconciliation_status_v1")
 
 
 def load_api_token(data_dir: Path) -> str:
@@ -150,6 +150,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     from aster.api.content import create_content_router
     from aster.api.customization import create_customization_router
     from aster.api.feishu import create_feishu_router
+    from aster.api.feishu_tasks import create_feishu_tasks_router
     from aster.api.github import create_github_router
     from aster.api.management import create_management_router
     from aster.api.providers import create_provider_router
@@ -164,6 +165,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     app.include_router(create_tasks_router(coordinator))
     app.include_router(create_github_router(coordinator))
     app.include_router(create_feishu_router(coordinator))
+    app.include_router(create_feishu_tasks_router(coordinator))
     app.include_router(create_provider_router(coordinator))
     app.include_router(create_workbench_router(coordinator))
     app.include_router(create_web_router(coordinator, browser_auth, static_root))
@@ -333,6 +335,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         github_sources = coordinator.github.list_sources(source_session_id=session_id)
         return {**coordinator.store.get_session(session_id), "runs": coordinator.store.list_runs(session_id),
                 "messages": coordinator.store.history_records(session_id), "plan": coordinator.store.get_plan(session_id),
+                "requires_reconciliation": coordinator.store.has_unresolved(session_id),
                 "selection": coordinator.session_selection(session_id),
                 "local_task": {key: binding[key] for key in ("ticket_id", "worker_id", "role")} if binding else None,
                 "github_sources": {"count": len(github_sources), "enabled": sum(bool(item["enabled"]) for item in github_sources)}}
@@ -359,6 +362,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         budget = coordinator.store.run_budget(run_id)
         kind = (coordinator.store.run_request(run_id) or {}).get("kind")
         return {**run, "kind": kind if kind in {"compaction", "tool_action"} else "task",
+                "requires_reconciliation": coordinator.store.has_unresolved(run["session_id"]),
                 "pending_requests": coordinator.store.pending_requests(run_id),
                 "tool_executions": coordinator.store.tool_executions(run_id), "usage": usage, "budget": budget,
                 "cost_estimate": cost_estimate(coordinator.store, run, coordinator.data_dir),

@@ -1,5 +1,6 @@
 import type { Pending } from "./types";
 import type { GithubTaskBinding } from "./githubTypes";
+import type { FeishuTaskBinding } from "./feishuTypes";
 
 export type TaskState =
   | "queued"
@@ -53,6 +54,7 @@ export interface TaskTicket {
   can_cancel?: boolean;
   can_add_input?: boolean;
   github?: GithubTaskBinding | null;
+  feishu?: FeishuTaskBinding | null;
 }
 export interface TaskOverview {
   counts: {

@@ -44,6 +44,7 @@ type Props = {
   agents: ManagedAgent[];
   initialTicketId?: string | null;
   onOpenGithub?: (sourceId: string) => void;
+  onOpenFeishu?: (sourceId: string) => void;
 };
 
 export default function TaskBoard({
@@ -54,6 +55,7 @@ export default function TaskBoard({
   agents,
   initialTicketId = null,
   onOpenGithub,
+  onOpenFeishu,
 }: Props) {
   const [overview, setOverview] = useState<TaskOverview>(emptyOverview),
     [loading, setLoading] = useState(true);
@@ -614,6 +616,24 @@ export default function TaskBoard({
                             }
                           >
                             打开仓库来源
+                            <Icon name="chevron" size={14} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {ticket.feishu && (
+                      <div className="github-task-origin">
+                        <strong>
+                          飞书 · {ticket.feishu.name || ticket.feishu.chat_id}
+                        </strong>
+                        {onOpenFeishu && (
+                          <button
+                            className="text-button"
+                            onClick={() =>
+                              onOpenFeishu(ticket.feishu!.source_id)
+                            }
+                          >
+                            打开飞书来源
                             <Icon name="chevron" size={14} />
                           </button>
                         )}

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "./api";
 import {
   findEmptyProjectSession,
+  projectFeishuPresence,
   projectTaskPresence,
   projectGithubPresence,
   type ProjectSessionSnapshot,
@@ -42,6 +43,7 @@ const snapshot = (
   hasAutomation: false,
   hasTasks: false,
   hasGithubSources: false,
+  hasFeishuSources: false,
   ...fields,
 });
 const defaults = {
@@ -248,53 +250,60 @@ describe("empty project conversation reuse", () => {
     ).rejects.toThrow("Task lookup failed");
   });
 
-  it("preserves disabled GitHub source bindings and gates observational lookups on capability", async () => {
-    const used = session("github-bound"),
-      blank = session("blank");
-    const readSources = vi.fn(async () => ({
-      sources: [{ enabled: false, mode: "read_only" }],
-    }));
-    expect(
-      await projectGithubPresence(detail(used), ["runs_v1"], readSources),
-    ).toBe(false);
-    expect(readSources).not.toHaveBeenCalled();
-    expect(
-      await projectGithubPresence(
-        detail(used),
-        ["github_sources_v1"],
-        readSources,
-      ),
-    ).toBe(true);
-    expect(
-      await findEmptyProjectSession({
-        ...defaults,
-        listPage: async () => [used, blank],
-        readSession: async (id) =>
-          snapshot(session(id), { hasGithubSources: id === used.id }),
-      }),
-    ).toEqual(detail(blank));
-    await expect(
-      findEmptyProjectSession({
-        ...defaults,
-        listPage: async () => [used],
-        readSession: async () => ({
-          ...snapshot(used),
-          hasGithubSources: await projectGithubPresence(
-            detail(used),
-            ["github_sources_v1"],
-            async () => {
-              throw new ApiError(404, "missing source endpoint");
-            },
-          ),
+  it.each([
+    ["GitHub", "github_sources_v1", projectGithubPresence, "hasGithubSources"],
+    [
+      "飞书",
+      "feishu_task_sources_v1",
+      projectFeishuPresence,
+      "hasFeishuSources",
+    ],
+  ] as const)(
+    "preserves disabled %s source bindings and gates observational lookups on capability",
+    async (name, capability, readPresence, boundField) => {
+      const used = session("github-bound"),
+        blank = session("blank");
+      const readSources = vi.fn(async () => ({
+        sources: [{ enabled: false }],
+      }));
+      expect(await readPresence(detail(used), ["runs_v1"], readSources)).toBe(
+        false,
+      );
+      expect(readSources).not.toHaveBeenCalled();
+      expect(await readPresence(detail(used), [capability], readSources)).toBe(
+        true,
+      );
+      expect(
+        await findEmptyProjectSession({
+          ...defaults,
+          listPage: async () => [used, blank],
+          readSession: async (id) =>
+            snapshot(session(id), { [boundField]: id === used.id }),
         }),
-      }),
-    ).rejects.toThrow("GitHub 来源查询不可用");
-    await expect(
-      projectGithubPresence(detail(used), ["github_sources_v1"], async () => ({
-        sources: null as unknown as unknown[],
-      })),
-    ).rejects.toThrow("无法确认");
-  });
+      ).toEqual(detail(blank));
+      await expect(
+        findEmptyProjectSession({
+          ...defaults,
+          listPage: async () => [used],
+          readSession: async () => ({
+            ...snapshot(used),
+            [boundField]: await readPresence(
+              detail(used),
+              [capability],
+              async () => {
+                throw new ApiError(404, "missing source endpoint");
+              },
+            ),
+          }),
+        }),
+      ).rejects.toThrow(`${name} 来源查询不可用`);
+      await expect(
+        readPresence(detail(used), [capability], async () => ({
+          sources: null as unknown as unknown[],
+        })),
+      ).rejects.toThrow("无法确认");
+    },
+  );
 
   it("discards delayed lookup results after navigation without selecting or creating", async () => {
     const preferred = session("current");

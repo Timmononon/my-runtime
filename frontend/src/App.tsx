@@ -50,9 +50,16 @@ import TaskBoard from "./TaskBoard";
 import Conversation from "./Conversation";
 import PendingCard from "./PendingCard";
 import SideChatPanel from "./SideChatPanel";
+import {
+  RECONCILIATION_NOTICE,
+  runRequiresReconciliation,
+} from "./reconciliation";
+import { createReconciliationRefresh } from "./reconciliationRefresh";
 import { readSideChats } from "./sideChats";
+import { FEISHU_TASK_SOURCES } from "./feishuTypes";
 const ProviderSettings = lazy(() => import("./ProviderSettings"));
 const GitHubPanel = lazy(() => import("./GitHubPanel"));
+const FeishuPanel = lazy(() => import("./FeishuPanel"));
 import ExecutionTimeline from "./ExecutionTimeline";
 import ContextMeter from "./ContextMeter";
 import type { ManagedAgent, RuntimeManagement } from "./types";
@@ -68,6 +75,7 @@ import type { SessionAction } from "./SessionLifecycle";
 import { readSessionSnapshot } from "./sessionSnapshot";
 import {
   findEmptyProjectSession,
+  projectFeishuPresence,
   projectTaskPresence,
   projectGithubPresence,
 } from "./projectSession";
@@ -121,6 +129,7 @@ export default function App() {
   const [view, setView] = useState("chat"),
     [taskFocus, setTaskFocus] = useState<string | null>(null),
     [githubFocus, setGithubFocus] = useState<string | null>(null),
+    [feishuFocus, setFeishuFocus] = useState<string | null>(null),
     [sidebar, setSidebar] = useState(false),
     [search, setSearch] = useState(""),
     [searchOpen, setSearchOpen] = useState(false);
@@ -219,6 +228,16 @@ export default function App() {
     draft = drafts[key] || "",
     chosenFiles = draftFiles[key] || [],
     busy = activeStatus(run?.status),
+    requiresReconciliation = runRequiresReconciliation(
+      run,
+      runtimeCapabilities,
+      detail,
+    ),
+    resultStatus = requiresReconciliation
+      ? "needs_reconciliation"
+      : run?.status === "needs_reconciliation"
+        ? null
+        : run?.status,
     compactionActive = !!selected && compactionSession === selected,
     compactionRunReady =
       compactionActive &&
@@ -337,6 +356,22 @@ export default function App() {
     },
     [report],
   );
+  const refreshCapabilities = useCallback(async (valid: () => boolean) => {
+    const previous = capabilityRef.current;
+    if (!previous) return;
+    const supported = await request<{ capabilities: string[] }>(
+      "/capabilities",
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (!valid() || capabilityRef.current !== previous) return;
+    if (
+      !Array.isArray(supported.capabilities) ||
+      supported.capabilities.some((value) => typeof value !== "string")
+    )
+      throw new Error("无法读取当前服务能力，请重新连接。");
+    capabilityRef.current = supported.capabilities;
+    setRuntimeCapabilities(supported.capabilities);
+  }, []);
   const startConnection = useCallback(async () => {
     setConnecting(true);
     setConnectError("");
@@ -592,18 +627,24 @@ export default function App() {
                   `/automations?session_id=${enc(id)}`,
                 ),
               ]);
-            const [hasTasks, hasGithubSources] = await Promise.all([
-              projectTaskPresence(value, supported, (sessionId) =>
-                request<{ tickets: unknown[] }>(
-                  `/tasks?source_session_id=${enc(sessionId)}`,
+            const [hasTasks, hasGithubSources, hasFeishuSources] =
+              await Promise.all([
+                projectTaskPresence(value, supported, (sessionId) =>
+                  request<{ tickets: unknown[] }>(
+                    `/tasks?source_session_id=${enc(sessionId)}`,
+                  ),
                 ),
-              ),
-              projectGithubPresence(value, supported, (sessionId) =>
-                request<{ sources: unknown[] }>(
-                  `/github/sources?source_session_id=${enc(sessionId)}`,
+                projectGithubPresence(value, supported, (sessionId) =>
+                  request<{ sources: unknown[] }>(
+                    `/github/sources?source_session_id=${enc(sessionId)}`,
+                  ),
                 ),
-              ),
-            ]);
+                projectFeishuPresence(value, supported, (sessionId) =>
+                  request<{ sources: unknown[] }>(
+                    `/feishu/sources?source_session_id=${enc(sessionId)}`,
+                  ),
+                ),
+              ]);
             return {
               detail: value,
               hasAttachments: !!files.attachments.length,
@@ -612,6 +653,7 @@ export default function App() {
               hasAutomation: !!automation.jobs.length,
               hasTasks,
               hasGithubSources,
+              hasFeishuSources,
             };
           },
         });
@@ -675,6 +717,52 @@ export default function App() {
     );
     return () => clearInterval(timer);
   }, [boot, selected, busy, compactionActive, refresh, report]);
+  useEffect(() => {
+    if (!boot || !selected || view !== "chat") return;
+    let mounted = true;
+    const isActive = () =>
+      mounted &&
+      selectedRef.current === selected &&
+      document.visibilityState !== "hidden" &&
+      document.hasFocus();
+    // The shared gate already falls back to historical status when live fields
+    // are unavailable; an authoritative false stops terminal polling.
+    const keepPolling = !busy && !compactionActive && requiresReconciliation;
+    const reader = createReconciliationRefresh({
+      isActive,
+      keepPolling,
+      refresh: async () => {
+        await refreshCapabilities(isActive);
+        if (isActive()) await refresh(selected);
+      },
+      onError: report,
+    });
+    const onVisibility = () => {
+      if (isActive()) reader.wake();
+      else reader.pause();
+    };
+    window.addEventListener("focus", reader.wake);
+    window.addEventListener("blur", reader.pause);
+    document.addEventListener("visibilitychange", onVisibility);
+    if (keepPolling) reader.wake();
+    return () => {
+      mounted = false;
+      reader.dispose();
+      window.removeEventListener("focus", reader.wake);
+      window.removeEventListener("blur", reader.pause);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [
+    boot,
+    selected,
+    view,
+    busy,
+    compactionActive,
+    requiresReconciliation,
+    refreshCapabilities,
+    refresh,
+    report,
+  ]);
   useEffect(() => {
     if (!boot || !run?.id || !busy || !selected) return;
     const rid = run.id,
@@ -880,7 +968,7 @@ export default function App() {
       !!localTask ||
       closed ||
       (!busy && !providerReady) ||
-      run?.status === "needs_reconciliation"
+      requiresReconciliation
     )
       return;
     const text = draft,
@@ -1600,6 +1688,18 @@ export default function App() {
               GitHub
             </button>
           )}
+          {runtimeCapabilities.includes(FEISHU_TASK_SOURCES) && (
+            <button
+              className={view === "feishu" ? "nav-item active" : "nav-item"}
+              onClick={() => {
+                setView("feishu");
+                setSidebar(false);
+              }}
+            >
+              <Icon name="globe" />
+              飞书
+            </button>
+          )}
         </nav>
         <div className="workspace-browser">
           <Projects
@@ -1754,7 +1854,9 @@ export default function App() {
                       ? "任务"
                       : view === "github"
                         ? "GitHub"
-                        : "自动化"}
+                        : view === "feishu"
+                          ? "飞书"
+                          : "自动化"}
             </button>
             {lineage?.kind === "side_chat" && view === "chat" && (
               <span className="small-tag">侧边聊天</span>
@@ -1836,6 +1938,47 @@ export default function App() {
                   setView("tasks");
                 }}
                 initialSourceId={githubFocus}
+                triageIncludesFeishu={runtimeCapabilities.includes(
+                  FEISHU_TASK_SOURCES,
+                )}
+              />
+            </Suspense>
+          ) : view === "feishu" ? (
+            <Suspense
+              fallback={
+                <div className="loading-history">
+                  <Spinner />
+                  正在打开飞书来源
+                </div>
+              }
+            >
+              <FeishuPanel
+                sourceWritable={
+                  !writeLocked &&
+                  !readOnly &&
+                  !localTask &&
+                  lineage?.kind !== "side_chat"
+                }
+                sourceContext={{
+                  workspace:
+                    currentSession?.cwd ||
+                    currentProject?.cwd ||
+                    newWorkspace ||
+                    boot.cwd,
+                  agent: currentSession
+                    ? currentAssistant
+                    : assistantName(newAgent || "default"),
+                  conversation: selected
+                    ? currentSession?.title || "未命名对话"
+                    : "新对话",
+                }}
+                ensureSession={ensureSession}
+                onOpenSession={(id) => void openWorkspaceSession(id)}
+                onOpenTicket={(id) => {
+                  setTaskFocus(id);
+                  setView("tasks");
+                }}
+                initialSourceId={feishuFocus}
               />
             </Suspense>
           ) : view === "tasks" ? (
@@ -1851,6 +1994,14 @@ export default function App() {
                   ? (id) => {
                       setGithubFocus(id);
                       setView("github");
+                    }
+                  : undefined
+              }
+              onOpenFeishu={
+                runtimeCapabilities.includes(FEISHU_TASK_SOURCES)
+                  ? (id) => {
+                      setFeishuFocus(id);
+                      setView("feishu");
                     }
                   : undefined
               }
@@ -1948,7 +2099,7 @@ export default function App() {
                         <Spinner />
                         正在载入对话
                       </div>
-                    ) : !hasHistory ? (
+                    ) : !hasHistory && !requiresReconciliation ? (
                       <div className="welcome">
                         <div className="welcome-mark">
                           <Star size={38} />
@@ -2040,22 +2191,24 @@ export default function App() {
                             }
                           />
                         ))}
-                        {run && !busy && run.status !== "completed" && (
-                          <div className={`run-result ${run.status}`}>
-                            <Icon name="info" size={18} />
-                            <div>
-                              <Status status={run.status} />
-                              <p>
-                                {run.status === "needs_reconciliation"
-                                  ? "部分操作的结果尚不确定。请先在 Runtime 中核对执行结果，避免重复产生副作用。"
-                                  : run.status === "cancelled"
-                                    ? "任务已停止，已完成的操作和对话仍会保留。"
-                                    : run.error ||
-                                      "这次任务未完整完成。你可以补充信息后开始新的请求。"}
-                              </p>
+                        {!busy &&
+                          resultStatus &&
+                          resultStatus !== "completed" && (
+                            <div className={`run-result ${resultStatus}`}>
+                              <Icon name="info" size={18} />
+                              <div>
+                                <Status status={resultStatus} />
+                                <p>
+                                  {requiresReconciliation
+                                    ? RECONCILIATION_NOTICE
+                                    : run?.status === "cancelled"
+                                      ? "任务已停止，已完成的操作和对话仍会保留。"
+                                      : run?.error ||
+                                        "这次任务未完整完成。你可以补充信息后开始新的请求。"}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </>
                     )}
                   </div>
@@ -2293,7 +2446,7 @@ export default function App() {
                             !compactionSession &&
                             !closed &&
                             !writeLocked &&
-                            run?.status !== "needs_reconciliation"
+                            !requiresReconciliation
                           }
                           compactReason={
                             busy
@@ -2384,7 +2537,7 @@ export default function App() {
                             writeLocked ||
                             (!draft.trim() && !chosenFiles.length) ||
                             (!busy && !providerReady) ||
-                            run?.status === "needs_reconciliation"
+                            requiresReconciliation
                           }
                         >
                           {sending ? (
@@ -2641,6 +2794,7 @@ export default function App() {
                 activeSideId === session.id
               }
               providers={providers}
+              runtimeCapabilities={runtimeCapabilities}
               assistantName={assistantName(session.agent_id)}
               options={sideOptions}
               onSelect={(item) => showSideChat(item)}

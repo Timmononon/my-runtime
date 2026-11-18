@@ -1,4 +1,5 @@
 import { ApiError } from "./api";
+import { FEISHU_TASK_SOURCES } from "./feishuTypes";
 import type { Project, Session, SessionDetail } from "./types";
 
 export type ProjectSessionSnapshot = {
@@ -9,6 +10,7 @@ export type ProjectSessionSnapshot = {
   hasAutomation: boolean;
   hasTasks: boolean;
   hasGithubSources: boolean;
+  hasFeishuSources: boolean;
 };
 
 // A task source can still have no messages or runs. Only the advertised
@@ -37,23 +39,53 @@ export async function projectTaskPresence(
   return result.tickets.length > 0;
 }
 
-export async function projectGithubPresence(
+async function projectSourcePresence(
   detail: SessionDetail,
   capabilities: readonly string[],
+  capability: string,
+  provider: string,
   readSources: (id: string) => Promise<{ sources: unknown[] }>,
 ) {
-  if (!capabilities.includes("github_sources_v1")) return false;
+  if (!capabilities.includes(capability)) return false;
   let result: { sources: unknown[] };
   try {
     result = await readSources(detail.id);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404)
-      throw new Error("GitHub 来源查询不可用，请重新连接后再试。");
+      throw new Error(`${provider} 来源查询不可用，请重新连接后再试。`);
     throw error;
   }
-  if (!Array.isArray(result.sources))
-    throw new Error("无法确认对话关联的 GitHub 来源，请重新读取后再试。");
+  if (!Array.isArray(result?.sources))
+    throw new Error(`无法确认对话关联的 ${provider} 来源，请重新读取后再试。`);
   return result.sources.length > 0;
+}
+
+export function projectGithubPresence(
+  detail: SessionDetail,
+  capabilities: readonly string[],
+  readSources: (id: string) => Promise<{ sources: unknown[] }>,
+) {
+  return projectSourcePresence(
+    detail,
+    capabilities,
+    "github_sources_v1",
+    "GitHub",
+    readSources,
+  );
+}
+
+export function projectFeishuPresence(
+  detail: SessionDetail,
+  capabilities: readonly string[],
+  readSources: (id: string) => Promise<{ sources: unknown[] }>,
+) {
+  return projectSourcePresence(
+    detail,
+    capabilities,
+    FEISHU_TASK_SOURCES,
+    "飞书",
+    readSources,
+  );
 }
 
 function matchesProject(session: Session, project: Project, agent: string) {
@@ -112,7 +144,8 @@ export async function findEmptyProjectSession({
       !value.hasLineage &&
       !value.hasAutomation &&
       !value.hasTasks &&
-      !value.hasGithubSources
+      !value.hasGithubSources &&
+      !value.hasFeishuSources
       ? detail
       : null;
   };

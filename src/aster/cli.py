@@ -7,6 +7,7 @@ import getpass
 import json
 import re
 import sys
+import warnings
 import webbrowser
 from pathlib import Path
 
@@ -31,6 +32,10 @@ def parser():
     configure = commands.add_parser("configure", help="Store a DeepSeek key in the Runtime's credentials.yaml")
     configure.add_argument("--model", default="deepseek-flash")
     configure.add_argument("--skip-key", action="store_true", help="Update model only, without reading or writing a key")
+    webhook = commands.add_parser("feishu-webhook", help="Configure a Feishu custom bot webhook")
+    webhook_actions = webhook.add_subparsers(required=True)
+    webhook_configure = webhook_actions.add_parser("configure", help="Store the webhook URL using hidden input")
+    webhook_configure.add_argument("--group", required=True, help="Display name of the destination group")
     run = commands.add_parser("run", help="Run one request or start an interactive session")
     run.add_argument("prompt", nargs="?")
     run.add_argument("--session")
@@ -502,6 +507,22 @@ def main(argv=None):
             raise ValueError("A positional prompt and --command are mutually exclusive")
         if args.command == "doctor":
             _print(maintenance.doctor(args.data_dir))
+            return 0
+        if args.command == "feishu-webhook":
+            from aster.tools.feishu_webhook import configure_feishu_webhook
+
+            terminal_required = "Enter the Feishu webhook URL in a terminal with hidden input"
+            # Windows also reports its seekable NUL device as a TTY.
+            if (sys.stdin is None or not sys.stdin.isatty()
+                    or (sys.platform == "win32" and sys.stdin.seekable())):
+                raise ValueError(terminal_required)
+            try:
+                with warnings.catch_warnings(action="error", category=getpass.GetPassWarning):
+                    url = getpass.getpass("Feishu webhook URL: ")
+            except (EOFError, getpass.GetPassWarning):
+                raise ValueError(terminal_required) from None
+            configure_feishu_webhook(args.data_dir, args.group, url)
+            print("Feishu webhook saved. Restart Aster to load it.")
             return 0
         if args.command == "configure":
             from aster.platform.filesystem import atomic_write

@@ -25,6 +25,94 @@ export function toolErrorSummary(
   const data = metadata.data;
   const reason =
     data && typeof data === "object" && "reason" in data ? data.reason : null;
+  const feishuError =
+    data && typeof data === "object" && "error" in data ? data.error : null;
+
+  if (
+    tool === "feishu_cli" &&
+    category === "authorization" &&
+    (metadata.outcome === "not_executed" || metadata.outcome === "known") &&
+    data &&
+    typeof data === "object" &&
+    "identity" in data &&
+    data.identity === "user" &&
+    feishuError &&
+    typeof feishuError === "object" &&
+    "type" in feishuError &&
+    feishuError.type === "authorization" &&
+    "subtype" in feishuError &&
+    feishuError.subtype === "missing_scope" &&
+    "identity" in feishuError &&
+    feishuError.identity === "user" &&
+    "missing_scopes" in feishuError &&
+    Array.isArray(feishuError.missing_scopes) &&
+    feishuError.missing_scopes.includes("im:message.send_as_user")
+  )
+    return {
+      title: "缺少飞书权限",
+      detail:
+        "当前发送操作需要飞书“以本人身份发送消息”权限，请通过人工授权入口补充授权后再继续。",
+    };
+
+  if (
+    tool === "feishu_cli" &&
+    metadata.is_error === true &&
+    (metadata.outcome === "not_executed" || metadata.outcome === "known") &&
+    category === "authorization" &&
+    data &&
+    typeof data === "object" &&
+    "ok" in data &&
+    data.ok === false &&
+    "identity" in data &&
+    data.identity === "user" &&
+    feishuError &&
+    typeof feishuError === "object" &&
+    "type" in feishuError &&
+    feishuError.type === "authorization" &&
+    "subtype" in feishuError &&
+    feishuError.subtype === "user_unauthorized" &&
+    "code" in feishuError &&
+    feishuError.code === 230027 &&
+    "identity" in feishuError &&
+    feishuError.identity === "user" &&
+    "log_id" in feishuError &&
+    typeof feishuError.log_id === "string" &&
+    feishuError.log_id.trim().length > 0
+  )
+    return {
+      title: "飞书拒绝本人发送（230027）",
+      detail: "本次消息未发送。请核对应用权限和目标会话的发送限制。",
+    };
+
+  if (
+    tool === "feishu_cli" &&
+    metadata.is_error === true &&
+    (metadata.outcome === "not_executed" || metadata.outcome === "known") &&
+    category === "api" &&
+    data &&
+    typeof data === "object" &&
+    "ok" in data &&
+    data.ok === false &&
+    "identity" in data &&
+    data.identity === "bot" &&
+    feishuError &&
+    typeof feishuError === "object" &&
+    "type" in feishuError &&
+    feishuError.type === "api" &&
+    "subtype" in feishuError &&
+    feishuError.subtype === "unknown" &&
+    "code" in feishuError &&
+    feishuError.code === 230002 &&
+    "log_id" in feishuError &&
+    typeof feishuError.log_id === "string" &&
+    feishuError.log_id.trim().length > 0 &&
+    (!("identity" in feishuError) || feishuError.identity === "bot")
+  )
+    return {
+      title: "当前机器人不在目标聊天中",
+      detail:
+        "个人身份能看到该聊天，不代表机器人可以发送。请先核实发送身份与目标聊天。",
+    };
 
   if (category === "permission")
     return {

@@ -7,9 +7,13 @@ import sys
 
 import pytest
 
-from aster.domain import ToolContext
+from aster.domain import ToolCall, ToolContext
+from aster.engine.dispatcher import Dispatcher
 from aster.platform.processes import ProcessResult, ProcessSupervisor
+from aster.policy import ApprovalBroker, PermissionPolicy
+from aster.state import StateError, Store
 from aster.tools.feishu import FeishuCLITool, cli_environment
+from aster.tools.registry import Registry
 
 
 class RecordingSupervisor:
@@ -153,6 +157,367 @@ async def test_proven_missing_app_preflight_does_not_create_unknown_write_barrie
     item, _ = tool(tmp_path, process)
     result = await item.execute({"argv": ["docs", "+create", "--content", "hello"]}, context(tmp_path))
     assert result.is_error and result.outcome == "not_executed" and result.error_category == "config"
+
+
+def missing_send_scope(*, identity="user", **updates):
+    error = {"type": "authorization", "subtype": "missing_scope", "identity": identity,
+             "missing_scopes": ["im:message.send_as_user" if identity == "user" else "im:message:send_as_bot"]}
+    error.update(updates)
+    return error
+
+
+@pytest.mark.parametrize("extra,identity", [
+    ([], "user"), (["--dry-run"], "user"), (["--idempotency-key", "offline-send"], "user"), ([], "bot"),
+])
+async def test_exact_local_send_scope_gate_is_known_not_executed_without_replay(tmp_path, extra, identity):
+    error = missing_send_scope(identity=identity)
+    process = ProcessResult(3, stderr=json.dumps({"ok": False, "identity": identity, "error": error}), pid=42)
+    item, runner = tool(tmp_path, process)
+    arguments = {"argv": ["im", "+messages-send", "--chat-id", "oc_offline", "--text", "offline", *extra],
+                 "identity": identity}
+    result = await item.execute(arguments, context(tmp_path))
+    assert result.is_error and result.outcome == "not_executed" and result.error_category == "authorization"
+    assert result.data["ok"] is False and result.data["error"]["missing_scopes"] == error["missing_scopes"]
+    assert item.classify(arguments).risk == "external" and not item.classify(arguments).replay_safe
+    assert len(runner.calls) == 1 and runner.calls[0][0][-4:] == ["--as", identity, "--format", "json"]
+
+
+@pytest.mark.parametrize("updates,exit_code,stdout,command", [
+    ({"code": 99991672}, 3, "", "send"),
+    ({"code": 0}, 3, "", "send"),
+    ({"code": None}, 3, "", "send"),
+    ({"log_id": "offline-server-response"}, 3, "", "send"),
+    ({"identity": "bot"}, 3, "", "send"),
+    ({"missing_scopes": []}, 3, "", "send"),
+    ({"missing_scopes": ["drive:drive"]}, 3, "", "send"),
+    ({"missing_scopes": [None]}, 3, "", "send"),
+    ({"type": "api"}, 3, "", "send"),
+    ({"subtype": "permission_denied"}, 3, "", "send"),
+    ({}, 1, "", "send"),
+    ({}, 3, '{"ok":true,"data":{"upload_completed":true}}', "send"),
+    ({}, 3, "", "docs"),
+])
+async def test_unproven_scope_errors_keep_unknown_write_barrier(tmp_path, updates, exit_code, stdout, command):
+    process = ProcessResult(exit_code, stdout=stdout,
+                            stderr=json.dumps({"ok": False, "identity": "user", "error": missing_send_scope(**updates)}), pid=42)
+    item, runner = tool(tmp_path, process)
+    argv = (["im", "+messages-send", "--chat-id", "oc_offline", "--text", "offline"] if command == "send"
+            else ["docs", "+create", "--content", "offline"])
+    result = await item.execute({"argv": argv, "identity": "user"}, context(tmp_path))
+    assert result.is_error and result.outcome == "unknown"
+    assert len(runner.calls) == 1
+
+
+async def test_mismatched_scope_error_envelope_identity_cannot_claim_local_preflight(tmp_path):
+    process = ProcessResult(3, stderr=json.dumps({"ok": False, "identity": "bot", "error": missing_send_scope()}), pid=42)
+    item, runner = tool(tmp_path, process)
+    result = await item.execute({"argv": ["im", "+messages-send", "--chat-id", "oc_offline", "--text", "offline"],
+                                 "identity": "user"}, context(tmp_path))
+    assert result.is_error and result.outcome == "unknown" and len(runner.calls) == 1
+
+
+@pytest.mark.parametrize("extra", [["--dry-run"], ["--idempotency-key", "offline-send"]])
+@pytest.mark.parametrize("remote_error", [False, True])
+async def test_send_scope_outcome_controls_real_ledger_and_subsequent_dispatch(tmp_path, extra, remote_error):
+    error = missing_send_scope(**({"code": 99991672} if remote_error else {}))
+    item, runner = tool(tmp_path, ProcessResult(3, stderr=json.dumps({"ok": False, "identity": "user", "error": error}), pid=42))
+    store = Store(tmp_path / "runtime.db")
+    try:
+        session_id = store.create_session(tmp_path)["id"]
+        run, _ = store.create_run(session_id)
+        ctx = ToolContext(session_id, run["id"], tmp_path, tmp_path / "artifacts", asyncio.Event())
+        broker = ApprovalBroker(store, timeout_seconds=2)
+        engine = Dispatcher(Registry([item]), store, PermissionPolicy(), broker)
+        approvals = []
+
+        async def emit(kind, payload):
+            if kind == "approval.waiting":
+                approvals.append(payload)
+                broker.resolve(payload["request_id"], True)
+
+        ctx.emit = emit
+        arguments = {"argv": ["im", "+messages-send", "--chat-id", "oc_offline", "--text", "offline", *extra],
+                     "identity": "user"}
+        first, = await engine.execute([ToolCall("send", "feishu_cli", arguments)], ctx)
+        assert first.is_error and len(approvals) == 1 and len(runner.calls) == 1
+        entry, = store.tool_executions(ctx.run_id)
+        assert entry["risk"] == "external" and not entry["replay_safe"]
+        assert entry["state"] == ("outcome_unknown" if remote_error else "failed_no_effect")
+        assert store.has_unresolved(ctx.session_id) is remote_error
+        runner.result = ProcessResult(0, '{"ok":true,"identity":"user","data":[]}', pid=43)
+        following, = await engine.execute([ToolCall("read", "feishu_cli", {"argv": ["calendar", "+agenda"]})], ctx)
+        assert following.is_error is remote_error
+        assert len(runner.calls) == (1 if remote_error else 2)
+        # The failed send is never replayed, and an uncertain remote failure
+        # still blocks an identical send under a fresh call ID.
+        assert sum(call[0][1:3] == ["im", "+messages-send"] for call in runner.calls) == 1
+        if remote_error:
+            blocked, = await engine.execute([ToolCall("another-send-id", "feishu_cli", arguments)], ctx)
+            assert blocked.is_error and blocked.outcome == "not_executed" and len(runner.calls) == 1
+    finally:
+        store.close()
+
+
+def plain_chat_send(**values):
+    fields = {"chat-id": "oc_offline", "text": "Synthetic plain text", "idempotency-key": "offline-send"}
+    fields.update(values)
+    return ["im", "+messages-send", *(token for flag, value in fields.items() for token in ["--" + flag, value])]
+
+
+def rejected_bot_chat(**updates):
+    error = {"type": "api", "subtype": "unknown", "code": 230002, "log_id": "synthetic-server-log",
+             "message": "Synthetic rejection in any server language", "hint": "Synthetic upstream hint"}
+    error.update(updates)
+    return {"ok": False, "identity": "bot", "error": error}
+
+
+def rejected_user_chat():
+    return {"ok": False, "identity": "user", "error": {
+        "type": "authorization", "subtype": "user_unauthorized", "identity": "user", "code": 230027,
+        "log_id": "synthetic-server-log", "message": "Synthetic authorization denial",
+        "hint": "Synthetic upstream hint",
+    }}
+
+
+@pytest.mark.parametrize("equals_style,padding,nested_identity", [
+    (False, "", False), (True, "", False), (False, "\ufeff\n", True), (True, " \n", True),
+])
+async def test_complete_bot_plain_text_rejection_is_no_effect_and_preserves_error(tmp_path, equals_style, padding, nested_identity):
+    envelope = rejected_bot_chat(**({"identity": "bot"} if nested_identity else {}))
+    process = ProcessResult(1, stderr=padding + json.dumps(envelope, indent=2) + "\n", pid=42)
+    item, runner = tool(tmp_path, process)
+    argv = (plain_chat_send(**{"idempotency-key": "字" * 50}) if not equals_style else
+            ["im", "+messages-send", "--idempotency-key=offline-send", "--text=literal --user-id value",
+             "--chat-id=oc_offline"])
+    arguments = {"argv": argv, "identity": "bot"}
+    result = await item.execute(arguments, context(tmp_path))
+    assert result.is_error and result.error_category == "api" and result.outcome == "not_executed"
+    assert result.data["ok"] is False and result.data["identity"] == "bot"
+    assert result.data["error"]["code"] == 230002 and result.data["error"]["log_id"] == "synthetic-server-log"
+    assert result.data["error"]["message"] == envelope["error"]["message"]
+    assert "本次消息未发送" in result.data["error"]["hint"]
+    assert "不要自动切换身份" in result.data["error"]["hint"] and "扩大 OAuth" in result.data["error"]["hint"]
+    assert "Synthetic upstream hint" not in result.content
+    assert result.data["recovery_action"] == "verify_message_target"
+    assert item.classify(arguments).risk == "external" and not item.classify(arguments).replay_safe
+    assert len(runner.calls) == 1 and runner.calls[0][0][-4:] == ["--as", "bot", "--format", "json"]
+
+
+@pytest.mark.parametrize("error_changes,envelope_changes,process_changes,stderr_style", [
+    ({"code": 230027}, {}, {}, "json"),
+    ({"code": "230002"}, {}, {}, "json"),
+    ({"code": 230002.0}, {}, {}, "json"),
+    ({"type": "network"}, {}, {}, "json"),
+    ({"subtype": "permission_denied"}, {}, {}, "json"),
+    ({"log_id": None}, {}, {}, "json"),
+    ({"log_id": "  "}, {}, {}, "json"),
+    ({"message": None}, {}, {}, "json"),
+    ({"identity": "user"}, {}, {}, "json"),
+    ({}, {"identity": "user"}, {}, "json"),
+    ({}, {"identity": None}, {}, "json"),
+    ({}, {"ok": True}, {}, "json"),
+    ({}, {"data": {}}, {}, "json"),
+    ({}, {"message_id": "om_synthetic"}, {}, "json"),
+    ({"data": {}}, {}, {}, "json"),
+    ({"details": [{"message_id": "om_synthetic"}]}, {}, {}, "json"),
+    ({}, {"error": None}, {}, "json"),
+    ({}, {"error": "incomplete"}, {}, "json"),
+    ({}, {}, {"exit_code": 3}, "json"),
+    ({}, {}, {"exit_code": True}, "json"),
+    ({}, {}, {"stdout": '{"ok":true,"data":{"message_id":"om_synthetic"}}'}, "json"),
+    ({}, {}, {"timed_out": True}, "json"),
+    ({}, {}, {"cancelled": True}, "json"),
+    ({}, {}, {"error": "Synthetic read interruption"}, "json"),
+    ({}, {}, {}, "missing_error"),
+    ({}, {}, {}, "missing_message"),
+    ({}, {}, {}, "missing_code"),
+    ({}, {}, {}, "missing_log_id"),
+    ({}, {}, {}, "missing_identity"),
+    ({}, {}, {}, "prefix"),
+    ({}, {}, {}, "suffix"),
+    ({}, {}, {}, "concatenated"),
+    ({}, {}, {}, "prior_success"),
+    ({}, {}, {}, "duplicate_code"),
+    ({}, {}, {}, "duplicate_ok"),
+    ({}, {}, {}, "truncated"),
+])
+async def test_bot_chat_rejection_requires_complete_unconflicted_process_response(
+        tmp_path, error_changes, envelope_changes, process_changes, stderr_style):
+    envelope = rejected_bot_chat(**error_changes)
+    envelope.update(envelope_changes)
+    if stderr_style.startswith("missing_"):
+        field = stderr_style.removeprefix("missing_")
+        (envelope if field in {"error", "identity"} else envelope["error"]).pop(field)
+    stderr = json.dumps(envelope)
+    if stderr_style == "prefix":
+        stderr = "Synthetic progress\n" + stderr
+    elif stderr_style == "suffix":
+        stderr += "\nSynthetic progress"
+    elif stderr_style == "concatenated":
+        stderr += "\n" + json.dumps(envelope)
+    elif stderr_style == "prior_success":
+        stderr = '{"ok":true,"data":{"message_id":"om_synthetic"}}\n' + stderr
+    elif stderr_style == "duplicate_code":
+        stderr = stderr.replace('"code": 230002', '"code": 0, "code": 230002')
+    elif stderr_style == "duplicate_ok":
+        stderr = stderr.replace('"ok": false', '"ok": true, "ok": false')
+    elif stderr_style == "truncated":
+        stderr = stderr[:-1]
+    process = ProcessResult(**{"exit_code": 1, "stderr": stderr, "pid": 42, **process_changes})
+    item, runner = tool(tmp_path, process)
+    result = await item.execute({"argv": plain_chat_send(), "identity": "bot"}, context(tmp_path))
+    assert result.is_error and result.outcome == "unknown"
+    assert "本次消息未发送" not in result.content and len(runner.calls) == 1
+
+
+@pytest.mark.parametrize("argv,identity", [
+    (["im", "+messages-send", "--chat-id", "oc_offline", "--text", "Synthetic"], "bot"),
+    (plain_chat_send(text=" "), "bot"),
+    (plain_chat_send(**{"chat-id": "oc_first,oc_second"}), "bot"),
+    (plain_chat_send(**{"chat-id": "oc_first oc_second"}), "bot"),
+    (plain_chat_send(**{"idempotency-key": " "}), "bot"),
+    (plain_chat_send(**{"idempotency-key": "x" * 51}), "bot"),
+    (plain_chat_send() + ["--dry-run"], "bot"),
+    (plain_chat_send() + ["--dry-run=false"], "bot"),
+    (plain_chat_send() + ["--msg-type=text"], "bot"),
+    (["im", "+messages-send", "--chat-id", "oc_offline", "--markdown", "![remote](https://example.test/image.png)",
+      "--idempotency-key", "offline-send"], "bot"),
+    (["im", "+messages-send", "--chat-id", "oc_offline", "--content", '{"text":"Synthetic"}',
+      "--idempotency-key", "offline-send"], "bot"),
+    (["im", "+messages-send", "--user-id", "ou_offline", "--text", "Synthetic",
+      "--idempotency-key", "offline-send"], "bot"),
+    (["im", "+messages-reply", "--message-id", "om_offline", "--text", "Synthetic",
+      "--idempotency-key", "offline-send"], "bot"),
+    (plain_chat_send(), "user"),
+])
+async def test_other_send_paths_cannot_borrow_plain_text_bot_no_effect_proof(tmp_path, argv, identity):
+    envelope = rejected_bot_chat()
+    envelope["identity"] = identity
+    item, runner = tool(tmp_path, ProcessResult(1, stderr=json.dumps(envelope), pid=42))
+    result = await item.execute({"argv": argv, "identity": identity}, context(tmp_path))
+    assert result.is_error and result.outcome == "unknown" and len(runner.calls) == 1
+    assert "本次消息未发送" not in result.content
+
+
+@pytest.mark.parametrize("field,value,exit_code", [
+    ("identity", None, 3),
+    ("identity", "bot", 3),
+    ("code", "230027", 3),
+    ("code", 230049, 3),  # The previous request could still be sending.
+    ("subtype", "missing_scope", 3),
+    ("type", "api", 3),
+    ("type", "authorization", 1),
+])
+async def test_user_send_rejection_requires_exact_authorization_error(tmp_path, field, value, exit_code):
+    envelope = rejected_user_chat()
+    if value is None:
+        del envelope["error"][field]
+    else:
+        envelope["error"][field] = value
+    item, runner = tool(tmp_path, ProcessResult(exit_code, stderr=json.dumps(envelope), pid=42))
+    result = await item.execute({"argv": plain_chat_send()}, context(tmp_path))
+    assert result.is_error and result.outcome == "unknown" and len(runner.calls) == 1
+    assert result.data.get("recovery_action") != "verify_message_target"
+
+
+@pytest.mark.parametrize("identity", ["bot", "user"])
+@pytest.mark.parametrize("failure", ["rejected_text", "network_unknown", "media_partial_unknown"])
+async def test_send_rejection_ledger_allows_reads_and_new_run_without_automatic_resend(tmp_path, failure, identity):
+    known_rejection = failure == "rejected_text"
+    envelope = rejected_bot_chat() if identity == "bot" else rejected_user_chat()
+    exit_code = 1 if identity == "bot" else 3
+    process = (ProcessResult(None, timed_out=True, pid=42) if failure == "network_unknown" else
+               ProcessResult(exit_code, stderr=json.dumps(envelope), pid=42))
+    item, runner = tool(tmp_path, process)
+    store = Store(tmp_path / "runtime.db")
+    try:
+        sid = store.create_session(tmp_path)["id"]
+        run, _ = store.create_run(sid)
+        ctx = ToolContext(sid, run["id"], tmp_path, tmp_path / "artifacts", asyncio.Event())
+        broker = ApprovalBroker(store, timeout_seconds=2)
+        engine = Dispatcher(Registry([item]), store, PermissionPolicy(), broker)
+        approvals = []
+
+        async def emit(kind, payload):
+            if kind == "approval.waiting":
+                approvals.append(payload)
+                broker.resolve(payload["request_id"], True)
+
+        ctx.emit = emit
+        argv = (plain_chat_send() if failure != "media_partial_unknown" else
+                ["im", "+messages-send", "--chat-id", "oc_offline", "--markdown",
+                 "![remote](https://example.test/image.png)", "--idempotency-key", "offline-send"])
+        arguments = {"argv": argv}
+        if identity == "bot":
+            arguments["identity"] = "bot"
+        rejected, = await engine.execute([ToolCall("send", "feishu_cli", arguments)], ctx)
+        assert rejected.is_error and len(approvals) == 1 and len(runner.calls) == 1
+        entry, = store.tool_executions(ctx.run_id)
+        assert entry["state"] == ("failed_no_effect" if known_rejection else "outcome_unknown")
+        assert entry["result"]["is_error"] and entry["risk"] == "external" and not entry["replay_safe"]
+        if known_rejection:
+            assert entry["result"]["data"]["error"]["code"] == envelope["error"]["code"]
+            assert entry["result"]["data"]["error"]["log_id"] == "synthetic-server-log"
+        assert store.has_unresolved(sid) is not known_rejection
+        runner.result = ProcessResult(0, json.dumps({"ok": True, "identity": identity, "data": []}), pid=43)
+        read = {"argv": ["calendar", "+agenda"], "identity": identity}
+        following, = await engine.execute([ToolCall("read", "feishu_cli", read)], ctx)
+        assert following.is_error is not known_rejection
+        store.finish_run(run["id"], "failed" if known_rejection else "needs_reconciliation")
+        if known_rejection:
+            new_run, _ = store.create_run(sid)
+            next_context = ToolContext(sid, new_run["id"], tmp_path, tmp_path / "artifacts", asyncio.Event())
+            continued, = await engine.execute([ToolCall("new-run-read", "feishu_cli", read)], next_context)
+            assert not continued.is_error and store.get_run(run["id"])["status"] == "failed"
+            assert len(runner.calls) == 3
+        else:
+            with pytest.raises(StateError, match="unresolved"):
+                store.create_run(sid)
+            blocked, = await engine.execute([ToolCall("new-send-id", "feishu_cli", arguments)], ctx)
+            assert blocked.is_error and blocked.outcome == "not_executed" and len(runner.calls) == 1
+        assert sum(call[0][1:3] == ["im", "+messages-send"] for call in runner.calls) == 1
+        assert all(call[0][-4:] == ["--as", identity, "--format", "json"] for call in runner.calls)
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("envelope,exit_code", [(rejected_bot_chat(), 1), (rejected_user_chat(), 3)])
+async def test_real_native_complete_send_rejection_is_failed_without_raw_output_files(tmp_path, envelope, exit_code):
+    ctx = context(tmp_path)
+    identity = envelope["identity"]
+    payload = json.dumps(envelope) + "\n"
+    program = (f"import sys\nassert sys.argv[-4:] == {['--as', identity, '--format', 'json']!r}\n"
+               f"sys.stderr.write({payload!r})\nraise SystemExit({exit_code})\n")
+    (data_directory(tmp_path) / "im").write_text(program, encoding="utf-8")
+    supervisor = ProcessSupervisor()
+    item = FeishuCLITool(supervisor, tmp_path / "state", executable=sys.executable)
+    try:
+        arguments = {"argv": plain_chat_send()}
+        if identity == "bot":
+            arguments["identity"] = "bot"
+        result = await item.execute(arguments, ctx)
+        assert result.is_error and result.outcome == "not_executed"
+        assert result.error_category == envelope["error"]["type"]
+        assert result.data["error"]["code"] == envelope["error"]["code"]
+        assert result.data["error"]["log_id"] == "synthetic-server-log"
+        assert result.data["recovery_action"] == "verify_message_target"
+        assert "Synthetic upstream hint" not in result.content and not result.artifacts
+        if identity == "user":
+            assert "消息未发送" in result.data["error"]["hint"] and "dry-run" in result.data["error"]["hint"]
+        assert not list(ctx.artifact_dir.iterdir())
+    finally:
+        await supervisor.close()
+
+
+@pytest.mark.parametrize("text", ["给飞书助手发一条消息", "看看自建机器人"])
+async def test_recipient_words_do_not_select_identity_or_resolve_a_target(tmp_path, text):
+    item, runner = tool(tmp_path)
+    result = await item.execute({"argv": plain_chat_send(text=text)}, context(tmp_path))
+    assert not result.is_error and runner.calls[0][0][-4:] == ["--as", "user", "--format", "json"]
+    description = item.spec.description
+    assert "Default identity=user" in description and "飞书助手" in description
+    assert "group/topic" in description and "never guess" in description
+    assert "Message-search hits do not verify" in description
 
 
 async def test_missing_executable_and_precancellation_do_not_dispatch(tmp_path, monkeypatch):

@@ -65,6 +65,20 @@ _AUTH_RECOVERY = (
     "这不等于用户从未授权；保持当前身份，不要自动改成 bot，也不要在业务工具中运行 auth login。"
     "需要补充授权时应由用户通过人工连接入口处理。"
 )
+_BOT_CHAT_REJECTION = (
+    "飞书拒绝本次发送（230002）：当前 bot 不在目标聊天中，本次消息未发送。"
+    "用户身份可见的聊天不等于机器人已加入，请先核实指定目标及用户要求的发送身份。"
+    "不要自动切换身份、把机器人加入聊天、扩大 OAuth 授权或重发。"
+)
+_USER_CHAT_REJECTION = (
+    "飞书拒绝了本次以本人身份发送的请求（230027），消息未发送。"
+    "该错误码没有指出具体缺失的权限。本地授权检查或 dry-run 仅验证本地条件。"
+    "请核实当前应用与目标会话的发送权限，保持当前身份和授权范围，等待用户明确指示后再发送。"
+)
+_SEND_REJECTIONS = {
+    230002: ("bot", "api", "unknown", 1, _BOT_CHAT_REJECTION),
+    230027: ("user", "authorization", "user_unauthorized", 3, _USER_CHAT_REJECTION),
+}
 # Official 1.0.100: calendar/description_rich_images.go reads local Markdown
 # images; doc/local_doc_resources.go and html5_block_resources.go read @ images,
 # resource path attributes, whiteboard @ bodies and reference-map path entries.
@@ -72,6 +86,93 @@ _MARKDOWN_IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)]*)\)")
 _DOC_LOCAL_IMAGE = re.compile(r"!\[[\s\S]*?\]\(\s*(?:<\s*)?\\?@")
 _DOC_LOCAL_RESOURCE = re.compile(r"(?is)<(?:img|source|whiteboard|html5-block)\b[^>]*\bpath\s*=")
 _DOC_WHITEBOARD_FILE = re.compile(r"(?is)<whiteboard\b[^>]*>\s*@(?!@)")
+# Only this audited legacy shortcut has a local scope gate before every
+# business phase; other shortcuts may check extra scopes after earlier writes.
+_SEND_PREFLIGHT_SCOPES = {"user": {"im:message.send_as_user", "im:message"},
+                          "bot": {"im:message:send_as_bot"}}
+
+
+def _is_send_scope_preflight(argv, identity, result, envelope):
+    # Official 1.0.100 common/runner.go:1122 checks scopes before runtime,
+    # dry-run and Execute. Local errors have no code/log_id; API classification
+    # always retains a nonzero code (internal/errclass/classify.go:51-95).
+    error = envelope.get("error")
+    if not isinstance(error, dict):
+        return False
+    if (tuple(argv[:2]) != ("im", "+messages-send") or result.exit_code != 3
+            or envelope.get("identity") != identity
+            or result.stdout.strip() or error.get("type") != "authorization"
+            or error.get("subtype") != "missing_scope" or error.get("identity") != identity
+            or "code" in error or "log_id" in error):
+        return False
+    scopes = error.get("missing_scopes")
+    return (isinstance(scopes, list) and bool(scopes)
+            and all(isinstance(scope, str) and scope in _SEND_PREFLIGHT_SCOPES[identity] for scope in scopes))
+
+
+def _unique_json_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("Conflicting Feishu response fields")
+        value[key] = item
+    return value
+
+
+def _text_send_rejection_hint(arguments, result, envelope) -> str | None:
+    # Official 1.0.100 im_messages_send.go:187-264 and helpers.go:314-320
+    # perform one text-message POST with no preceding upload. Feishu documents
+    # HTTP 400 / 230002 (membership) and 230027 (permissions) as send rejections.
+    error = envelope.get("error")
+    if not isinstance(error, dict) or type(error.get("code")) is not int:
+        return None
+    rule = _SEND_REJECTIONS.get(error["code"])
+    if rule is None:
+        return None
+    identity, category, subtype, exit_code, hint = rule
+    # PermissionError carries identity; the generic APIError may omit it.
+    if error.get("identity") != identity and (category != "api" or "identity" in error):
+        return None
+    if (arguments.get("identity", "user") != identity or envelope.get("identity") != identity
+            or envelope.get("ok") is not False
+            or type(result.exit_code) is not int or result.exit_code != exit_code or not result.pid
+            or result.cancelled or result.timed_out or result.error is not None or result.stdout.strip()
+            or error.get("type") != category or error.get("subtype") != subtype
+            or not isinstance(error.get("log_id"), str) or not error["log_id"].strip()
+            or not isinstance(error.get("message"), str) or not error["message"].strip()):
+        return None
+    argv = arguments["argv"]
+    if tuple(argv[:2]) != ("im", "+messages-send"):
+        return None
+    values, tokens = {}, iter(argv[2:])
+    for token in tokens:
+        flag, separator, value = token[2:].partition("=")
+        if not token.startswith("--") or flag not in {"chat-id", "text", "idempotency-key"} or flag in values:
+            return None
+        value = value if separator else next(tokens, "")
+        if not value.strip():
+            return None
+        values[flag] = value
+    if (set(values) != {"chat-id", "text", "idempotency-key"}
+            or not re.fullmatch(r"oc_[A-Za-z0-9_-]+", values["chat-id"])
+            or len(values["idempotency-key"]) > 50):
+        return None
+    try:
+        complete = json.loads(result.stderr.lstrip("\ufeff").strip(), object_pairs_hook=_unique_json_object)
+    except (ValueError, TypeError, RecursionError):
+        return None
+    if complete != envelope:
+        return None
+    pending = [complete]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, dict):
+            if "data" in item or "message_id" in item:
+                return None
+            pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
+    return hint
 
 
 def _reject_implicit_local_media(command, flag, value):
@@ -184,8 +285,13 @@ class FeishuCLITool:
             "feishu_cli",
             "Use 飞书 Feishu CLI for docs, messages, calendar and sheets. Start with argv=['--help']; "
             "exact argv=['auth','status'] reads local connection diagnostics. Default identity=user accesses personal "
-            "resources; use bot only for explicitly requested application resources. Never switch identity after an auth "
-            "error. Writes require Runtime approval; auth login/config and raw API are unavailable.",
+            "resources; use bot only for explicitly requested application resources. For a requested group custom-bot "
+            "Webhook (群自定义机器人), use feishu_webhook_send when offered. Keep the requested delivery channel and "
+            "supplied message text. Never switch identity after an auth error. Feishu's built-in 飞书助手 is distinct "
+            "from a custom app bot. +chat-search returns group/topic chats; "
+            "it cannot by itself identify that built-in assistant. Message-search hits do not verify the requested recipient. "
+            "Verify the exact target before sending; if unverified, explain the limitation and ask for a target, never guess. "
+            "Writes require Runtime approval; auth login/config and raw API are unavailable.",
             {"type": "object", "properties": {
                 "argv": {"type": "array", "minItems": 1, "maxItems": 100,
                          "items": {"type": "string", "minLength": 1, "maxLength": 16000}},
@@ -331,15 +437,22 @@ class FeishuCLITool:
         if envelope and envelope.get("ok") is False:
             error = envelope.get("error") or {}
             category = error.get("type") if isinstance(error, dict) else "protocol"
+            send_rejection_hint = _text_send_rejection_hint(arguments, result, envelope)
             # Fixed CLI 1.0.100 resolves Config before shortcut execution; its
             # not_configured subtype and confirmation gate are pre-dispatch.
             # Other errors can follow partial multi-request writes.
             if ((category == "confirmation" and result.exit_code == 10)
                     or (category == "config" and error.get("subtype") == "not_configured"
-                        and result.exit_code == 3)):
+                        and result.exit_code == 3)
+                    or (isinstance(error, dict) and _is_send_scope_preflight(
+                        argv, arguments.get("identity", "user"), result, envelope))
+                    or send_rejection_hint is not None):
                 outcome = "not_executed"
             safe = _sanitize(envelope)
-            if isinstance(safe.get("error"), dict) and (category in {"authentication", "authorization"}
+            if send_rejection_hint is not None:
+                safe["error"]["hint"] = send_rejection_hint
+                safe["recovery_action"] = "verify_message_target"
+            elif isinstance(safe.get("error"), dict) and (category in {"authentication", "authorization"}
                     or (category == "config" and error.get("subtype") == "invalid_client")):
                 original_hint = safe["error"].pop("hint", None)
                 if original_hint:

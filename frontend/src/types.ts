@@ -94,6 +94,7 @@ export interface Run {
   kind?: string;
   session_id: string;
   status: string;
+  requires_reconciliation?: boolean;
   answer?: string;
   error?: string | null;
   created_at: number;
@@ -156,6 +157,7 @@ export interface ContextUsage {
   updated_at: number | null;
 }
 export interface SessionDetail extends Session {
+  requires_reconciliation?: boolean;
   messages: MessageRecord[];
   runs: Run[];
   plan: {
