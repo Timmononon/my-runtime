@@ -1,0 +1,242 @@
+.chat-workbench-shell {
+  --chat-shell-background: #edf2fa;
+  --chat-shell-rule: #dce4f1;
+  background: var(--chat-shell-background);
+}
+
+.chat-workbench-shell > .sidebar {
+  background: var(--chat-shell-background);
+}
+
+.chat-workbench-shell .brand {
+  width: fit-content;
+  margin: 0 0 18px;
+  padding: 2px 4px;
+  border-radius: 11px;
+}
+
+.chat-workbench-shell .brand-mark {
+  background: linear-gradient(140deg, #526deb, #3653c9);
+  box-shadow: 0 4px 12px #344eb52b;
+}
+
+.shell-sidebar-actions {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 17px;
+  flex-shrink: 0;
+}
+
+.chat-workbench-shell .new-chat {
+  margin: 0;
+}
+
+.shell-sidebar-search {
+  justify-content: flex-start;
+  gap: 9px;
+  height: 38px;
+  padding-inline: 12px 9px;
+  border-radius: 10px;
+  --button-bg: #f8faff;
+  --button-bg-hover: #fff;
+  --button-fg: var(--muted);
+  --border: var(--chat-shell-rule);
+}
+
+.shell-sidebar-search > kbd {
+  margin-inline-start: auto;
+  font-size: 10px;
+}
+
+.chat-workbench-shell .sidebar nav,
+.shell-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-workbench-shell .sidebar nav {
+  gap: 11px;
+  flex-shrink: 0;
+}
+
+.shell-nav-label {
+  margin: 0 9px 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 590;
+}
+
+.chat-workbench-shell .nav-item {
+  height: 32px;
+  padding-inline: 9px;
+}
+
+.chat-workbench-shell .nav-item[aria-current="page"] {
+  --button-bg: #fff;
+  --button-bg-hover: #f8faff;
+  box-shadow: inset 0 0 0 1px var(--chat-shell-rule), 0 1px 1px #40538d0a;
+}
+
+.chat-workbench-shell .workspace-browser {
+  margin-top: 13px;
+  border-top: 1px solid var(--chat-shell-rule);
+  padding-top: 5px;
+}
+
+.chat-workbench-shell .project-heading > span,
+.chat-workbench-shell .project-empty,
+.chat-workbench-shell .recent-empty {
+  color: var(--muted);
+}
+
+.chat-workbench-shell .sidebar-search {
+  padding-inline: 0;
+  margin-block: 0 9px;
+}
+
+.chat-workbench-shell .project-row-wrap.selected,
+.chat-workbench-shell .recent-row.selected {
+  background: #dfe8fa;
+}
+
+.chat-workbench-shell .recent-row.selected .recent-item {
+  color: #324bb0;
+  font-weight: 600;
+}
+
+.chat-workbench-shell .sidebar-footer {
+  padding: 9px 0 12px;
+  border-top-color: var(--chat-shell-rule);
+}
+
+.chat-workbench-shell .profile {
+  border: 1px solid var(--chat-shell-rule);
+  background: #f8faff;
+}
+
+.chat-workbench-shell .profile:hover {
+  background: #fff;
+}
+
+.chat-workbench-shell .topbar {
+  gap: 8px;
+  padding-inline: 14px;
+}
+
+.chat-workbench-shell .topbar-start {
+  flex: 1;
+}
+
+.chat-workbench-shell .topbar-actions {
+  flex-shrink: 0;
+  gap: 5px;
+}
+
+.shell-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.chat-workbench-shell .shell-title .page-name {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: left;
+  padding: 0;
+}
+
+.shell-title-scope {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-workbench-shell .topbar [data-slot="button"] {
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.shell-desktop-toggle,
+.shell-top-search,
+.shell-activity-button {
+  --button-fg: var(--muted);
+}
+
+.shell-top-search,
+.chat-workbench-shell .topbar-button {
+  padding-inline: 9px;
+}
+
+.chat-workbench-shell .topbar [aria-pressed="true"] {
+  --button-bg: var(--sage-light);
+  --button-fg: var(--sage);
+  background: var(--sage-light);
+  color: var(--sage);
+}
+
+@media (min-width: 721px) {
+  .chat-workbench-shell {
+    padding: 8px 8px 8px 0;
+  }
+
+  .chat-workbench-shell > .sidebar {
+    flex-basis: 268px;
+    width: 268px;
+    padding: 9px 12px 0;
+    border-right: 0;
+  }
+
+  .chat-workbench-shell > .main-shell {
+    border: 1px solid var(--chat-shell-rule);
+    border-radius: 15px;
+    background: var(--panel);
+    box-shadow: 0 9px 32px #253c7210;
+  }
+
+  .chat-workbench-shell .topbar {
+    border-radius: 15px 15px 0 0;
+  }
+
+  .chat-workbench-shell > .main-shell > .workspace {
+    border-radius: 0 0 15px 15px;
+    overflow: clip;
+  }
+
+  .chat-workbench-shell[data-sidebar-collapsed="true"] {
+    padding-inline-start: 8px;
+  }
+
+  .chat-workbench-shell[data-sidebar-collapsed="true"] > .sidebar,
+  .chat-workbench-shell .mobile-menu {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .chat-workbench-shell .topbar {
+    height: 56px;
+    padding-inline: 9px;
+  }
+
+  .chat-workbench-shell > .sidebar:not(.open) {
+    visibility: hidden;
+  }
+
+  .chat-workbench-shell .shell-desktop-toggle,
+  .shell-top-search > span {
+    display: none;
+  }
+
+  .chat-workbench-shell .topbar .topbar-button {
+    padding-inline: 7px;
+  }
+}

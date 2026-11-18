@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Button } from "@heroui/react";
+import { useRef, useState } from "react";
 import { Icon } from "./icons";
 import { Modal, Popup } from "./ui";
 import type { ModelProvider, RunSelection, Skill } from "./types";
@@ -17,6 +18,8 @@ export function ModelOptions({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState<"model" | "effort" | null>(null);
+  const modelTrigger = useRef<HTMLButtonElement>(null);
+  const effortTrigger = useRef<HTMLButtonElement>(null);
   const provider = providers.find((p) => p.id === selection.provider_id),
     model = provider?.models.find((m) => m.id === selection.model),
     efforts = model?.effort_levels || [];
@@ -32,29 +35,35 @@ export function ModelOptions({
   };
   return (
     <div className="model-options">
-      <div className="option-anchor">
-        <button
+      <div
+        className="option-anchor"
+        title={
+          busy
+            ? "用于下一次新请求，不改变运行中的任务"
+            : `${provider?.name || "尚未选择提供商"} · ${selection.model || "未选择模型"}`
+        }
+      >
+        <Button
+          ref={modelTrigger}
           type="button"
+          size="sm"
+          variant="ghost"
           className="model-picker"
           aria-label="选择模型"
-          disabled={disabled}
+          isDisabled={disabled}
           aria-expanded={open === "model"}
-          onClick={() => setOpen(open === "model" ? null : "model")}
-          title={
-            busy
-              ? "用于下一次新请求，不改变运行中的任务"
-              : `${provider?.name || "尚未选择提供商"} · ${selection.model || "未选择模型"}`
-          }
+          onPress={() => setOpen(open === "model" ? null : "model")}
         >
-          <Icon name="globe" size={13} />
           <span>{model?.name || selection.model || "选择模型"}</span>
           <Icon name="down" size={11} />
-        </button>
+        </Button>
         {open === "model" && !disabled && (
           <Popup
             label="模型选择"
             onClose={() => setOpen(null)}
-            className="model-popup"
+            className="model-popup composer-popover"
+            anchor={modelTrigger.current}
+            align="start"
           >
             <div className="popup-heading">
               选择模型<span>下一次新请求生效</span>
@@ -106,19 +115,24 @@ export function ModelOptions({
           </Popup>
         )}
       </div>
-      <div className="option-anchor">
-        <button
+      <div
+        className="option-anchor"
+        title={
+          efforts.length
+            ? "仅展示模型明确支持的推理强度"
+            : "当前模型未声明可调推理能力"
+        }
+      >
+        <Button
+          ref={effortTrigger}
           type="button"
+          size="sm"
+          variant="ghost"
           className="effort-picker"
           aria-label="选择推理强度"
-          disabled={disabled || !efforts.length}
+          isDisabled={disabled || !efforts.length}
           aria-expanded={open === "effort"}
-          title={
-            efforts.length
-              ? "仅展示模型明确支持的推理强度"
-              : "当前模型未声明可调推理能力"
-          }
-          onClick={() => setOpen(open === "effort" ? null : "effort")}
+          onPress={() => setOpen(open === "effort" ? null : "effort")}
         >
           <Icon name="bolt" size={13} />
           <span>
@@ -130,12 +144,14 @@ export function ModelOptions({
               : "不可调"}
           </span>
           <Icon name="down" size={10} />
-        </button>
+        </Button>
         {open === "effort" && !disabled && (
           <Popup
             label="推理强度选择"
             onClose={() => setOpen(null)}
-            className="effort-popup"
+            className="effort-popup composer-popover"
+            anchor={effortTrigger.current}
+            align="start"
           >
             <div className="popup-heading">推理强度</div>
             {[null, ...efforts].map((effort) => (
@@ -178,23 +194,30 @@ export function ComposerMenu({
   disabled: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   return (
-    <div className="option-anchor">
-      <button
+    <div className="option-anchor" title="添加附件或选择 Skill">
+      <Button
+        ref={trigger}
         type="button"
-        className="icon-button composer-plus"
+        size="sm"
+        variant="ghost"
+        isIconOnly
+        className="composer-plus"
         aria-label="更多输入选项"
         aria-expanded={open}
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
+        isDisabled={disabled}
+        onPress={() => setOpen(!open)}
       >
-        <Icon name="plus" size={21} />
-      </button>
+        <Icon name="plus" size={17} />
+      </Button>
       {open && (
         <Popup
           label="输入选项"
           onClose={() => setOpen(false)}
-          className="composer-popup"
+          className="composer-popup composer-popover"
+          anchor={trigger.current}
+          align="start"
         >
           <button
             type="button"

@@ -1,5 +1,6 @@
+import { Chip, ProgressCircle } from "@heroui/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -265,8 +266,53 @@ export function Empty({
     </div>
   );
 }
-export function Spinner() {
-  return <span className="spinner" aria-label="加载中" />;
+export function Spinner({ inline = true }: { inline?: boolean } = {}) {
+  // The ProgressCircle root is a block element. Buttons use the inline marker.
+  if (inline) return <span className="spinner" aria-label="加载中" />;
+  return (
+    <ProgressCircle aria-label="加载中" size="sm" isIndeterminate>
+      <ProgressCircle.Track>
+        <ProgressCircle.TrackCircle />
+        <ProgressCircle.FillCircle />
+      </ProgressCircle.Track>
+    </ProgressCircle>
+  );
+}
+
+const statusColors: Record<string, ComponentProps<typeof Chip>["color"]> = {
+  running: "accent",
+  working: "accent",
+  completed: "success",
+  waiting: "warning",
+  waiting_approval: "warning",
+  waiting_input: "warning",
+  cancelling: "warning",
+  needs_reconciliation: "warning",
+  outcome_unknown: "warning",
+  failed: "danger",
+  timed_out: "danger",
+  budget_exhausted: "danger",
+};
+
+export function StatusChip({
+  status,
+  label,
+  className,
+}: {
+  status: string;
+  label: string;
+  className: string;
+}) {
+  return (
+    <Chip
+      className={className}
+      color={statusColors[status] ?? "default"}
+      variant="soft"
+      size="sm"
+    >
+      <Chip.Label>{label}</Chip.Label>
+    </Chip>
+  );
 }
 export function Status({ status }: { status: string }) {
   const names: Record<string, string> = {
@@ -284,10 +330,11 @@ export function Status({ status }: { status: string }) {
     outcome_unknown: "结果未知",
   };
   return (
-    <span className={`status-badge ${status}`}>
-      <i />
-      {names[status] || status}
-    </span>
+    <StatusChip
+      className={`status-badge ${status}`}
+      status={status}
+      label={names[status] || status}
+    />
   );
 }
 export const activeStatus = (status?: string) =>

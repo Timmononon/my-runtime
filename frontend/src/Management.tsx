@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SearchField } from "@heroui/react";
 import { post, request } from "./api";
 import { Icon, Star } from "./icons";
 import { dateLabel, Empty, Modal, Spinner } from "./ui";
@@ -170,15 +171,19 @@ function SkillsPanel({ ensureSession, report }: Props) {
         }
       />
       <div className="management-toolbar">
-        <div className="search-field">
-          <Icon name="search" size={17} />
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="寻找一个 Skill"
-            aria-label="搜索 Skills"
-          />
-        </div>
+        <SearchField
+          className="management-search-field"
+          aria-label="搜索 Skills"
+          fullWidth
+          value={filter}
+          onChange={setFilter}
+        >
+          <SearchField.Group>
+            <SearchField.SearchIcon />
+            <SearchField.Input placeholder="寻找一个 Skill" />
+            <SearchField.ClearButton aria-label="清除 Skills 搜索" />
+          </SearchField.Group>
+        </SearchField>
         <span>{installed.length} 个已安装</span>
       </div>
       {loading ? (
@@ -527,7 +532,7 @@ function MemoryPanel({ selected, ensureSession, report }: Props) {
       />
       <div className="management-toolbar">
         <form
-          className="search-field"
+          className="management-search"
           onSubmit={(e) => {
             e.preventDefault();
             void load();

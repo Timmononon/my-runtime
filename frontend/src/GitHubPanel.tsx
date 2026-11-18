@@ -1,3 +1,4 @@
+import { Alert, Button, ButtonGroup, Card, Chip } from "@heroui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { post, readableError, request } from "./api";
 import { Icon } from "./icons";
@@ -30,6 +31,13 @@ import TaskTriageSettingsModal, {
 } from "./TaskTriageSettings";
 
 const enc = encodeURIComponent;
+const healthColors = {
+  unchecked: "default",
+  healthy: "success",
+  error: "danger",
+  rate_limited: "warning",
+  disabled: "default",
+} as const;
 type Props = {
   sourceWritable: boolean;
   ensureSession: () => Promise<string>;
@@ -492,46 +500,59 @@ export default function GitHubPanel({
     <div className="github-scroll">
       <div className="github-panel">
         <header className="github-heading">
-          <div>
-            <span className="eyebrow">仓库协作</span>
-            <h1>GitHub</h1>
-            <p>读取仓库进展、关联任务，并在审阅后回传结果。</p>
+          <div className="github-heading-title">
+            <span className="github-heading-icon">
+              <Icon name="branch" size={23} />
+            </span>
+            <div>
+              <h1>GitHub</h1>
+              <p>读取仓库进展、关联任务，并在审阅后回传结果。</p>
+            </div>
           </div>
           <div className="github-heading-actions">
-            <button
-              className="button secondary"
-              onClick={() => setTriageSettingsOpen(true)}
+            <Button
+              className="github-action"
+              variant="outline"
+              onPress={() => setTriageSettingsOpen(true)}
             >
               任务判断模型
-            </button>
-            <button
-              className="button primary"
-              disabled={!sourceWritable}
-              onClick={() => openEditor("new")}
+            </Button>
+            <Button
+              className="github-action"
+              variant="primary"
+              isDisabled={!sourceWritable}
+              onPress={() => openEditor("new")}
             >
               <Icon name="plus" size={16} />
               添加仓库来源
-            </button>
+            </Button>
           </div>
         </header>
         {error && (
-          <div className="github-error" role="alert">
-            <span>{error}</span>
-            <button
-              className="text-button"
-              onClick={() => {
+          <Alert className="github-feedback" status="danger" role="alert">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>{error}</Alert.Description>
+            </Alert.Content>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => {
                 setError("");
                 void refresh();
               }}
             >
               重新读取本地状态
-            </button>
-          </div>
+            </Button>
+          </Alert>
         )}
         {notice && (
-          <div className="github-notice" role="status">
-            {notice}
-          </div>
+          <Alert className="github-feedback" status="success" role="status">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>{notice}</Alert.Description>
+            </Alert.Content>
+          </Alert>
         )}
         {!sourceWritable && (
           <p className="github-note">
@@ -539,18 +560,27 @@ export default function GitHubPanel({
           </p>
         )}
         <div className="github-columns">
-          <section className="github-sources" aria-label="GitHub 来源列表">
-            <div className="github-list-heading">
-              <span>{sources.length}个来源</span>
-              <button
-                className="icon-button"
+          <Card<"section">
+            render={(props) => <section {...props} />}
+            className="github-sources"
+            aria-label="GitHub 来源列表"
+          >
+            <Card.Header className="github-list-heading">
+              <Card.Title<"h2"> render={(props) => <h2 {...props} />}>
+                {sources.length} 个来源
+              </Card.Title>
+              <Button
+                isIconOnly
+                variant="ghost"
+                size="sm"
+                className="github-refresh"
                 aria-label="刷新 GitHub 本地状态"
-                disabled={busy}
-                onClick={() => void refresh()}
+                isDisabled={busy}
+                onPress={() => void refresh()}
               >
                 <Icon name="refresh" size={16} />
-              </button>
-            </div>
+              </Button>
+            </Card.Header>
             {loading ? (
               <div className="github-loading" role="status">
                 <Spinner />
@@ -564,37 +594,69 @@ export default function GitHubPanel({
               />
             ) : (
               sources.map((item) => (
-                <button
+                <Card<"button">
+                  render={(props) => <button type="button" {...props} />}
                   className={`github-source-card ${selectedId === item.id ? "selected" : ""}`}
                   key={item.id}
+                  variant="transparent"
                   aria-pressed={selectedId === item.id}
                   onClick={() => selectSource(item.id)}
                 >
-                  <h2>{item.repository}</h2>
-                  <div>
-                    <span className="github-tag">
+                  <Card.Header<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-heading"
+                  >
+                    <Card.Title<"span"> render={(props) => <span {...props} />}>
+                      {item.repository}
+                    </Card.Title>
+                    <Icon name="chevron" size={14} />
+                  </Card.Header>
+                  <Card.Content<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-chips"
+                  >
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color={item.mode === "tasks" ? "accent" : "default"}
+                    >
                       {item.mode === "read_only" ? "只读" : "接入任务"}
-                    </span>
-                    <span className="github-tag">
+                    </Chip>
+                    <Chip size="sm" variant="soft">
                       {item.enabled ? "后台轮询开启" : "后台轮询关闭"}
-                    </span>
-                    <span
-                      className={`github-tag ${item.allow_writes ? "write-enabled" : ""}`}
+                    </Chip>
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color={item.allow_writes ? "warning" : "default"}
                     >
                       {item.allow_writes ? "允许审阅后发送" : "禁止发送"}
-                    </span>
-                  </div>
-                  <p>{githubHealthLabel(item)}</p>
-                  <small>
-                    {item.configured
-                      ? item.verified_login || "已保存令牌，尚未检查账号"
-                      : "匿名读取 · 未保存令牌"}
-                  </small>
-                </button>
+                    </Chip>
+                  </Card.Content>
+                  <Card.Footer<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-meta"
+                  >
+                    <Card.Description<"span">
+                      render={(props) => <span {...props} />}
+                    >
+                      {githubHealthLabel(item)}
+                    </Card.Description>
+                    <small>
+                      {item.configured
+                        ? item.verified_login || "已保存令牌，尚未检查账号"
+                        : "匿名读取 · 未保存令牌"}
+                    </small>
+                  </Card.Footer>
+                </Card>
               ))
             )}
-          </section>
-          <section className="github-detail" aria-label="GitHub 来源详情">
+          </Card>
+          <Card<"section">
+            render={(props) => <section {...props} />}
+            className="github-detail"
+            aria-label="GitHub 来源详情"
+          >
             {!selectedId ? (
               <Empty
                 icon="branch"
@@ -609,27 +671,38 @@ export default function GitHubPanel({
             ) : (
               source && (
                 <>
-                  <div className="github-detail-heading">
-                    <div>
-                      <span className="eyebrow">
-                        {source.mode === "read_only" ? "只读来源" : "任务来源"}
-                      </span>
-                      <h2>{source.repository}</h2>
-                    </div>
-                    <button
-                      className="button secondary"
-                      disabled={busy}
-                      onClick={() => openEditor(source)}
+                  <Card.Header className="github-detail-heading">
+                    <Card.Title<"h2"> render={(props) => <h2 {...props} />}>
+                      {source.repository}
+                    </Card.Title>
+                    <Button
+                      className="github-action"
+                      variant="outline"
+                      size="sm"
+                      isDisabled={busy}
+                      onPress={() => openEditor(source)}
                     >
                       <Icon name="settings" size={15} />
                       配置来源
-                    </button>
-                  </div>
+                    </Button>
+                  </Card.Header>
                   <div className="github-source-status">
-                    <span className={`github-health health-${source.health}`}>
-                      <i />
-                      {githubHealthLabel(source)}
-                    </span>
+                    <Chip
+                      className="github-health"
+                      size="sm"
+                      variant="soft"
+                      color={healthColors[source.health]}
+                    >
+                      <i aria-hidden="true" />
+                      <Chip.Label>{githubHealthLabel(source)}</Chip.Label>
+                    </Chip>
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color={source.mode === "tasks" ? "accent" : "default"}
+                    >
+                      {source.mode === "read_only" ? "只读来源" : "任务来源"}
+                    </Chip>
                     <span>
                       {source.configured
                         ? `账号 ${source.verified_login || "尚未检查"}`
@@ -657,30 +730,36 @@ export default function GitHubPanel({
                     ) : null}
                   </div>
                   <div className="github-controls">
-                    <button
-                      className="button secondary"
-                      disabled={busy}
-                      onClick={checkSource}
+                    <ButtonGroup
+                      className="github-read-actions"
+                      aria-label="仓库读取"
+                      variant="outline"
+                      size="sm"
+                      isDisabled={busy}
                     >
-                      <Icon name="globe" size={15} />
-                      检查连接
-                    </button>
-                    <button
-                      className="button secondary"
-                      disabled={busy}
-                      onClick={() => pollSource(true)}
-                    >
-                      <Icon name="download" size={15} />
-                      只读抓取
-                    </button>
+                      <Button className="github-action" onPress={checkSource}>
+                        <Icon name="globe" size={15} />
+                        检查连接
+                      </Button>
+                      <Button
+                        className="github-action"
+                        onPress={() => pollSource(true)}
+                      >
+                        <ButtonGroup.Separator aria-hidden="true" />
+                        <Icon name="download" size={15} />
+                        只读抓取
+                      </Button>
+                    </ButtonGroup>
                     {source.mode === "tasks" && (
-                      <button
-                        className="button secondary"
-                        disabled={busy}
-                        onClick={() => pollSource(false)}
+                      <Button
+                        className="github-action"
+                        variant="outline"
+                        size="sm"
+                        isDisabled={busy}
+                        onPress={() => pollSource(false)}
                       >
                         抓取并按规则处理
-                      </button>
+                      </Button>
                     )}
                     <button
                       className="text-button"
@@ -757,12 +836,18 @@ export default function GitHubPanel({
                         />
                       ) : (
                         events.map((item) => (
-                          <article className="github-event" key={item.id}>
-                            <div className="github-event-heading">
-                              <span className="github-tag">
-                                {githubEventLabel(item.kind)}
-                                {item.number ? ` #${item.number}` : ""}
-                              </span>
+                          <Card<"article">
+                            render={(props) => <article {...props} />}
+                            className="github-event"
+                            key={item.id}
+                          >
+                            <Card.Header className="github-event-heading">
+                              <Chip size="sm" variant="soft">
+                                <Chip.Label>
+                                  {githubEventLabel(item.kind)}
+                                  {item.number ? ` #${item.number}` : ""}
+                                </Chip.Label>
+                              </Chip>
                               <span>
                                 {item.baseline
                                   ? "历史基线"
@@ -770,23 +855,25 @@ export default function GitHubPanel({
                                     ? "已关联任务"
                                     : "已记录"}
                               </span>
-                            </div>
-                            <p className="github-event-byline">
-                              {item.actor || "自动事件"} ·{" "}
-                              {typeof item.at === "number"
-                                ? dateLabel(item.at)
-                                : item.at}
-                            </p>
-                            {item.body && (
-                              <details>
-                                <summary>查看事件内容</summary>
-                                <blockquote>{item.body}</blockquote>
-                              </details>
-                            )}
-                            {item.triage && (
-                              <TaskTriageDecisionCard value={item.triage} />
-                            )}
-                            <div className="github-event-links">
+                            </Card.Header>
+                            <Card.Content>
+                              <p className="github-event-byline">
+                                {item.actor || "自动事件"} ·{" "}
+                                {typeof item.at === "number"
+                                  ? dateLabel(item.at)
+                                  : item.at}
+                              </p>
+                              {item.body && (
+                                <details>
+                                  <summary>查看事件内容</summary>
+                                  <blockquote>{item.body}</blockquote>
+                                </details>
+                              )}
+                              {item.triage && (
+                                <TaskTriageDecisionCard value={item.triage} />
+                              )}
+                            </Card.Content>
+                            <Card.Footer className="github-event-links">
                               {safeGithubUrl(item.url, source.repository) && (
                                 <a
                                   href={safeGithubUrl(
@@ -809,8 +896,8 @@ export default function GitHubPanel({
                                   <Icon name="chevron" size={13} />
                                 </button>
                               )}
-                            </div>
-                          </article>
+                            </Card.Footer>
+                          </Card>
                         ))
                       )}
                     </div>
@@ -819,14 +906,16 @@ export default function GitHubPanel({
                     <>
                       <div className="github-section-heading">
                         <p>草稿保存在本机；只有审阅确认后才会发送。</p>
-                        <button
-                          className="button secondary"
-                          disabled={busy}
-                          onClick={() => openDraft()}
+                        <Button
+                          className="github-action"
+                          variant="outline"
+                          size="sm"
+                          isDisabled={busy}
+                          onPress={() => openDraft()}
                         >
                           <Icon name="plus" size={15} />
                           准备草稿
-                        </button>
+                        </Button>
                       </div>
                       {!drafts.length ? (
                         <Empty
@@ -836,25 +925,37 @@ export default function GitHubPanel({
                         />
                       ) : (
                         drafts.map((draft) => (
-                          <article
+                          <Card<"article">
+                            render={(props) => <article {...props} />}
                             className={`github-draft draft-${draft.state}`}
                             key={draft.id}
                           >
-                            <div className="github-draft-heading">
+                            <Card.Header className="github-draft-heading">
                               <div>
-                                <span className="github-tag">
+                                <Chip size="sm" variant="soft">
                                   {draft.kind === "comment"
                                     ? `评论 #${draft.number}`
                                     : "Pull request"}
-                                </span>
-                                <h3>
+                                </Chip>
+                                <Card.Title>
                                   {draft.title || `仓库讨论 #${draft.number}`}
-                                </h3>
+                                </Card.Title>
                               </div>
-                              <span className="github-draft-state">
+                              <Chip
+                                className="github-draft-state"
+                                size="sm"
+                                variant="soft"
+                                color={
+                                  draft.state === "sent"
+                                    ? "success"
+                                    : draft.state === "outcome_unknown"
+                                      ? "warning"
+                                      : "default"
+                                }
+                              >
                                 {githubDraftLabel(draft.state)}
-                              </span>
-                            </div>
+                              </Chip>
+                            </Card.Header>
                             {draft.kind === "pull_request" && (
                               <p className="github-draft-branches">
                                 {draft.head} → {draft.base}
@@ -879,36 +980,42 @@ export default function GitHubPanel({
                                 远端可能已经收到。只读核验不会重发；尚未找到回执时继续保留待核验状态。
                               </p>
                             )}
-                            <div className="github-draft-actions">
+                            <Card.Footer className="github-draft-actions">
                               {draftActions(draft, source).edit && (
-                                <button
-                                  className="button secondary"
-                                  disabled={busy}
-                                  onClick={() => openDraft(draft)}
+                                <Button
+                                  className="github-action"
+                                  variant="outline"
+                                  size="sm"
+                                  isDisabled={busy}
+                                  onPress={() => openDraft(draft)}
                                 >
                                   编辑草稿
-                                </button>
+                                </Button>
                               )}
                               {draftActions(draft, source).send && (
-                                <button
-                                  className="button primary"
-                                  disabled={busy}
-                                  onClick={() => {
+                                <Button
+                                  className="github-action"
+                                  variant="primary"
+                                  size="sm"
+                                  isDisabled={busy}
+                                  onPress={() => {
                                     setReview(draft);
                                     setReviewError("");
                                   }}
                                 >
                                   审阅并发送
-                                </button>
+                                </Button>
                               )}
                               {draftActions(draft, source).reconcile && (
-                                <button
-                                  className="button secondary"
-                                  disabled={busy}
-                                  onClick={() => reconcile(draft)}
+                                <Button
+                                  className="github-action"
+                                  variant="outline"
+                                  size="sm"
+                                  isDisabled={busy}
+                                  onPress={() => reconcile(draft)}
                                 >
                                   只读核验结果
-                                </button>
+                                </Button>
                               )}
                               {safeGithubUrl(draft.url, source.repository) && (
                                 <a
@@ -932,14 +1039,14 @@ export default function GitHubPanel({
                                   关联任务
                                 </button>
                               )}
-                            </div>
+                            </Card.Footer>
                             {draftActions(draft, source).edit &&
                               !draftActions(draft, source).send && (
                                 <p className="github-fine-print">
                                   发送需要启用来源、任务模式、允许发送、已保存令牌和已检查账号；来源变更后需重新准备草稿。
                                 </p>
                               )}
-                          </article>
+                          </Card>
                         ))
                       )}
                     </>
@@ -948,17 +1055,19 @@ export default function GitHubPanel({
                     <>
                       <div className="github-section-heading">
                         <p>执行结果和 PR 交付状态分别跟踪。</p>
-                        <button
-                          className="button secondary"
-                          disabled={busy || !tickets.length}
-                          onClick={() => {
+                        <Button
+                          className="github-action"
+                          variant="outline"
+                          size="sm"
+                          isDisabled={busy || !tickets.length}
+                          onPress={() => {
                             setBindingOpen(true);
                             setBindingTicket("");
                             setBindingNumber("");
                           }}
                         >
                           关联仓库讨论
-                        </button>
+                        </Button>
                       </div>
                       {!linkedTickets.length ? (
                         <Empty
@@ -968,27 +1077,41 @@ export default function GitHubPanel({
                         />
                       ) : (
                         linkedTickets.map((item) => (
-                          <article className="github-linked-task" key={item.id}>
-                            <h3>{item.title}</h3>
-                            <div>
-                              <span className="github-tag">
-                                执行：{taskLabel(item.state)}
-                              </span>
-                              <span className="github-tag">
-                                {githubDeliveryLabel(
-                                  item.github?.delivery_state,
-                                )}
-                              </span>
-                            </div>
-                            {item.attention && <p>{item.attention}</p>}
-                            <button
-                              className="text-button"
-                              onClick={() => onOpenTicket(item.id)}
-                            >
-                              打开任务
-                              <Icon name="chevron" size={14} />
-                            </button>
-                          </article>
+                          <Card<"article">
+                            render={(props) => <article {...props} />}
+                            className="github-linked-task"
+                            key={item.id}
+                          >
+                            <Card.Header>
+                              <Card.Title>{item.title}</Card.Title>
+                              <div className="github-linked-task-labels">
+                                <Chip size="sm" variant="soft">
+                                  <Chip.Label>
+                                    执行：{taskLabel(item.state)}
+                                  </Chip.Label>
+                                </Chip>
+                                <Chip size="sm" variant="soft">
+                                  {githubDeliveryLabel(
+                                    item.github?.delivery_state,
+                                  )}
+                                </Chip>
+                              </div>
+                              {item.attention && (
+                                <Card.Description>
+                                  {item.attention}
+                                </Card.Description>
+                              )}
+                            </Card.Header>
+                            <Card.Footer className="github-linked-task-footer">
+                              <button
+                                className="text-button"
+                                onClick={() => onOpenTicket(item.id)}
+                              >
+                                打开任务
+                                <Icon name="chevron" size={14} />
+                              </button>
+                            </Card.Footer>
+                          </Card>
                         ))
                       )}
                     </>
@@ -996,7 +1119,7 @@ export default function GitHubPanel({
                 </>
               )
             )}
-          </section>
+          </Card>
         </div>
         {triageSettingsOpen && (
           <TaskTriageSettingsModal
@@ -1072,24 +1195,28 @@ export default function GitHubPanel({
                 </p>
               )}
               <div className="modal-actions">
-                <button
-                  className="button secondary"
+                <Button
+                  className="github-action"
+                  variant="outline"
+                  size="sm"
                   type="button"
-                  disabled={busy}
-                  onClick={() => {
+                  isDisabled={busy}
+                  onPress={() => {
                     setEditor(null);
                     setToken("");
                   }}
                 >
                   取消
-                </button>
-                <button
-                  className="button primary"
+                </Button>
+                <Button
+                  className="github-action"
+                  variant="primary"
+                  size="sm"
                   type="submit"
-                  disabled={busy}
+                  isDisabled={busy}
                 >
                   {busy ? "正在保存…" : "保存来源"}
-                </button>
+                </Button>
               </div>
             </form>
           </Modal>
@@ -1219,21 +1346,25 @@ export default function GitHubPanel({
                 </p>
               )}
               <div className="modal-actions">
-                <button
-                  className="button secondary"
+                <Button
+                  className="github-action"
+                  variant="outline"
+                  size="sm"
                   type="button"
-                  disabled={busy}
-                  onClick={() => setDraftForm(null)}
+                  isDisabled={busy}
+                  onPress={() => setDraftForm(null)}
                 >
                   取消
-                </button>
-                <button
-                  className="button primary"
+                </Button>
+                <Button
+                  className="github-action"
+                  variant="primary"
+                  size="sm"
                   type="submit"
-                  disabled={busy}
+                  isDisabled={busy}
                 >
                   只保存草稿
-                </button>
+                </Button>
               </div>
             </form>
           </Modal>
@@ -1265,20 +1396,24 @@ export default function GitHubPanel({
               </p>
             )}
             <div className="modal-actions">
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setReview(null)}
+              <Button
+                className="github-action"
+                variant="outline"
+                size="sm"
+                isDisabled={busy}
+                onPress={() => setReview(null)}
               >
                 返回检查
-              </button>
-              <button
-                className="button primary"
-                disabled={busy || !canSendReview}
-                onClick={sendDraft}
+              </Button>
+              <Button
+                className="github-action"
+                variant="primary"
+                size="sm"
+                isDisabled={busy || !canSendReview}
+                onPress={sendDraft}
               >
                 确认发送这份草稿
-              </button>
+              </Button>
             </div>
           </Modal>
         )}
@@ -1323,20 +1458,24 @@ export default function GitHubPanel({
               </p>
             )}
             <div className="modal-actions">
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setBindingOpen(false)}
+              <Button
+                className="github-action"
+                variant="outline"
+                size="sm"
+                isDisabled={busy}
+                onPress={() => setBindingOpen(false)}
               >
                 取消
-              </button>
-              <button
-                className="button primary"
-                disabled={busy || !bindingTicket || !bindingNumber}
-                onClick={() => void bind()}
+              </Button>
+              <Button
+                className="github-action"
+                variant="primary"
+                size="sm"
+                isDisabled={busy || !bindingTicket || !bindingNumber}
+                onPress={() => void bind()}
               >
                 核验并关联
-              </button>
+              </Button>
             </div>
           </Modal>
         )}

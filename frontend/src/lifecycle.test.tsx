@@ -126,8 +126,11 @@ describe("conversation lifecycle and workspace tree", () => {
         onChange={noop}
       />,
     );
-    expect(model).toMatch(/aria-label="选择模型" disabled/);
-    expect(model).toMatch(/aria-label="选择推理强度" disabled/);
+    const buttons = model.match(/<button\b[^>]*>/g) || [];
+    for (const label of ["选择模型", "选择推理强度"]) {
+      const button = buttons.find((tag) => tag.includes(`aria-label="${label}"`));
+      expect(button).toContain('disabled=""');
+    }
   });
 
   it("groups multiple conversations per project and keeps orphaned history accessible", () => {
@@ -167,7 +170,6 @@ describe("conversation lifecycle and workspace tree", () => {
         onNewChat={noop}
         creatingSession={null}
         renderSessions={() => null}
-        searchControl={null}
         searchField={null}
       />,
     );

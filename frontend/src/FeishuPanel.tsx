@@ -1,3 +1,4 @@
+import { Alert, Button, Card, Chip } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import { post, readableError, request } from "./api";
 import {
@@ -27,6 +28,15 @@ import "./feishu.css";
 
 const sourcePath = (id: string) => `/feishu/sources/${encodeURIComponent(id)}`;
 const sourceName = (source: FeishuSource) => source.name || source.chat_id;
+const healthColors = {
+  disabled: "default",
+  connecting: "accent",
+  listening: "success",
+  setup_required: "warning",
+  disconnected: "danger",
+  identity_changed: "danger",
+  group_unavailable: "danger",
+} as const;
 
 type SourceContext = { workspace: string; agent: string; conversation: string };
 type SourceFields = ReturnType<typeof feishuSourceFields>;
@@ -271,65 +281,93 @@ export default function FeishuPanel({
     <div className="github-scroll">
       <div className="github-panel feishu-panel">
         <header className="github-heading">
-          <div>
-            <h1>飞书</h1>
-            <p>在指定群聊中接收获准成员 @ 机器人的任务消息。</p>
+          <div className="github-heading-title">
+            <span className="github-heading-icon">
+              <Icon name="chat" size={23} />
+            </span>
+            <div>
+              <h1>飞书</h1>
+              <p>在指定群聊中接收获准成员 @ 机器人的任务消息。</p>
+            </div>
           </div>
           <div className="github-heading-actions">
-            <button
-              className="button secondary"
-              onClick={() => setTriageSettingsOpen(true)}
+            <Button
+              className="github-action"
+              variant="outline"
+              onPress={() => setTriageSettingsOpen(true)}
             >
               任务判断模型
-            </button>
-            <button
-              className="button primary"
-              disabled={!sourceWritable || busy}
-              onClick={() => openEditor("new")}
+            </Button>
+            <Button
+              className="github-action"
+              variant="primary"
+              isDisabled={!sourceWritable || busy}
+              onPress={() => openEditor("new")}
             >
               <Icon name="plus" size={16} />
               添加飞书来源
-            </button>
+            </Button>
           </div>
         </header>
         {[
           ...new Set([actionError, listError, detailError].filter(Boolean)),
         ].map((message) => (
-          <div className="github-error" role="alert" key={message}>
-            <span>{message}</span>
-            <button
-              className="text-button"
-              disabled={busy}
-              onClick={() => {
+          <Alert
+            className="github-feedback"
+            status="danger"
+            role="alert"
+            key={message}
+          >
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>{message}</Alert.Description>
+            </Alert.Content>
+            <Button
+              variant="ghost"
+              size="sm"
+              isDisabled={busy}
+              onPress={() => {
                 setActionError("");
                 refresh();
               }}
             >
               重新读取本地状态
-            </button>
-          </div>
+            </Button>
+          </Alert>
         ))}
         {notice && (
-          <p className="github-notice" role="status">
-            {notice}
-          </p>
+          <Alert className="github-feedback" status="success" role="status">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>{notice}</Alert.Description>
+            </Alert.Content>
+          </Alert>
         )}
         {!sourceWritable && (
           <p className="github-note">要添加来源，请先切换到可用的普通对话。</p>
         )}
         <div className="github-columns">
-          <section className="github-sources" aria-label="飞书来源列表">
-            <div className="github-list-heading">
-              <span>{sources.length} 个来源</span>
-              <button
-                className="icon-button"
+          <Card<"section">
+            render={(props) => <section {...props} />}
+            className="github-sources"
+            aria-label="飞书来源列表"
+          >
+            <Card.Header className="github-list-heading">
+              <Card.Title<"h2"> render={(props) => <h2 {...props} />}>
+                {sources.length} 个来源
+              </Card.Title>
+              <Button
+                isIconOnly
+                variant="ghost"
+                size="sm"
+                className="github-refresh"
                 aria-label="刷新飞书本地状态"
-                disabled={busy}
-                onClick={refresh}
+                isDisabled={busy}
+                onPress={refresh}
               >
                 <Icon name="refresh" size={16} />
-              </button>
-            </div>
+              </Button>
+            </Card.Header>
             {listLoading ? (
               <div className="github-loading" role="status">
                 <Spinner /> 正在读取来源
@@ -344,24 +382,52 @@ export default function FeishuPanel({
               )
             ) : (
               sources.map((source) => (
-                <button
+                <Card<"button">
+                  render={(props) => <button type="button" {...props} />}
                   className={`github-source-card ${selectedId === source.id ? "selected" : ""}`}
                   key={source.id}
+                  variant="transparent"
                   aria-pressed={selectedId === source.id}
                   disabled={busy}
                   onClick={() => selectSource(source.id)}
                 >
-                  <h2>{sourceName(source)}</h2>
-                  <div>
+                  <Card.Header<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-heading"
+                  >
+                    <Card.Title<"span"> render={(props) => <span {...props} />}>
+                      {sourceName(source)}
+                    </Card.Title>
+                    <Icon name="chevron" size={14} />
+                  </Card.Header>
+                  <Card.Content<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-chips"
+                  >
                     <FeishuSourceHealth source={source} />
-                  </div>
-                  <p>{source.bot_name || source.bot_open_id}</p>
-                  <small>{source.chat_id}</small>
-                </button>
+                  </Card.Content>
+                  <Card.Footer<"span">
+                    render={(props) => <span {...props} />}
+                    className="github-source-card-meta"
+                  >
+                    <Card.Description<"span">
+                      render={(props) => <span {...props} />}
+                    >
+                      {source.bot_name || source.bot_open_id}
+                    </Card.Description>
+                    <small>
+                      <code>{source.chat_id}</code>
+                    </small>
+                  </Card.Footer>
+                </Card>
               ))
             )}
-          </section>
-          <section className="github-detail" aria-label="飞书来源详情">
+          </Card>
+          <Card<"section">
+            render={(props) => <section {...props} />}
+            className="github-detail"
+            aria-label="飞书来源详情"
+          >
             {!selectedId ? (
               <Empty
                 icon="chat"
@@ -376,23 +442,29 @@ export default function FeishuPanel({
               )
             ) : (
               <>
-                <div className="github-detail-heading">
-                  <h2>{sourceName(current.source)}</h2>
-                  <button
-                    className="button secondary"
-                    disabled={busy}
-                    onClick={() => openEditor(current.source)}
+                <Card.Header className="github-detail-heading">
+                  <Card.Title<"h2"> render={(props) => <h2 {...props} />}>
+                    {sourceName(current.source)}
+                  </Card.Title>
+                  <Button
+                    className="github-action"
+                    variant="outline"
+                    size="sm"
+                    isDisabled={busy}
+                    onPress={() => openEditor(current.source)}
                   >
                     <Icon name="settings" size={15} /> 配置来源
-                  </button>
-                </div>
+                  </Button>
+                </Card.Header>
                 <div className="github-source-status">
                   <FeishuSourceHealth source={current.source} />
                   <span>
                     机器人{" "}
                     {current.source.bot_name || current.source.bot_open_id}
                   </span>
-                  <span>应用 {current.source.app_id}</span>
+                  <span>
+                    应用 <code>{current.source.app_id}</code>
+                  </span>
                 </div>
                 {current.source.error && (
                   <p className="github-error" role="status">
@@ -400,7 +472,9 @@ export default function FeishuPanel({
                   </p>
                 )}
                 <div className="github-source-facts">
-                  <span>群聊 {current.source.chat_id}</span>
+                  <span>
+                    群聊 <code>{current.source.chat_id}</code>
+                  </span>
                   <span>
                     允许 {current.source.allowed_senders.length} 位发送人
                   </span>
@@ -411,21 +485,23 @@ export default function FeishuPanel({
                   </span>
                 </div>
                 <div className="github-controls">
-                  <button
-                    className={`button ${current.source.enabled ? "secondary" : "primary"}`}
-                    disabled={
+                  <Button
+                    className="github-action"
+                    variant={current.source.enabled ? "outline" : "primary"}
+                    size="sm"
+                    isDisabled={
                       busy ||
                       (!current.source.enabled &&
                         !current.source.allowed_senders.length)
                     }
-                    onClick={() => toggle(current.source)}
+                    onPress={() => toggle(current.source)}
                   >
                     <Icon
                       name={current.source.enabled ? "pause" : "play"}
                       size={15}
                     />
                     {current.source.enabled ? "暂停接收" : "启用接收"}
-                  </button>
+                  </Button>
                   <button
                     className="text-button"
                     onClick={() =>
@@ -514,25 +590,33 @@ export default function FeishuPanel({
                   )
                 ) : current.tickets.length ? (
                   current.tickets.map((ticket) => (
-                    <article key={ticket.id} className="github-linked-task">
-                      <span className="github-tag">
-                        {taskLabel(ticket.state)}
-                      </span>
-                      <h3>{ticket.title}</h3>
-                      <button
-                        className="text-button"
-                        onClick={() => onOpenTicket(ticket.id)}
-                      >
-                        在任务看板打开 <Icon name="chevron" size={13} />
-                      </button>
-                    </article>
+                    <Card<"article">
+                      render={(props) => <article {...props} />}
+                      key={ticket.id}
+                      className="github-linked-task"
+                    >
+                      <Card.Header>
+                        <Chip size="sm" variant="soft">
+                          {taskLabel(ticket.state)}
+                        </Chip>
+                        <Card.Title>{ticket.title}</Card.Title>
+                      </Card.Header>
+                      <Card.Footer className="github-linked-task-footer">
+                        <button
+                          className="text-button"
+                          onClick={() => onOpenTicket(ticket.id)}
+                        >
+                          在任务看板打开 <Icon name="chevron" size={13} />
+                        </button>
+                      </Card.Footer>
+                    </Card>
                   ))
                 ) : (
                   <Empty icon="grid" title="暂无关联任务" />
                 )}
               </>
             )}
-          </section>
+          </Card>
         </div>
       </div>
       {editor && (
@@ -558,17 +642,16 @@ export default function FeishuPanel({
 }
 
 function FeishuSourceHealth({ source }: { source: FeishuSource }) {
-  const color =
-    source.health === "listening"
-      ? "health-healthy"
-      : ["disabled", "connecting"].includes(source.health)
-        ? ""
-        : "health-error";
   return (
-    <span className={`github-health github-tag ${color}`}>
+    <Chip
+      className="github-health"
+      size="sm"
+      variant="soft"
+      color={healthColors[source.health]}
+    >
       <i aria-hidden="true" />
-      {feishuHealthLabel(source.health)}
-    </span>
+      <Chip.Label>{feishuHealthLabel(source.health)}</Chip.Label>
+    </Chip>
   );
 }
 
@@ -590,35 +673,48 @@ export function FeishuEventCard({
 }) {
   const ticketId = value.ticket_id;
   return (
-    <article className="github-event">
-      <div className="github-event-heading">
-        <span className="github-tag">
+    <Card<"article">
+      render={(props) => <article {...props} />}
+      className="github-event"
+    >
+      <Card.Header className="github-event-heading">
+        <Chip
+          size="sm"
+          variant="soft"
+          color={value.disposition === "accepted" ? "success" : "default"}
+        >
           {feishuEventLabel(value.disposition)}
-        </span>
+        </Chip>
         <time>{dateLabel(value.received_at)}</time>
-      </div>
-      <p className="github-event-byline">{value.sender_id || "发送人未知"}</p>
-      {value.reason && (
-        <p className="github-event-byline">{feishuEventReason(value.reason)}</p>
-      )}
-      {value.text && (
-        <details>
-          <summary>查看消息正文</summary>
-          <blockquote>{value.text}</blockquote>
-        </details>
-      )}
-      {value.triage && <TaskTriageDecisionCard value={value.triage} />}
+      </Card.Header>
+      <Card.Content>
+        <p className="github-event-byline">
+          {value.sender_id ? <code>{value.sender_id}</code> : "发送人未知"}
+        </p>
+        {value.reason && (
+          <p className="github-event-byline">
+            {feishuEventReason(value.reason)}
+          </p>
+        )}
+        {value.text && (
+          <details>
+            <summary>查看消息正文</summary>
+            <blockquote>{value.text}</blockquote>
+          </details>
+        )}
+        {value.triage && <TaskTriageDecisionCard value={value.triage} />}
+      </Card.Content>
       {ticketId && (
-        <div className="github-event-links">
+        <Card.Footer className="github-event-links">
           <button
             className="text-button"
             onClick={() => onOpenTicket(ticketId)}
           >
             查看关联任务 <Icon name="chevron" size={13} />
           </button>
-        </div>
+        </Card.Footer>
       )}
-    </article>
+    </Card>
   );
 }
 
@@ -739,11 +835,13 @@ function FeishuSourceEditor({
             <FeishuSetupHint />
           </>
         )}
-        <button
-          className="button secondary"
+        <Button
+          className="github-action"
+          variant="outline"
+          size="sm"
           type="button"
-          disabled={busy || reading || !writable}
-          onClick={() => void discover()}
+          isDisabled={busy || reading || !writable}
+          onPress={() => void discover()}
         >
           {reading ? <Spinner /> : <Icon name="refresh" size={15} />}
           {reading
@@ -751,7 +849,7 @@ function FeishuSourceEditor({
             : source
               ? "查询当前用户 OpenID"
               : "读取机器人所在群聊"}
-        </button>
+        </Button>
         {discoveryError && (
           <p className="inline-error" role="alert">
             {discoveryError}
@@ -817,11 +915,13 @@ function FeishuSourceEditor({
           </small>
         </label>
         {userId && (
-          <button
+          <Button
             type="button"
-            className="button secondary"
-            disabled={busy || hasUser || !writable}
-            onClick={() =>
+            className="github-action"
+            variant="outline"
+            size="sm"
+            isDisabled={busy || hasUser || !writable}
+            onPress={() =>
               setForm((current) => ({
                 ...current,
                 allowed_senders: [current.allowed_senders.trim(), userId]
@@ -831,7 +931,7 @@ function FeishuSourceEditor({
             }
           >
             {hasUser ? "已添加当前用户" : "添加当前用户"}
-          </button>
+          </Button>
         )}
         <label className="field">
           消息关键词（可选）
@@ -860,21 +960,25 @@ function FeishuSourceEditor({
           </p>
         )}
         <div className="modal-actions">
-          <button
+          <Button
             type="button"
-            className="button secondary"
-            disabled={busy}
-            onClick={onClose}
+            className="github-action"
+            variant="outline"
+            size="sm"
+            isDisabled={busy}
+            onPress={onClose}
           >
             取消
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="button primary"
-            disabled={busy || !writable || (!source && !selectedGroup)}
+            className="github-action"
+            variant="primary"
+            size="sm"
+            isDisabled={busy || !writable || (!source && !selectedGroup)}
           >
             {busy ? "正在保存…" : "保存来源"}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

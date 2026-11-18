@@ -1,9 +1,26 @@
 import { useState } from "react";
+import { Avatar, Button, Chip } from "@heroui/react";
 import { Icon, Star } from "./icons";
 import { Markdown, Popup } from "./ui";
 import { branchBoundaries, displayContent, groupConversation } from "./state";
 import type { MessageRecord } from "./types";
 import { toolErrorSummary } from "./toolErrors";
+
+function AssistantAvatar() {
+  return (
+    <Avatar
+      className="message-avatar"
+      size="sm"
+      color="accent"
+      variant="soft"
+      aria-hidden="true"
+    >
+      <Avatar.Fallback>
+        <Star size={19} />
+      </Avatar.Fallback>
+    </Avatar>
+  );
+}
 
 export default function Conversation({
   records,
@@ -36,22 +53,26 @@ export default function Conversation({
           const message = group.records[0].record.message;
           return (
             <article
-              className="message user"
+              className="message thread-message user"
               key={group.id}
               data-testid="message-user"
             >
               <div className="message-body">
-                <Markdown>{displayContent(message)}</Markdown>
                 {message.metadata.artifacts?.length ? (
                   <div className="message-attachments">
                     {message.metadata.artifacts.map((a) => (
-                      <span key={a.artifact_id}>
+                      <Chip key={a.artifact_id} variant="soft" size="sm">
                         <Icon name="file" size={14} />
-                        {a.filename || a.path?.split(/[\\/]/).pop() || "附件"}
-                      </span>
+                        <Chip.Label>
+                          {a.filename || a.path?.split(/[\\/]/).pop() || "附件"}
+                        </Chip.Label>
+                      </Chip>
                     ))}
                   </div>
                 ) : null}
+                <div className="message-bubble">
+                  <Markdown>{displayContent(message)}</Markdown>
+                </div>
               </div>
             </article>
           );
@@ -63,21 +84,23 @@ export default function Conversation({
         const finalText = textRecords.at(-1)?.record.message.content || "";
         return (
           <article
-            className={`message assistant assistant-group ${live ? "live" : ""}`}
+            className={`message thread-message assistant assistant-group ${live ? "live" : ""}`}
             key={group.id}
             data-testid="message-assistant"
             data-message-boundary={group.boundary}
           >
-            <div className="message-avatar">
-              <Star size={25} />
-            </div>
+            <AssistantAvatar />
             <div className="message-body">
               <div className="message-label">
                 Aster
                 {group.records.some(
                   ({ record }) =>
                     record.message.metadata.inherited_from_session,
-                ) && <span>继承的上下文</span>}
+                ) && (
+                  <Chip size="sm" variant="soft">
+                    继承的上下文
+                  </Chip>
+                )}
               </div>
               {group.records.map(({ record }) => {
                 const message = record.message;
@@ -120,7 +143,19 @@ export default function Conversation({
                                     size={14}
                                   />
                                   <code>{call.name}</code>
-                                  <span>
+                                  <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    color={
+                                      !result
+                                        ? "default"
+                                        : result.metadata.outcome === "unknown"
+                                          ? "warning"
+                                          : result.metadata.is_error
+                                            ? "danger"
+                                            : "success"
+                                    }
+                                  >
                                     {result
                                       ? result.metadata.outcome === "unknown"
                                         ? "结果待核验"
@@ -128,7 +163,7 @@ export default function Conversation({
                                           ? "返回错误"
                                           : "已返回"
                                       : "等待结果"}
-                                  </span>
+                                  </Chip>
                                 </div>
                                 {error && (
                                   <div
@@ -160,41 +195,49 @@ export default function Conversation({
               {!live && (
                 <div className="message-actions">
                   {finalText && (
-                    <button
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
                       aria-label="复制回答"
-                      onClick={() =>
+                      onPress={() =>
                         void navigator.clipboard
                           .writeText(finalText)
                           .catch(report)
                       }
                     >
                       <Icon name="copy" size={14} />
-                    </button>
+                    </Button>
                   )}
                   {!readOnly && onBranch && boundaries.has(group.boundary) && (
-                    <>
-                      <button onClick={() => onBranch(group.boundary)}>
-                        <Icon name="branch" size={14} />
-                        从这里分支
-                      </button>
-                    </>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => onBranch(group.boundary)}
+                    >
+                      <Icon name="branch" size={14} />
+                      从这里分支
+                    </Button>
                   )}
                   {!readOnly &&
                     onBranch &&
                     group.records.filter((r) => boundaries.has(r.rawIndex + 1))
                       .length > 1 && (
                       <div className="option-anchor">
-                        <button
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
                           aria-label="选择更早的分支位置"
                           aria-expanded={boundaryMenu === group.id}
-                          onClick={() =>
+                          onPress={() =>
                             setBoundaryMenu(
                               boundaryMenu === group.id ? null : group.id,
                             )
                           }
                         >
                           <Icon name="more" size={16} />
-                        </button>
+                        </Button>
                         {boundaryMenu === group.id && (
                           <Popup
                             label="完整历史分支位置"
@@ -238,15 +281,16 @@ export default function Conversation({
       })}
       {stream && !appendStream && (
         <article
-          className="message assistant streaming"
+          className="message thread-message assistant streaming"
           data-testid="message-assistant"
         >
-          <div className="message-avatar">
-            <Star size={25} />
-          </div>
+          <AssistantAvatar />
           <div className="message-body">
             <div className="message-label">
-              Aster<span>正在回应</span>
+              Aster
+              <Chip size="sm" variant="soft" color="accent">
+                正在回应
+              </Chip>
             </div>
             <Markdown>{stream}</Markdown>
             <span className="stream-caret" />

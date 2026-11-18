@@ -1,3 +1,14 @@
+.feishu-panel .github-heading-icon {
+  color: #236b82;
+  background: linear-gradient(150deg, #effaff, #e3f1fa);
+  border-color: #d9ebf4;
+}
+
+.feishu-panel code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.94em;
+}
+
 .feishu-panel .github-source-status,
 .feishu-panel .github-source-facts {
   overflow-wrap: anywhere;

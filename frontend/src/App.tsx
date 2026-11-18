@@ -8,6 +8,7 @@ import {
   Suspense,
 } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
+import { Avatar, Button, Kbd, SearchField } from "@heroui/react";
 import {
   ApiError,
   connect,
@@ -46,6 +47,7 @@ import type {
   Skill,
 } from "./types";
 import Management from "./Management";
+import ChatSearchDialog from "./ChatSearchDialog";
 import TaskBoard from "./TaskBoard";
 import Conversation from "./Conversation";
 import PendingCard from "./PendingCard";
@@ -91,6 +93,57 @@ import {
 
 const enc = encodeURIComponent;
 
+const navigationGroups: {
+  label: string;
+  entries: { id: string; label: string; icon: string; capability?: string }[];
+}[] = [
+  {
+    label: "工作台",
+    entries: [
+      { id: "chat", label: "对话", icon: "chat" },
+      { id: "skills", label: "Skills", icon: "skills" },
+      { id: "memory", label: "记忆", icon: "memory" },
+    ],
+  },
+  {
+    label: "自动化与接入",
+    entries: [
+      { id: "tasks", label: "任务", icon: "grid", capability: "local_tasks_v1" },
+      { id: "automations", label: "自动化", icon: "clock" },
+      {
+        id: "github",
+        label: "GitHub",
+        icon: "branch",
+        capability: "github_sources_v1",
+      },
+      {
+        id: "feishu",
+        label: "飞书",
+        icon: "globe",
+        capability: FEISHU_TASK_SOURCES,
+      },
+    ],
+  },
+];
+
+const welcomePrompts = [
+  {
+    label: "查看项目",
+    icon: "folder",
+    prompt: "请阅读当前项目的关键文件，概括它的结构、入口和运行方式。",
+  },
+  {
+    label: "整理资料",
+    icon: "file",
+    prompt: "请整理我提供的资料，提炼要点，并列出还需确认的事项。",
+  },
+  {
+    label: "拆分工作",
+    icon: "grid",
+    prompt: "请把这项工作拆成可以独立推进的任务，写明每项的交付物和验收条件。",
+  },
+];
+
 export default function App() {
   const [boot, setBoot] = useState<Bootstrap | null>(null),
     [connecting, setConnecting] = useState(true),
@@ -131,8 +184,29 @@ export default function App() {
     [githubFocus, setGithubFocus] = useState<string | null>(null),
     [feishuFocus, setFeishuFocus] = useState<string | null>(null),
     [sidebar, setSidebar] = useState(false),
-    [search, setSearch] = useState(""),
-    [searchOpen, setSearchOpen] = useState(false);
+    [sidebarCollapsed, setSidebarCollapsed] = useState(false),
+    [chatSearchOpen, setChatSearchOpen] = useState(false),
+    [search, setSearch] = useState("");
+  useEffect(() => {
+    if (!boot) return;
+    const keydown = (event: WindowEventMap["keydown"]) => {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.isComposing ||
+        event.altKey ||
+        event.shiftKey ||
+        !(event.ctrlKey || event.metaKey) ||
+        event.key.toLowerCase() !== "k"
+      )
+        return;
+      if (!chatSearchOpen && document.querySelector('[role="dialog"]')) return;
+      event.preventDefault();
+      setChatSearchOpen(!chatSearchOpen);
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [boot, chatSearchOpen]);
   const [right, setRight] = useState<"files" | "activity" | "side-chat" | null>(
       null,
     ),
@@ -307,6 +381,19 @@ export default function App() {
   }, [renameOpen]);
   const setDraft = (value: string) =>
     setDrafts((old) => ({ ...old, [key]: value }));
+  const suggestionDisabled =
+    closed || lifecycleBlocked || writeLocked || !!localTask || !!draft;
+  const fillPrompt = (prompt: string) => {
+    if (
+      suggestionDisabled ||
+      submitting.current ||
+      !writableRef.current ||
+      draftsRef.current[key]
+    )
+      return;
+    setDraft(prompt);
+    textarea.current?.focus({ preventScroll: true });
+  };
   const report = useCallback((e: unknown) => {
     if (e instanceof ApiError && e.status === 401) {
       setBoot(null);
@@ -1534,15 +1621,13 @@ export default function App() {
       behavior: "instant",
     });
   };
-  const filtered = sessions
-    .filter((s) => sessionState(s) === "active")
-    .filter(
-      (s) =>
-        (s.title || "新对话")
-          .toLocaleLowerCase()
-          .includes(search.toLocaleLowerCase()) ||
-        s.cwd.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-    );
+  const activeSessions = sessions.filter((s) => sessionState(s) === "active");
+  const sessionQuery = search.trim().toLocaleLowerCase();
+  const filtered = activeSessions.filter(
+    (s) =>
+      (s.title || "新对话").toLocaleLowerCase().includes(sessionQuery) ||
+      s.cwd.toLocaleLowerCase().includes(sessionQuery),
+  );
   const boundaries = branchBoundaries(detail?.messages || []),
     lastBoundary = Math.max(0, ...boundaries);
   const hasHistory = !!detail?.messages.length;
@@ -1605,7 +1690,25 @@ export default function App() {
     );
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell chat-workbench-shell"
+      data-sidebar-collapsed={sidebarCollapsed}
+    >
+      {chatSearchOpen && (
+        <ChatSearchDialog
+          open={chatSearchOpen}
+          onClose={() => setChatSearchOpen(false)}
+          sessions={activeSessions}
+          projects={projects}
+          onSelect={(id) => {
+            setChatSearchOpen(false);
+            void openWorkspaceSession(id);
+          }}
+          hasMore={sessionsMore}
+          loading={sessionsLoading}
+          onLoadMore={() => void refreshSessions(true)}
+        />
+      )}
       {sidebar && (
         <button
           className="sidebar-scrim"
@@ -1613,93 +1716,70 @@ export default function App() {
           onClick={() => setSidebar(false)}
         />
       )}
-      <aside className={`sidebar ${sidebar ? "open" : ""}`}>
+      <aside
+        id="aster-workspace-sidebar"
+        className={`sidebar ${sidebar ? "open" : ""}`}
+      >
         <button className="brand" onClick={newChat} aria-label="Aster 首页">
-          <Star size={34} />
-          <span>Aster</span>
-          <span className="brand-label">WORKSPACE</span>
+          <span className="brand-mark" aria-hidden="true">
+            <Star size={24} />
+          </span>
+          <span className="brand-name">Aster</span>
         </button>
-        <button className="new-chat" onClick={newChat}>
-          <Icon name="plus" size={19} />
-          开启新对话<span>↗</span>
-        </button>
+        <div className="shell-sidebar-actions">
+          <Button className="new-chat" fullWidth onPress={newChat}>
+            <Icon name="plus" size={18} />
+            开启新对话
+          </Button>
+          <Button
+            className="shell-sidebar-search"
+            fullWidth
+            variant="outline"
+            aria-haspopup="dialog"
+            aria-label="查找对话"
+            onPress={() => setChatSearchOpen(true)}
+          >
+            <Icon name="search" size={16} />
+            <span>查找对话</span>
+            <Kbd aria-hidden="true">
+              <Kbd.Content>Ctrl K</Kbd.Content>
+            </Kbd>
+          </Button>
+        </div>
         <nav aria-label="主导航">
-          <button
-            className={view === "chat" ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setView("chat");
-              setSidebar(false);
-            }}
-          >
-            <Icon name="chat" />
-            对话
-          </button>
-          <button
-            className={view === "skills" ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setView("skills");
-              setSidebar(false);
-            }}
-          >
-            <Icon name="skills" />
-            Skills
-          </button>
-          <button
-            className={view === "memory" ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setView("memory");
-              setSidebar(false);
-            }}
-          >
-            <Icon name="memory" />
-            记忆
-          </button>
-          <button
-            className={view === "automations" ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setView("automations");
-              setSidebar(false);
-            }}
-          >
-            <Icon name="clock" />
-            自动化
-          </button>
-          {runtimeCapabilities.includes("local_tasks_v1") && (
-            <button
-              className={view === "tasks" ? "nav-item active" : "nav-item"}
-              onClick={() => {
-                setView("tasks");
-                setSidebar(false);
-              }}
+          {navigationGroups.map(({ label, entries }) => (
+            <div
+              key={label}
+              className="shell-nav-group"
+              role="group"
+              aria-label={label}
             >
-              <Icon name="grid" />
-              任务
-            </button>
-          )}
-          {runtimeCapabilities.includes("github_sources_v1") && (
-            <button
-              className={view === "github" ? "nav-item active" : "nav-item"}
-              onClick={() => {
-                setView("github");
-                setSidebar(false);
-              }}
-            >
-              <Icon name="branch" />
-              GitHub
-            </button>
-          )}
-          {runtimeCapabilities.includes(FEISHU_TASK_SOURCES) && (
-            <button
-              className={view === "feishu" ? "nav-item active" : "nav-item"}
-              onClick={() => {
-                setView("feishu");
-                setSidebar(false);
-              }}
-            >
-              <Icon name="globe" />
-              飞书
-            </button>
-          )}
+              <span className="shell-nav-label" aria-hidden="true">
+                {label}
+              </span>
+              {entries
+                .filter(
+                  ({ capability }) =>
+                    !capability || runtimeCapabilities.includes(capability),
+                )
+                .map(({ id, label, icon }) => (
+                  <Button
+                    key={id}
+                    variant="ghost"
+                    fullWidth
+                    className="nav-item"
+                    aria-current={view === id ? "page" : undefined}
+                    onPress={() => {
+                      setView(id);
+                      setSidebar(false);
+                    }}
+                  >
+                    <Icon name={icon} />
+                    {label}
+                  </Button>
+                ))}
+            </div>
+          ))}
         </nav>
         <div className="workspace-browser">
           <Projects
@@ -1720,33 +1800,28 @@ export default function App() {
                 onAction={actionForSession}
               />
             )}
-            searchControl={
-              <button
-                className="icon-button"
-                onClick={() => setSearchOpen(!searchOpen)}
-                aria-label="搜索对话"
-              >
-                <Icon name="search" size={15} />
-              </button>
-            }
             searchField={
-              searchOpen && (
-                <div className="sidebar-search">
-                  <Icon name="search" size={14} />
-                  <input
-                    autoFocus
-                    placeholder="搜索已加载的标题或目录"
-                    aria-label="搜索最近对话"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
+              <SearchField
+                className="sidebar-search"
+                aria-label="搜索最近对话"
+                fullWidth
+                value={search}
+                onChange={setSearch}
+              >
+                <SearchField.Group>
+                  <SearchField.SearchIcon aria-hidden="true" />
+                  <SearchField.Input
+                    placeholder="搜索对话标题或目录"
+                    spellCheck={false}
                   />
-                </div>
-              )
+                  <SearchField.ClearButton aria-label="清除对话搜索" />
+                </SearchField.Group>
+              </SearchField>
             }
           />
           {!filtered.length && !sessionsLoading && !sessionsError && (
             <div className="recent-empty">
-              {search ? "没有找到匹配的对话" : "点击项目旁的 + 开启对话。"}
+              {sessionQuery ? "没有找到匹配的对话" : "点击项目旁的 + 开启对话。"}
             </div>
           )}
           {sessionsLoading && (
@@ -1774,7 +1849,7 @@ export default function App() {
               加载更多对话
             </button>
           )}
-          {search && sessionsMore && (
+          {sessionQuery && sessionsMore && (
             <p className="lifecycle-help">
               搜索已加载的对话；可继续加载更早的记录。
             </p>
@@ -1782,9 +1857,8 @@ export default function App() {
         </div>
         <div className="sidebar-footer">
           <div className="local-status">
-            <span className="connection-dot" />
+            <span className="connection-dot" aria-hidden="true" />
             <span>本机已连接</span>
-            <span className="local-tag">LOCAL</span>
           </div>
           <div className="profile-anchor">
             {profileMenu && (
@@ -1813,7 +1887,9 @@ export default function App() {
               aria-expanded={profileMenu}
               onClick={() => setProfileMenu(!profileMenu)}
             >
-              <span className="profile-avatar">A</span>
+              <Avatar size="sm" color="accent" variant="soft" aria-hidden="true">
+                <Avatar.Fallback>A</Avatar.Fallback>
+              </Avatar>
               <span>
                 <strong>我的工作空间</strong>
               </span>
@@ -1825,64 +1901,103 @@ export default function App() {
       <main className="main-shell">
         <header className="topbar">
           <div className="topbar-start">
-            <button
-              className="icon-button mobile-menu"
-              onClick={() => setSidebar(true)}
+            <Button
+              className="mobile-menu"
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              onPress={() => setSidebar(true)}
               aria-label="打开导航"
+              aria-controls="aster-workspace-sidebar"
+              aria-expanded={sidebar}
             >
               <Icon name="menu" />
-            </button>
-            <span className="breadcrumb">
-              {currentProject?.name || "工作台"}
-            </span>
-            <span className="breadcrumb-divider">/</span>
-            <button
-              className="page-name"
-              onClick={() => {
-                if (selected && view === "chat") setRenameOpen(true);
-              }}
-              disabled={!selected || view !== "chat" || writeLocked}
-              title="重命名当前对话"
+            </Button>
+            <Button
+              className="shell-desktop-toggle"
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              aria-label={sidebarCollapsed ? "展开侧栏" : "收起侧栏"}
+              aria-controls="aster-workspace-sidebar"
+              aria-expanded={!sidebarCollapsed}
+              onPress={() => setSidebarCollapsed(!sidebarCollapsed)}
             >
-              {view === "chat"
-                ? detail?.title || "新对话"
-                : view === "skills"
-                  ? "Skills"
-                  : view === "memory"
-                    ? "长期记忆"
-                    : view === "tasks"
-                      ? "任务"
-                      : view === "github"
-                        ? "GitHub"
-                        : view === "feishu"
-                          ? "飞书"
-                          : "自动化"}
-            </button>
+              <Icon name="panel" size={17} />
+            </Button>
+            <div className="shell-title">
+              <button
+                className="page-name"
+                onClick={() => {
+                  if (selected && view === "chat") setRenameOpen(true);
+                }}
+                disabled={!selected || view !== "chat" || writeLocked}
+                title="重命名当前对话"
+              >
+                {view === "chat"
+                  ? detail?.title || "新对话"
+                  : view === "skills"
+                    ? "Skills"
+                    : view === "memory"
+                      ? "长期记忆"
+                      : view === "tasks"
+                        ? "任务"
+                        : view === "github"
+                          ? "GitHub"
+                          : view === "feishu"
+                            ? "飞书"
+                            : "自动化"}
+              </button>
+              {view === "chat" && currentProject && (
+                <span className="shell-title-scope" title={currentProject.name}>
+                  {currentProject.name}
+                </span>
+              )}
+            </div>
             {lineage?.kind === "side_chat" && view === "chat" && (
               <span className="small-tag">侧边聊天</span>
             )}
           </div>
           <div className="topbar-actions">
+            <Button
+              className="shell-top-search"
+              size="sm"
+              variant="ghost"
+              aria-label="搜索对话"
+              aria-haspopup="dialog"
+              aria-keyshortcuts="Control+K Meta+K"
+              onPress={() => setChatSearchOpen(true)}
+            >
+              <Icon name="search" size={16} />
+              <span>搜索</span>
+            </Button>
             {view === "chat" && (
               <>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   aria-label="文件与成果"
+                  aria-pressed={right === "files"}
                   className={`topbar-button ${right === "files" ? "selected" : ""}`}
-                  onClick={() => setRight(right === "files" ? null : "files")}
+                  onPress={() => setRight(right === "files" ? null : "files")}
                 >
                   <Icon name="folder" size={16} />
                   <span>文件与成果</span>
                   {deliverables.length > 0 && <b>{deliverables.length}</b>}
-                </button>
-                <button
-                  className="icon-button"
-                  onClick={() =>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isIconOnly
+                  className="shell-activity-button"
+                  aria-pressed={right === "activity"}
+                  onPress={() =>
                     setRight(right === "activity" ? null : "activity")
                   }
                   aria-label="执行状态与性能"
                 >
                   <Icon name="panel" size={17} />
-                </button>
+                </Button>
                 {detail && (
                   <SessionActions
                     key={detail.id}
@@ -2101,8 +2216,8 @@ export default function App() {
                       </div>
                     ) : !hasHistory && !requiresReconciliation ? (
                       <div className="welcome">
-                        <div className="welcome-mark">
-                          <Star size={38} />
+                        <div className="welcome-mark" aria-hidden="true">
+                          <Star size={37} />
                         </div>
                         <h1>有什么可以帮你？</h1>
                         <p className="welcome-description">
@@ -2110,6 +2225,25 @@ export default function App() {
                             ? `在「${currentProject.name}」中开始一个任务。`
                             : "开启对话，或选择左侧项目继续工作。"}
                         </p>
+                        <div
+                          className="suggestions"
+                          role="group"
+                          aria-label="对话建议"
+                        >
+                          {welcomePrompts.map(({ label, icon, prompt }) => (
+                            <Button
+                              key={label}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              isDisabled={suggestionDisabled}
+                              onPress={() => fillPrompt(prompt)}
+                            >
+                              <Icon name={icon} size={16} />
+                              {label}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -2332,7 +2466,7 @@ export default function App() {
                   )}
                   <form
                     hidden={!!localTask}
-                    className={`composer ${closed || writeLocked ? "disabled" : ""}`}
+                    className={`composer chat-composer ${closed || writeLocked ? "disabled" : ""}`}
                     onSubmit={submit}
                   >
                     {chosenFiles.length > 0 && (
@@ -2381,7 +2515,7 @@ export default function App() {
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
                       disabled={closed || writeLocked}
-                      rows={2}
+                      rows={1}
                       onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
                         if (
                           e.key === "Enter" &&
@@ -2395,6 +2529,30 @@ export default function App() {
                     />
                     <div className="composer-toolbar">
                       <div className="composer-tools">
+                        <ComposerMenu
+                          onUpload={() => fileInput.current?.click()}
+                          onCompact={() => void compact()}
+                          onSummarize={() => void compact("semantic")}
+                          onSkills={() => void openSkills()}
+                          canCompact={
+                            !!selected &&
+                            hasHistory &&
+                            !busy &&
+                            !actionBusy &&
+                            !compactionSession &&
+                            !closed &&
+                            !writeLocked &&
+                            !requiresReconciliation
+                          }
+                          compactReason={
+                            busy
+                              ? "任务运行中，完成后可压缩"
+                              : !hasHistory
+                                ? "开始对话后可压缩上下文"
+                                : "保留原始记录，仅整理模型上下文"
+                          }
+                          disabled={uploading || closed || writeLocked}
+                        />
                         {selected ? (
                           <output
                             className="agent-label"
@@ -2433,30 +2591,6 @@ export default function App() {
                             ))}
                           </select>
                         )}
-                        <ComposerMenu
-                          onUpload={() => fileInput.current?.click()}
-                          onCompact={() => void compact()}
-                          onSummarize={() => void compact("semantic")}
-                          onSkills={() => void openSkills()}
-                          canCompact={
-                            !!selected &&
-                            hasHistory &&
-                            !busy &&
-                            !actionBusy &&
-                            !compactionSession &&
-                            !closed &&
-                            !writeLocked &&
-                            !requiresReconciliation
-                          }
-                          compactReason={
-                            busy
-                              ? "任务运行中，完成后可压缩"
-                              : !hasHistory
-                                ? "开始对话后可压缩上下文"
-                                : "保留原始记录，仅整理模型上下文"
-                          }
-                          disabled={uploading || closed || writeLocked}
-                        />
                         {uploading && <Spinner />}
                         {selection.selected_skill && (
                           <button
@@ -2478,6 +2612,13 @@ export default function App() {
                         )}
                       </div>
                       <div className="composer-send">
+                        <ModelOptions
+                          providers={providers}
+                          selection={selection}
+                          onChange={updateSelection}
+                          busy={busy}
+                          disabled={writeLocked}
+                        />
                         <ContextMeter
                           key={selected || "new"}
                           sessionId={selected}
@@ -2486,18 +2627,13 @@ export default function App() {
                           providerId={selection.provider_id}
                           active={busy || compactionActive}
                         />
-                        <ModelOptions
-                          providers={providers}
-                          selection={selection}
-                          onChange={updateSelection}
-                          busy={busy}
-                          disabled={writeLocked}
-                        />
                         {(busy || compactionActive) && (
-                          <button
+                          <Button
                             className="cancel-button"
+                            variant="danger-soft"
+                            size="sm"
                             type="button"
-                            onClick={() =>
+                            onPress={() =>
                               compactionActive
                                 ? void cancelCompaction()
                                 : void act(async () => {
@@ -2510,7 +2646,7 @@ export default function App() {
                                       );
                                   })
                             }
-                            disabled={
+                            isDisabled={
                               compactionActive
                                 ? !compactionRunReady ||
                                   compactionCancelling ||
@@ -2522,13 +2658,14 @@ export default function App() {
                           >
                             <Icon name="stop" size={13} />
                             {compactionActive ? "取消压缩" : "停止"}
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           className="send-button"
+                          isIconOnly
                           aria-label={busy ? "发送补充消息" : "发送消息"}
                           type="submit"
-                          disabled={
+                          isDisabled={
                             sending ||
                             compactionActive ||
                             uploading ||
@@ -2543,9 +2680,9 @@ export default function App() {
                           {sending ? (
                             <Spinner />
                           ) : (
-                            <Icon name="arrow" size={20} />
+                            <Icon name="arrow" size={17} />
                           )}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </form>
@@ -2572,7 +2709,18 @@ export default function App() {
                       <span>Aster 可能会出错，请核对重要结果。</span>
                     )}
                     <span className="keyboard-hint">
-                      Enter 发送 · Shift + Enter 换行
+                      <span>
+                        <Kbd>
+                          <Kbd.Content>Enter</Kbd.Content>
+                        </Kbd>
+                        发送
+                      </span>
+                      <span>
+                        <Kbd>
+                          <Kbd.Content>Shift + Enter</Kbd.Content>
+                        </Kbd>
+                        换行
+                      </span>
                     </span>
                   </div>
                   <input

@@ -1,3 +1,4 @@
+import { Button } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { ApiError, readableError, request } from "./api";
 import type { ModelProvider } from "./types";
@@ -111,30 +112,36 @@ export default function TaskTriageSettingsModal({
               </p>
             )}
             {conflict && (
-              <button
-                className="button secondary"
+              <Button
+                className="github-action"
+                variant="outline"
+                size="sm"
                 type="button"
-                onClick={() => setReload((current) => current + 1)}
+                onPress={() => setReload((current) => current + 1)}
               >
                 重新读取已保存配置
-              </button>
+              </Button>
             )}
             <div className="modal-actions">
-              <button
-                className="button secondary"
+              <Button
+                className="github-action"
+                variant="outline"
+                size="sm"
                 type="button"
-                disabled={busy}
-                onClick={onClose}
+                isDisabled={busy}
+                onPress={onClose}
               >
                 取消
-              </button>
-              <button
-                className="button primary"
+              </Button>
+              <Button
+                className="github-action"
+                variant="primary"
+                size="sm"
                 type="submit"
-                disabled={busy || conflict}
+                isDisabled={busy || conflict}
               >
                 {busy ? "正在保存…" : "保存判断模型"}
-              </button>
+              </Button>
             </div>
           </form>
         )
@@ -144,12 +151,14 @@ export default function TaskTriageSettingsModal({
           <p className="inline-error" role="alert">
             {error || "无法读取判断模型设置。"}
           </p>
-          <button
-            className="button secondary"
-            onClick={() => setReload((current) => current + 1)}
+          <Button
+            className="github-action"
+            variant="outline"
+            size="sm"
+            onPress={() => setReload((current) => current + 1)}
           >
             重新读取本地配置
-          </button>
+          </Button>
         </>
       )}
     </Modal>

@@ -20,7 +20,6 @@ export default function Projects({
   onNewChat,
   creatingSession,
   renderSessions,
-  searchControl,
   searchField,
 }: {
   projects: Project[];
@@ -31,7 +30,6 @@ export default function Projects({
   onNewChat: (project: Project) => void;
   creatingSession: string | null;
   renderSessions: (project: Project | null) => ReactNode;
-  searchControl: ReactNode;
   searchField: ReactNode;
 }) {
   const folderRequest = useRef(0),
@@ -145,7 +143,6 @@ export default function Projects({
       <div className="project-heading">
         <span>项目与对话</span>
         <div className="workspace-header-actions">
-          {searchControl}
           <button
             className="icon-button"
             aria-label="创建项目"

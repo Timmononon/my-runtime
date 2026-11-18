@@ -1,7 +1,15 @@
+import {
+  Alert,
+  Button,
+  Card,
+  SearchField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@heroui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, post, readableError, request } from "./api";
 import { Icon } from "./icons";
-import { dateLabel, Empty, Markdown, Modal, Spinner } from "./ui";
+import { dateLabel, Empty, Markdown, Modal, Spinner, StatusChip } from "./ui";
 import { LatestRequest } from "./state";
 import PendingCard from "./PendingCard";
 import type { ManagedAgent, Pending } from "./types";
@@ -30,6 +38,19 @@ const emptyOverview: TaskOverview = {
   counts: { total: 0, active: 0, attention: 0, completed: 0 },
   tickets: [],
 };
+const taskStats = [
+  { key: "attention", icon: "info", label: "需要你处理" },
+  { key: "active", icon: "bolt", label: "进行中" },
+  { key: "completed", icon: "check", label: "已完成" },
+  { key: "total", icon: "grid", label: "全部任务" },
+] as const;
+const taskFilters = [
+  { id: "all", label: "全部" },
+  { id: "attention", label: "需要处理" },
+  { id: "active", label: "进行中" },
+  { id: "completed", label: "已完成" },
+] as const;
+type TaskFilter = (typeof taskFilters)[number]["id"];
 const workerDraft = (): WorkerDraft => ({
   title: "",
   goal: "",
@@ -63,7 +84,8 @@ export default function TaskBoard({
     [ticket, setTicket] = useState<TaskTicket | null>(null);
   const [detailLoading, setDetailLoading] = useState(false),
     [error, setError] = useState("");
-  const [filter, setFilter] = useState("all"),
+  const [filter, setFilter] = useState<TaskFilter>("all"),
+    [search, setSearch] = useState(""),
     [busy, setBusy] = useState(false),
     [pendingBusy, setPendingBusy] = useState<string | null>(null);
   const [creating, setCreating] = useState(false),
@@ -413,103 +435,137 @@ export default function TaskBoard({
       );
       setCandidates(history.candidates);
     }, setPolicyError);
-  const ordered = orderTickets(overview.tickets).filter((item) =>
-    filter === "attention"
-      ? taskNeedsAttention(item)
-      : filter === "active"
-        ? ["queued", "working", "waiting"].includes(item.state)
-        : filter === "completed"
-          ? item.state === "completed"
-          : true,
-  );
+  const query = search.trim().toLocaleLowerCase();
+  const ordered = orderTickets(overview.tickets)
+    .filter((item) =>
+      filter === "attention"
+        ? taskNeedsAttention(item)
+        : filter === "active"
+          ? ["queued", "working", "waiting"].includes(item.state)
+          : filter === "completed"
+            ? item.state === "completed"
+            : true,
+    )
+    .filter(
+      (item) =>
+        !query ||
+        item.title.toLocaleLowerCase().includes(query) ||
+        item.goal.toLocaleLowerCase().includes(query) ||
+        item.workers.some((worker) =>
+          worker.title.toLocaleLowerCase().includes(query),
+        ),
+    );
   const actions = ticket ? taskActions(ticket) : null;
 
   return (
     <div className="task-board-scroll">
       <div className="task-board">
         <header className="task-board-heading">
-          <div>
-            <span className="eyebrow">本地协作</span>
-            <h1>让每项工作都有着落。</h1>
-            <p>分派工作、跟进结果，需要你处理的事项会排在前面。</p>
+          <div className="task-heading-copy">
+            <span className="task-heading-icon">
+              <Icon name="grid" size={24} />
+            </span>
+            <div>
+              <h1>让每项工作都有着落。</h1>
+              <p>分派工作、跟进结果，需要你处理的事项会排在前面。</p>
+            </div>
           </div>
           <div className="task-heading-actions">
-            <button className="button secondary" onClick={openPolicy}>
+            <Button variant="outline" onPress={openPolicy}>
               <Icon name="shield" size={16} />
               接单规则
-            </button>
-            <button
-              className="button primary"
-              onClick={openCreate}
-              disabled={!sourceWritable}
-            >
+            </Button>
+            <Button onPress={openCreate} isDisabled={!sourceWritable}>
               <Icon name="plus" size={16} />
               创建任务
-            </button>
+            </Button>
           </div>
         </header>
         {!sourceWritable && (
-          <p className="task-notice">
-            当前对话仅供查看。可查看已有任务；切换到可用对话后再创建任务。
-          </p>
+          <Alert className="task-notice" status="accent">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>
+                当前对话仅供查看。切换到可用对话后可创建任务。
+              </Alert.Description>
+            </Alert.Content>
+          </Alert>
         )}
         {error && (
-          <div className="task-error" role="alert">
-            <span>{error}</span>
-            <button
-              className="text-button"
-              onClick={() => {
+          <Alert className="task-error" status="danger" role="alert">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Description>{error}</Alert.Description>
+            </Alert.Content>
+            <Button
+              variant="danger-soft"
+              size="sm"
+              onPress={() => {
                 setError("");
                 void refresh();
               }}
             >
               重新读取
-            </button>
-          </div>
+            </Button>
+          </Alert>
         )}
         <div className="task-stats" aria-label="任务概览">
-          <div>
-            <strong>{overview.counts.attention}</strong>
-            <span>需要你处理</span>
-          </div>
-          <div>
-            <strong>{overview.counts.active}</strong>
-            <span>进行中</span>
-          </div>
-          <div>
-            <strong>{overview.counts.completed}</strong>
-            <span>已完成</span>
-          </div>
-          <div>
-            <strong>{overview.counts.total}</strong>
-            <span>全部任务</span>
-          </div>
+          {taskStats.map(({ key, icon, label }) => (
+            <Card key={key} className="task-stat" data-count={key}>
+              <Card.Content className="task-stat-content">
+                <span className="task-stat-icon">
+                  <Icon name={icon} size={17} />
+                </span>
+                <strong>{overview.counts[key]}</strong>
+                <span className="task-stat-label">{label}</span>
+              </Card.Content>
+            </Card>
+          ))}
         </div>
         <div className="task-toolbar">
-          <div className="task-filters" aria-label="筛选任务">
-            {[
-              ["all", "全部"],
-              ["attention", "需要处理"],
-              ["active", "进行中"],
-              ["completed", "已完成"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                aria-pressed={filter === value}
-                onClick={() => setFilter(value)}
-              >
+          <SearchField
+            className="task-search"
+            aria-label="搜索任务"
+            fullWidth
+            value={search}
+            onChange={setSearch}
+          >
+            <SearchField.Group>
+              <SearchField.SearchIcon />
+              <SearchField.Input placeholder="搜索任务名称、目标或 Worker" />
+              <SearchField.ClearButton aria-label="清除任务搜索" />
+            </SearchField.Group>
+          </SearchField>
+          <ToggleButtonGroup
+            className="task-filters"
+            aria-label="筛选任务"
+            selectionMode="single"
+            disallowEmptySelection
+            isDetached
+            size="sm"
+            selectedKeys={[filter]}
+            onSelectionChange={(keys) => {
+              const next = taskFilters.find(({ id }) => keys.has(id));
+              if (next) setFilter(next.id);
+            }}
+          >
+            {taskFilters.map(({ id, label }) => (
+              <ToggleButton key={id} id={id} variant="ghost">
                 {label}
-              </button>
+              </ToggleButton>
             ))}
-          </div>
-          <button
-            className="icon-button"
+          </ToggleButtonGroup>
+          <Button
+            className="task-refresh"
+            isIconOnly
+            size="sm"
+            variant="outline"
             aria-label="刷新任务"
-            onClick={() => void refresh()}
-            disabled={busy}
+            onPress={() => void refresh()}
+            isDisabled={busy}
           >
             <Icon name="refresh" size={16} />
-          </button>
+          </Button>
         </div>
         <div className={`task-columns ${selectedId ? "has-detail" : ""}`}>
           <section
@@ -519,7 +575,7 @@ export default function TaskBoard({
           >
             {loading ? (
               <div className="task-loading" role="status">
-                <Spinner />
+                <Spinner inline={false} />
                 正在读取任务
               </div>
             ) : !ordered.length ? (
@@ -532,25 +588,48 @@ export default function TaskBoard({
                 }
                 detail={
                   overview.counts.total
-                    ? "试试其他筛选条件。"
+                    ? "试试其他关键词或筛选条件。"
                     : "创建任务，并把可以独立进行的工作分给不同 Worker。"
                 }
               />
             ) : (
               ordered.map((item) => (
-                <button
+                <Card<"button">
                   key={item.id}
+                  render={(props) => <button {...props} />}
+                  type="button"
                   className={`task-row ${selectedId === item.id ? "selected" : ""}`}
                   aria-pressed={selectedId === item.id}
                   onClick={() => selectTicket(item.id)}
                 >
-                  <div className="task-row-head">
+                  <Card.Header<"span">
+                    className="task-row-head"
+                    render={(props) => <span {...props} />}
+                  >
                     <TaskStatus state={item.state} />
                     <span>{dateLabel(item.updated_at)}</span>
-                  </div>
-                  <h2>{item.title}</h2>
-                  <p>{item.attention || item.goal}</p>
-                  <div className="task-row-foot">
+                  </Card.Header>
+                  <Card.Content<"span">
+                    className="task-row-content"
+                    render={(props) => <span {...props} />}
+                  >
+                    <Card.Title<"span">
+                      className="task-row-title"
+                      render={(props) => <span {...props} />}
+                    >
+                      {item.title}
+                    </Card.Title>
+                    <Card.Description<"span">
+                      className="task-row-summary"
+                      render={(props) => <span {...props} />}
+                    >
+                      {item.attention || item.goal}
+                    </Card.Description>
+                  </Card.Content>
+                  <Card.Footer<"span">
+                    className="task-row-foot"
+                    render={(props) => <span {...props} />}
+                  >
                     <span>
                       {item.workers.length} 个 Worker ·{" "}
                       {
@@ -561,30 +640,33 @@ export default function TaskBoard({
                       个完成
                     </span>
                     <Icon name="chevron" size={15} />
-                  </div>
-                </button>
+                  </Card.Footer>
+                </Card>
               ))
             )}
           </section>
           {selectedId && (
-            <section
+            <Card<"section">
+              render={(props) => <section {...props} />}
               className="task-detail"
               aria-label="任务详情"
               aria-busy={detailLoading}
             >
-              <div className="task-detail-top">
+              <Card.Header className="task-detail-top">
                 <span className="eyebrow">任务详情</span>
-                <button
-                  className="icon-button"
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="ghost"
                   aria-label="关闭任务详情"
-                  onClick={() => setSelectedId(null)}
+                  onPress={() => setSelectedId(null)}
                 >
                   <Icon name="close" size={16} />
-                </button>
-              </div>
+                </Button>
+              </Card.Header>
               {detailLoading ? (
                 <div className="task-loading" role="status">
-                  <Spinner />
+                  <Spinner inline={false} />
                   正在读取执行情况
                 </div>
               ) : (
@@ -592,8 +674,10 @@ export default function TaskBoard({
                   <>
                     <div className="task-detail-title">
                       <TaskStatus state={ticket.state} />
-                      <h2>{ticket.title}</h2>
-                      <p>{ticket.goal}</p>
+                      <Card.Title<"h2"> render={(props) => <h2 {...props} />}>
+                        {ticket.title}
+                      </Card.Title>
+                      <Card.Description>{ticket.goal}</Card.Description>
                     </div>
                     {ticket.github && (
                       <div className="github-task-origin">
@@ -640,45 +724,57 @@ export default function TaskBoard({
                       </div>
                     )}
                     {ticket.attention && (
-                      <div className="task-attention">
-                        <Icon name="info" size={17} />
-                        <span>{ticket.attention}</span>
-                      </div>
+                      <Alert className="task-notice" status="warning">
+                        <Alert.Indicator />
+                        <Alert.Content>
+                          <Alert.Description>
+                            {ticket.attention}
+                          </Alert.Description>
+                        </Alert.Content>
+                      </Alert>
                     )}
                     <div className="task-detail-actions">
-                      <button
-                        className="button secondary"
-                        onClick={() => onOpenSession(ticket.source_session_id)}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onPress={() => onOpenSession(ticket.source_session_id)}
                       >
                         <Icon name="chat" size={15} />
                         来源对话
-                      </button>
+                      </Button>
                       {actions?.retry && (
-                        <button
-                          className="button secondary"
-                          disabled={busy}
-                          onClick={() => ticketAction("retry")}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          isDisabled={busy}
+                          onPress={() => ticketAction("retry")}
                         >
                           <Icon name="refresh" size={15} />
                           重试未完成的工作
-                        </button>
+                        </Button>
                       )}
                       {actions?.cancel && (
-                        <button
-                          className="button secondary"
-                          disabled={busy}
-                          onClick={() => setConfirmCancel(true)}
+                        <Button
+                          variant="danger-soft"
+                          size="sm"
+                          isDisabled={busy}
+                          onPress={() => setConfirmCancel(true)}
                         >
                           <Icon name="stop" size={15} />
                           取消任务
-                        </button>
+                        </Button>
                       )}
                     </div>
                     {ticket.state === "needs_reconciliation" && (
-                      <p className="task-notice">
-                        先在工作对话中核验结果并登记证据，再按 Runtime
-                        的恢复流程继续。
-                      </p>
+                      <Alert className="task-notice" status="warning">
+                        <Alert.Indicator />
+                        <Alert.Content>
+                          <Alert.Description>
+                            先在工作对话中核验结果并登记证据，再按 Runtime
+                            的恢复流程继续。
+                          </Alert.Description>
+                        </Alert.Content>
+                      </Alert>
                     )}
                     {!!ticket.summary && (
                       <section className="task-result">
@@ -693,12 +789,20 @@ export default function TaskBoard({
                     <div className="task-workers">
                       <h3>工作分配</h3>
                       {ticket.workers.map((worker) => (
-                        <article className="task-worker" key={worker.id}>
-                          <div className="task-worker-heading">
-                            <h4>{worker.title}</h4>
+                        <Card<"article">
+                          render={(props) => <article {...props} />}
+                          className="task-worker"
+                          key={worker.id}
+                        >
+                          <Card.Header className="task-worker-heading">
+                            <Card.Title<"h4">
+                              render={(props) => <h4 {...props} />}
+                            >
+                              {worker.title}
+                            </Card.Title>
                             <TaskStatus state={worker.state} />
-                          </div>
-                          <p>{worker.goal}</p>
+                          </Card.Header>
+                          <Card.Description>{worker.goal}</Card.Description>
                           <small>
                             {worker.role === "reader"
                               ? "只读审查"
@@ -742,7 +846,7 @@ export default function TaskBoard({
                               <Icon name="external" size={13} />
                             </button>
                           )}
-                        </article>
+                        </Card>
                       ))}
                     </div>
                     {actions?.input && (
@@ -765,14 +869,14 @@ export default function TaskBoard({
                             disabled={busy}
                           />
                         </label>
-                        <button
-                          className="button secondary"
+                        <Button
+                          variant="outline"
                           type="submit"
-                          disabled={!followup.trim() || busy}
+                          isDisabled={!followup.trim() || busy}
                         >
                           发送补充
                           <Icon name="arrow" size={14} />
-                        </button>
+                        </Button>
                       </form>
                     )}
                     <details className="task-audit">
@@ -789,7 +893,7 @@ export default function TaskBoard({
                   </>
                 )
               )}
-            </section>
+            </Card>
           )}
         </div>
         {creating && (
@@ -941,21 +1045,17 @@ export default function TaskBoard({
                 </p>
               )}
               <div className="modal-actions">
-                <button
-                  className="button secondary"
+                <Button
+                  variant="outline"
                   type="button"
-                  disabled={busy}
-                  onClick={() => setCreating(false)}
+                  isDisabled={busy}
+                  onPress={() => setCreating(false)}
                 >
                   取消
-                </button>
-                <button
-                  className="button primary"
-                  type="submit"
-                  disabled={busy}
-                >
+                </Button>
+                <Button type="submit" isDisabled={busy}>
                   {busy ? "正在创建…" : "创建并开始"}
-                </button>
+                </Button>
               </div>
             </form>
           </Modal>
@@ -977,15 +1077,12 @@ export default function TaskBoard({
             {!settings ? (
               <div className="task-loading">
                 {policyError ? (
-                  <button
-                    className="button secondary"
-                    onClick={() => void loadPolicy()}
-                  >
+                  <Button variant="outline" onPress={() => void loadPolicy()}>
                     重试读取规则
-                  </button>
+                  </Button>
                 ) : (
                   <>
-                    <Spinner />
+                    <Spinner inline={false} />
                     正在读取规则
                   </>
                 )}
@@ -1103,20 +1200,16 @@ export default function TaskBoard({
                   增加规则
                 </button>
                 <div className="modal-actions">
-                  <button
-                    className="button secondary"
-                    disabled={busy}
-                    onClick={() => void loadPolicy()}
+                  <Button
+                    variant="outline"
+                    isDisabled={busy}
+                    onPress={() => void loadPolicy()}
                   >
                     重新读取已保存规则
-                  </button>
-                  <button
-                    className="button primary"
-                    disabled={busy}
-                    onClick={() => void savePolicy()}
-                  >
+                  </Button>
+                  <Button isDisabled={busy} onPress={() => void savePolicy()}>
                     保存规则
-                  </button>
+                  </Button>
                 </div>
                 <details className="task-candidate-test">
                   <summary>评估本地候选</summary>
@@ -1135,13 +1228,15 @@ export default function TaskBoard({
                       disabled={busy}
                     />
                   </label>
-                  <button
-                    className="button secondary"
-                    disabled={busy || !candidateText.trim() || !sourceWritable}
-                    onClick={() => void evaluate()}
+                  <Button
+                    variant="outline"
+                    isDisabled={
+                      busy || !candidateText.trim() || !sourceWritable
+                    }
+                    onPress={() => void evaluate()}
                   >
                     按已保存规则评估
-                  </button>
+                  </Button>
                   {candidate && (
                     <div className="task-candidate-result" role="status">
                       <strong>
@@ -1224,20 +1319,20 @@ export default function TaskBoard({
               </p>
             )}
             <div className="modal-actions">
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setConfirmCancel(false)}
+              <Button
+                variant="outline"
+                isDisabled={busy}
+                onPress={() => setConfirmCancel(false)}
               >
                 继续执行
-              </button>
-              <button
-                className="button danger"
-                disabled={busy}
-                onClick={() => ticketAction("cancel")}
+              </Button>
+              <Button
+                variant="danger-soft"
+                isDisabled={busy}
+                onPress={() => ticketAction("cancel")}
               >
                 确认取消
-              </button>
+              </Button>
             </div>
           </Modal>
         )}
@@ -1248,9 +1343,10 @@ export default function TaskBoard({
 
 export function TaskStatus({ state }: { state: string }) {
   return (
-    <span className={`task-status task-state-${state}`}>
-      <i />
-      {taskLabel(state)}
-    </span>
+    <StatusChip
+      className={`task-status task-state-${state}`}
+      status={state}
+      label={taskLabel(state)}
+    />
   );
 }
