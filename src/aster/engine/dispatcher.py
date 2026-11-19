@@ -244,13 +244,16 @@ class Dispatcher:
             result = rejected("Cancelled before dispatch", "cancelled")
             self.store.commit_tool(entry["id"], result)
             return result
-        self.store.mark_dispatching(entry["id"])
+        with self.store.tool_dispatch(entry["id"]):
+            return await self._run_dispatched(tool, call, context, entry["id"])
+
+    async def _run_dispatched(self, tool, call: ToolCall, context: ToolContext, execution_id: str) -> ToolResult:
         started = time.monotonic()
         if context.emit:
             await context.emit("tool.started", {"tool_call_id": call.id, "name": call.name})
         child_cancel = asyncio.Event()
         child = dataclasses.replace(context, cancel=child_cancel, services={
-            **context.services, "tool_execution_id": entry["id"], "tool_call_id": call.id,
+            **context.services, "tool_execution_id": execution_id, "tool_call_id": call.id,
         })
         async def invoke():
             if denial := self._task_denial(child, tool):
@@ -309,7 +312,7 @@ class Dispatcher:
             if steer_task:
                 steer_task.cancel()
             await asyncio.gather(parent_cancel, *([steer_task] if steer_task else []), return_exceptions=True)
-        self.store.commit_tool(entry["id"], result)
+        self.store.commit_tool(execution_id, result)
         if context.emit:
             await context.emit("tool.finished", {"tool_call_id": call.id, "name": call.name,
                                                  "is_error": result.is_error, "outcome": result.outcome,

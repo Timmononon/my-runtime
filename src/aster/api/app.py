@@ -335,7 +335,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         github_sources = coordinator.github.list_sources(source_session_id=session_id)
         return {**coordinator.store.get_session(session_id), "runs": coordinator.store.list_runs(session_id),
                 "messages": coordinator.store.history_records(session_id), "plan": coordinator.store.get_plan(session_id),
-                "requires_reconciliation": coordinator.store.has_unresolved(session_id),
+                "requires_reconciliation": coordinator.store.has_unresolved(session_id, include_live_dispatches=False),
                 "selection": coordinator.session_selection(session_id),
                 "local_task": {key: binding[key] for key in ("ticket_id", "worker_id", "role")} if binding else None,
                 "github_sources": {"count": len(github_sources), "enabled": sum(bool(item["enabled"]) for item in github_sources)}}
@@ -362,7 +362,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         budget = coordinator.store.run_budget(run_id)
         kind = (coordinator.store.run_request(run_id) or {}).get("kind")
         return {**run, "kind": kind if kind in {"compaction", "tool_action"} else "task",
-                "requires_reconciliation": coordinator.store.has_unresolved(run["session_id"]),
+                "requires_reconciliation": coordinator.store.has_unresolved(run["session_id"], include_live_dispatches=False),
                 "pending_requests": coordinator.store.pending_requests(run_id),
                 "tool_executions": coordinator.store.tool_executions(run_id), "usage": usage, "budget": budget,
                 "cost_estimate": cost_estimate(coordinator.store, run, coordinator.data_dir),

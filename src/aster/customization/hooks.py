@@ -141,41 +141,41 @@ def supervised_hook_executor(supervisor):
                 intent["id"], ToolResult("Hook cancelled", is_error=True, outcome="not_executed", data=data)
             )
             return data
-        store.mark_dispatching(intent["id"])
-        if context.emit:
-            await context.emit("hook.started", {"event": command.event, "execution_id": directory.name})
-        try:
-            result = await supervisor.run(
-                [command.executable, *command.args],
-                cwd=context.cwd,
-                artifact_dir=directory,
-                cancel=context.cancel,
-                env=env,
-                timeout=command.timeout_seconds,
-            )
-        except BaseException:
+        with store.tool_dispatch(intent["id"]):
+            if context.emit:
+                await context.emit("hook.started", {"event": command.event, "execution_id": directory.name})
+            try:
+                result = await supervisor.run(
+                    [command.executable, *command.args],
+                    cwd=context.cwd,
+                    artifact_dir=directory,
+                    cancel=context.cancel,
+                    env=env,
+                    timeout=command.timeout_seconds,
+                )
+            except BaseException:
+                store.commit_tool(
+                    intent["id"],
+                    ToolResult(
+                        "Hook interrupted after dispatch",
+                        is_error=True,
+                        outcome="unknown",
+                        error_category="hook_interrupted",
+                    ),
+                )
+                raise
+            data = {"returncode": result.exit_code, "stdout": result.stdout, "stderr": result.stderr}
+            unknown = bool(result.cancelled or result.timed_out or (result.error and result.pid))
             store.commit_tool(
                 intent["id"],
                 ToolResult(
-                    "Hook interrupted after dispatch",
-                    is_error=True,
-                    outcome="unknown",
-                    error_category="hook_interrupted",
+                    result.stdout,
+                    is_error=result.exit_code != 0,
+                    outcome="unknown" if unknown else "known",
+                    artifacts=result.artifacts,
+                    data=data,
                 ),
             )
-            raise
-        data = {"returncode": result.exit_code, "stdout": result.stdout, "stderr": result.stderr}
-        unknown = bool(result.cancelled or result.timed_out or (result.error and result.pid))
-        store.commit_tool(
-            intent["id"],
-            ToolResult(
-                result.stdout,
-                is_error=result.exit_code != 0,
-                outcome="unknown" if unknown else "known",
-                artifacts=result.artifacts,
-                data=data,
-            ),
-        )
         if context.emit:
             await context.emit(
                 "hook.finished",

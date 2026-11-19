@@ -57,6 +57,7 @@ class Store(SessionExtensions, SessionLifecycle, CompactionPersistence):
         self.path = Path(path).resolve()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
+        self._live_dispatches: set[str] = set()
         self.connection = sqlite3.connect(self.path, isolation_level=None, check_same_thread=False, timeout=10)
         self.connection.row_factory = sqlite3.Row
         self.connection.execute("PRAGMA journal_mode=WAL")
@@ -457,12 +458,29 @@ class Store(SessionExtensions, SessionLifecycle, CompactionPersistence):
             rows = self.connection.execute("SELECT id FROM tool_executions WHERE run_id=? ORDER BY created_at,id", (run_id,)).fetchall()
         return [self.tool_execution(row[0]) for row in rows]
 
-    def has_unresolved(self, session_id: str) -> bool:
+    def has_unresolved(self, session_id: str, *, include_live_dispatches: bool = True) -> bool:
+        """Admission includes all dispatches. Operator status can omit calls still settling in this process."""
         sessions = [session_id, *self.session_ancestors(session_id)]
+        marks = ",".join("?" for _ in sessions)
+        query = (f"SELECT id, state FROM tool_executions WHERE session_id IN ({marks}) AND "
+                 "(state='outcome_unknown' OR (state='dispatching' AND risk<>'read'))")
         with self._lock:
-            return self.connection.execute("SELECT 1 FROM tool_executions WHERE session_id IN (" + ",".join("?" for _ in sessions) + ") AND "
-                                           "(state='outcome_unknown' OR (state='dispatching' AND risk<>'read')) LIMIT 1",
-                                           sessions).fetchone() is not None
+            if include_live_dispatches or not self._live_dispatches:
+                return self.connection.execute(query + " LIMIT 1", sessions).fetchone() is not None
+            return any(row["state"] == "outcome_unknown" or row["id"] not in self._live_dispatches
+                       for row in self.connection.execute(query, sessions))
+
+    @contextlib.contextmanager
+    def tool_dispatch(self, execution_id: str):
+        """Own one dispatch until its caller exits, including work after the conversation turn completes."""
+        with self._lock:
+            self.mark_dispatching(execution_id)
+            self._live_dispatches.add(execution_id)
+        try:
+            yield
+        finally:
+            with self._lock:
+                self._live_dispatches.remove(execution_id)
 
     def mark_dispatching(self, execution_id: str):
         with self.transaction() as db:

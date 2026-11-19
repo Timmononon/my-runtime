@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -127,7 +129,16 @@ async def test_tasks_narrow_real_approvals_questions_and_cancellation(workbench_
             await expect(detail.get_by_role("heading", name="结果汇总", exact=True)).to_be_visible(timeout=15000)
             await assert_basics(page)
             await create_task(page, title="可取消的工作", workers=[("等待工作", "测试取消")])
-            await wait_ticket(workbench_server, title="可取消的工作", state="working")
+            active = await wait_ticket(workbench_server, title="可取消的工作", state="working")
+            db_url = (Path(workbench_server["data_dir"]) / "runtime.db").as_uri() + "?mode=ro"
+            # The API can show a live Worker before the scheduler saves that projection and advances its revision.
+            with closing(sqlite3.connect(db_url, uri=True)) as database:
+                async with asyncio.timeout(10):
+                    while database.execute(
+                        "SELECT state FROM local_task_tickets WHERE id=?", (active["id"],),
+                    ).fetchone() != ("working",):
+                        await asyncio.sleep(0.08)
+            cancel_url = f"{workbench_server['base_url']}/tasks/{active['id']}/cancel"
             cancel_attempts = []
 
             async def version_conflict_once(route):
@@ -137,9 +148,10 @@ async def test_tasks_narrow_real_approvals_questions_and_cancellation(workbench_
                 else:
                     await route.continue_()
 
-            await page.route("**/tasks/*/cancel", version_conflict_once)
+            await page.route(cancel_url, version_conflict_once)
             await detail.get_by_role("button", name="取消任务", exact=True).click()
-            async with page.expect_response(lambda response: response.request.method == "POST" and response.url.endswith("/cancel") and response.status == 200) as cancellation:
+            async with page.expect_response(lambda response: response.request.method == "POST"
+                    and response.url == cancel_url and len(cancel_attempts) >= 2) as cancellation:
                 await page.get_by_role("dialog", name="取消任务", exact=True).get_by_role("button", name="确认取消", exact=True).click()
             response = await cancellation.value
             assert response.status == 200, await response.text()

@@ -113,13 +113,13 @@ const navigationGroups: {
       {
         id: "github",
         label: "GitHub",
-        icon: "branch",
+        icon: "github",
         capability: "github_sources_v1",
       },
       {
         id: "feishu",
         label: "飞书",
-        icon: "globe",
+        icon: "feishu",
         capability: FEISHU_TASK_SOURCES,
       },
     ],

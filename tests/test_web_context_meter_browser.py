@@ -5,6 +5,7 @@ import copy
 import json
 import re
 import sqlite3
+from itertools import pairwise
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -35,6 +36,20 @@ async def inside_viewport(page, panel):
     assert bounds["x"] + bounds["width"] <= viewport["width"] - 7
     assert bounds["y"] + bounds["height"] <= viewport["height"] - 7
     assert await page.evaluate("() => document.documentElement.scrollWidth <= innerWidth + 1")
+
+
+async def assert_meter_position(page, meter):
+    buttons = (
+        page.get_by_role("button", name="选择模型", exact=True),
+        page.get_by_role("button", name="选择推理强度", exact=True),
+        meter,
+        page.get_by_role("button", name="发送消息", exact=True),
+    )
+    bounds = [await button.bounding_box() for button in buttons]
+    assert all(box is not None for box in bounds)
+    for left, right in pairwise(bounds):
+        assert left["x"] + left["width"] <= right["x"] + 1
+        assert abs((left["y"] + left["height"] / 2) - (right["y"] + right["height"] / 2)) <= 1
 
 
 @pytest.mark.browser
@@ -77,11 +92,7 @@ async def test_context_meter_real_counts_compaction_and_late_session_response(wo
             await open_saved(page, first["title"])
             meter = page.get_by_role("button", name=f"上下文已用 {first_value['percent']}%", exact=True)
             await expect(meter).to_be_visible()
-            model_button = page.get_by_role("button", name="选择模型", exact=True)
-            meter_bounds, model_bounds = await meter.bounding_box(), await model_button.bounding_box()
-            assert meter_bounds["x"] + meter_bounds["width"] <= model_bounds["x"] + 1
-            assert abs((meter_bounds["y"] + meter_bounds["height"] / 2)
-                       - (model_bounds["y"] + model_bounds["height"] / 2)) <= 1
+            await assert_meter_position(page, meter)
             await expect(meter.locator("svg circle")).to_have_count(2)
             await meter.click()
             panel = page.get_by_role("dialog", name="上下文已用", exact=True)
@@ -190,11 +201,7 @@ async def test_context_meter_keeps_legacy_independent_and_empty_chats_visible(wo
                 await open_saved(page, session["title"])
                 await expect(meter).to_be_visible()
                 await expect(meter.locator("svg circle")).to_have_count(1)
-                model = page.get_by_role("button", name="选择模型", exact=True)
-                meter_bounds, model_bounds = await meter.bounding_box(), await model.bounding_box()
-                assert meter_bounds["x"] + meter_bounds["width"] <= model_bounds["x"] + 1
-                assert abs((meter_bounds["y"] + meter_bounds["height"] / 2)
-                           - (model_bounds["y"] + model_bounds["height"] / 2)) <= 1
+                await assert_meter_position(page, meter)
                 await meter.click()
                 await expect(panel).to_be_visible()
                 await expect(panel).to_contain_text("后续运行")

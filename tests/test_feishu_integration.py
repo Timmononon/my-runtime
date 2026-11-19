@@ -262,7 +262,8 @@ $global:LASTEXITCODE = 0
     harness = tmp_path / "installer-multiple-commands.ps1"
     harness.write_text(r'''param($Installer, $DataDirectory, $Node, $Npm, $Version)
 $ErrorActionPreference = 'Stop'
-Import-Module Microsoft.PowerShell.Utility
+# Use the host's built-in cmdlets even if a parent shell's PSModulePath contains another PowerShell installation.
+Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1')
 $global:ASTER_FEISHU_TEST_NODE = $Node
 $global:ASTER_FEISHU_TEST_NPM = $Npm
 function global:Get-Command {

@@ -1,5 +1,37 @@
+/*!
+ * Source navigation marks.
+ * GitHub mark from https://github.com/primer/octicons/blob/main/icons/mark-github-16.svg
+ * Copyright (c) 2026 GitHub Inc.
+ * Feishu mark adapted from https://github.com/DouyinFE/semi-design/blob/main/packages/semi-icons/src/svgs/feishu_logo.svg
+ * Copyright (c) 2021 DouyinFE
+ * @license MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 import type { CSSProperties } from "react";
 const paths: Record<string, string> = {
+  github:
+    "M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656",
+  feishu:
+    "M6.14 3.81C8.77 5.99 11.02 8.49 12.74 11.43L14.44 9.76C15.25 8.97 16.21 8.34 17.26 7.93C16.78 6.32 16 4.98 14.94 3.65C14.81 3.49 14.62 3.4 14.41 3.4H6.28C6.07 3.4 5.97 3.67 6.14 3.81Z " +
+    "M11.04 14.56C12.27 15.08 13.38 15.53 14.69 15.88C17.02 16.51 19.23 15.57 20.32 13.49L21.64 10.85C21.94 10.21 22.31 9.62 22.76 9.07C21.97 8.78 21.31 8.63 20.45 8.63C18.55 8.63 16.76 9.36 15.4 10.69L13.38 12.69C12.66 13.39 11.88 14.02 11.04 14.56Z " +
+    "M1.63 9.75C1.48 9.61 1.24 9.71 1.24 9.91V17.87C1.24 18.1 1.35 18.31 1.53 18.43C3.67 19.85 6.15 20.6 8.72 20.6C11.17 20.6 13.55 19.92 15.61 18.63C16.39 18.14 17 17.71 17.65 17.08C16.6 17.39 15.45 17.41 14.28 17.09C9.38 15.76 5.2 13.2 1.63 9.75Z",
   compact: "M4 3h16M4 21h16M12 5v5m-3-3 3 3 3-3M12 19v-5m-3 3 3-3 3 3",
   plus: "M12 5v14M5 12h14",
   search: "m21 21-4.4-4.4M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
@@ -53,13 +85,14 @@ export function Icon({
   className?: string;
   style?: CSSProperties;
 }) {
+  const isBrandMark = name === "github" || name === "feishu";
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
+      viewBox={name === "github" ? "0 0 16 16" : "0 0 24 24"}
+      fill={isBrandMark ? "currentColor" : "none"}
+      stroke={isBrandMark ? "none" : "currentColor"}
       strokeWidth="1.65"
       strokeLinecap="round"
       strokeLinejoin="round"

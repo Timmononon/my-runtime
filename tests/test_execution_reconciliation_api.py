@@ -1,15 +1,22 @@
 """Live reconciliation gates use the ledger while historical runs stay intact."""
 from __future__ import annotations
 
+import asyncio
 import copy
 import subprocess
 from contextlib import asynccontextmanager
 
 import httpx
+import pytest
 
 from aster.api import create_app
-from aster.domain import Message, ToolCall, ToolResult
+from aster.customization.hooks import HookCommand, supervised_hook_executor
+from aster.domain import Message, ToolCall, ToolContext, ToolResult, ToolSpec
+from aster.engine.dispatcher import Dispatcher
+from aster.policy import PermissionPolicy
 from aster.service import RunCoordinator
+from aster.state import ReconciliationRequired
+from aster.tools.registry import Registry
 
 TOKEN = "execution-reconciliation-offline-api-token-with-over-thirty-two-characters"
 HEADERS = {"Authorization": "Bearer " + TOKEN}
@@ -62,6 +69,99 @@ async def reconcile(client, execution_id):
         "is_error": True,
     })
     assert response.status_code == 200, response.text
+
+
+async def reconciliation_flags(client, paths):
+    flags = []
+    for path in paths:
+        response = await client.get(path)
+        assert response.status_code == 200, response.text
+        flags.append(response.json()["requires_reconciliation"])
+    return flags
+
+
+@pytest.mark.parametrize("outcome", ["known", "unknown"])
+async def test_live_dispatch_after_turn_completion_needs_no_operator_action(tmp_path, outcome):
+    async with api(tmp_path) as (client, coordinator):
+        store = coordinator.store
+        sid = store.create_session(tmp_path / "workspace")["id"]
+        child = store.fork_session(sid, kind="side_chat")["id"]
+        run, _ = store.create_run(sid, request_payload={"kind": "task"})
+        rid = run["id"]
+        # Automatic memory evaluations use the dispatcher after the user turn finishes.
+        store.finish_run(rid, "completed", answer="Main turn completed")
+        paths = [f"/sessions/{sid}", f"/runs/{rid}", f"/sessions/{child}"]
+        started, finish = asyncio.Event(), asyncio.Event()
+
+        class ExternalStep:
+            spec = ToolSpec("post_turn_step", "Offline post-turn operation", {"type": "object"}, risk="external")
+
+            async def execute(self, arguments, context):
+                started.set()
+                await finish.wait()
+                return ToolResult("Offline receipt", is_error=outcome == "unknown", outcome=outcome)
+
+        dispatcher = Dispatcher(Registry([ExternalStep()]), store, PermissionPolicy(allowed_tools={"post_turn_step"}))
+        context = ToolContext(sid, rid, tmp_path, tmp_path / "artifacts", asyncio.Event())
+        task = asyncio.create_task(dispatcher.execute([ToolCall("call", "post_turn_step", {})], context))
+        try:
+            await asyncio.wait_for(started.wait(), timeout=10)
+            assert store.tool_executions(rid)[0]["state"] == "dispatching"
+            assert await reconciliation_flags(client, paths) == [False, False, False]
+            assert store.has_unresolved(sid) and store.has_unresolved(child)
+            with pytest.raises(ReconciliationRequired):
+                store.create_run(child, initial_status="queued")
+            queued, _ = store.create_run(sid, initial_status="queued", request_payload={"kind": "task"})
+            assert queued["status"] == "queued"
+        finally:
+            finish.set()
+            await task
+        assert await reconciliation_flags(client, paths) == [outcome == "unknown"] * len(paths)
+        assert store.get_run(rid)["status"] == "completed"
+        if outcome == "unknown":
+            with pytest.raises(ReconciliationRequired):
+                store.create_run(sid, initial_status="queued")
+
+
+async def test_abandoned_hook_dispatch_needs_reconciliation_even_with_a_running_status(tmp_path):
+    async with api(tmp_path) as (client, coordinator):
+        store = coordinator.store
+        sid = store.create_session(tmp_path / "workspace")["id"]
+        run, _ = store.create_run(sid, request_payload={"kind": "task"})
+        rid = run["id"]
+        paths = [f"/sessions/{sid}", f"/runs/{rid}"]
+
+        async def interrupt(event, payload):
+            assert event == "hook.started"
+            assert await reconciliation_flags(client, paths) == [False, False]
+            raise asyncio.CancelledError()
+
+        context = ToolContext(sid, rid, tmp_path, tmp_path / "artifacts", asyncio.Event(),
+                              emit=interrupt, services={"store": store})
+        with pytest.raises(asyncio.CancelledError):
+            await supervised_hook_executor(None)(HookCommand("Stop", "unused-offline"), {}, context)
+        assert store.get_run(rid)["status"] == "running"
+        assert store.tool_executions(rid)[0]["state"] == "dispatching"
+        assert await reconciliation_flags(client, paths) == [True, True]
+
+
+async def test_ownership_cannot_hide_an_abandoned_sibling_or_a_committed_unknown(tmp_path):
+    async with api(tmp_path) as (client, coordinator):
+        store = coordinator.store
+        sid = store.create_session(tmp_path / "workspace")["id"]
+        run, _ = store.create_run(sid, request_payload={"kind": "task"})
+        rid = run["id"]
+        paths = [f"/sessions/{sid}", f"/runs/{rid}"]
+        owned, abandoned = [store.prepare_tool(sid, rid, ToolCall(key, "offline_step", {}),
+                                                risk="external", replay_safe=False)["id"]
+                            for key in ("live", "orphan")]
+        with store.tool_dispatch(owned):
+            store.mark_dispatching(abandoned)
+            assert await reconciliation_flags(client, paths) == [True, True]
+            store.commit_tool(abandoned, ToolResult("Verified receipt"))
+            assert await reconciliation_flags(client, paths) == [False, False]
+            store.commit_tool(owned, ToolResult("Missing remote receipt", True, "network", "unknown"))
+            assert await reconciliation_flags(client, paths) == [True, True]
 
 
 async def test_reconcile_clears_live_gate_without_changing_historical_status_or_archive(tmp_path, monkeypatch):
