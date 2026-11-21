@@ -109,7 +109,9 @@ async def test_side_panel_preserves_main_draft_context_and_reopens_saved_chat(wo
             assert (await api.get(f"/sessions/{parent['id']}")).json()["messages"] == parent_records
             assert not await main.locator(".message.user").filter(has_text="只在侧边聊这个问题").count()
             await panel.get_by_label("侧边聊天消息", exact=True).fill("尚未发送的侧边草稿")
-            await panel.get_by_label("侧边聊天附件", exact=True).set_input_files({
+            async with page.expect_file_chooser() as chooser:
+                await panel.get_by_role("button", name="添加侧边聊天附件", exact=True).click()
+            await (await chooser.value).set_files({
                 "name": "keep-side-draft.txt", "mimeType": "text/plain", "buffer": b"retain when collapsed"})
             await expect(panel.locator(".draft-attachments")).to_contain_text("keep-side-draft.txt")
             collapse = await panel.get_by_role("button", name="收起侧边聊天", exact=True).bounding_box()
