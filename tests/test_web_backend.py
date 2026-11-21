@@ -1,19 +1,12 @@
 import asyncio
 import json
-import os
-import shutil
-import socket
-import subprocess
-import sys
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import httpx
 import pytest
 
-from aster.api import create_app, load_api_token
+from aster.api import create_app
 from aster.api.web import COOKIE_NAME, UIAuth
-from aster.cli import main
 from aster.domain import ModelTurn
 from aster.engine import FakeModel
 from aster.service import RunCoordinator
@@ -33,16 +26,9 @@ class EmptyCredentials:
 
 @asynccontextmanager
 async def workbench(tmp_path, *, authentication=None, model=None):
-    static = tmp_path / "static"
-    (static / "assets").mkdir(parents=True)
-    (static / "index.html").write_text('<!doctype html><html><script type="module" src="/assets/app-a1.js"></script></html>')
-    (static / "assets" / "app-a1.js").write_text('document.body.dataset.ready="yes";')
-    (static / "assets" / "app-a1.css").write_text("body{background:white}")
-    (static / "assets" / "app-a1.js.map").write_text("source code must not be served")
-    (static / "assets" / ".private.js").write_text("must not be served")
     coordinator = RunCoordinator(tmp_path / "state", tools=[], credentials=EmptyCredentials(),
         model_factory=(lambda _: model) if model else None)
-    app = create_app(coordinator, token=TOKEN, static_root=static, ui_auth=authentication)
+    app = create_app(coordinator, token=TOKEN, ui_auth=authentication)
     async with app.router.lifespan_context(app), httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url=ORIGIN,
     ) as client:
@@ -63,29 +49,28 @@ async def login(client, **values):
     return ticket, result
 
 
-async def test_public_assets_are_bounded_and_api_never_falls_back_to_index(tmp_path):
+async def test_runtime_only_serves_api_and_advertises_the_desktop_workbench(tmp_path):
     async with workbench(tmp_path) as (client, _, _):
-        response = await client.get("/")
-        assert response.status_code == 200 and "doctype html" in response.text
+        response = await client.get("/health")
+        assert response.status_code == 200 and response.json()["status"] == "ok"
         assert response.headers["cache-control"] == "no-store"
         assert response.headers["referrer-policy"] == "no-referrer"
         assert response.headers["x-frame-options"] == "DENY"
         assert "script-src 'self'" in response.headers["content-security-policy"]
-        assert TOKEN not in response.text
-        assert (await client.head("/")).content == b""
         assert (await client.head("/health")).status_code == 200
-        for name in ("app-a1.js", "app-a1.css"):
-            asset = await client.get("/assets/" + name)
-            assert asset.status_code == 200
-            assert asset.headers["cache-control"] == "public, max-age=3600"
-        for path in ("/assets/app-a1.js.map", "/assets/.private.js", "/assets/%2e%2e/index.html", "/assets/missing.js"):
-            response = await client.get(path)
-            assert response.status_code == 404 and "doctype html" not in response.text
-        for path in ("/sessions", "/sessions/typo", "/ui/bootstrap", "/webanything", "/api/unknown"):
-            response = await client.get(path)
-            assert response.status_code == 401 and "doctype html" not in response.text
-        assert (await client.post("/assets/app-a1.js")).status_code == 401
-        assert (await client.post("/")).status_code == 401
+        bearer = {"Authorization": "Bearer " + TOKEN}
+        capabilities = await client.get("/capabilities", headers=bearer)
+        for result in (response, capabilities):
+            assert "desktop_workbench_v1" in result.json()["capabilities"]
+            assert "web_workbench_v1" not in result.json()["capabilities"]
+        for path in ("/", "/assets/app.js", "/assets/app.css", "/assets/%2e%2e/index.html", "/api/unknown"):
+            for method in ("GET", "HEAD"):
+                public = await client.request(method, path)
+                authorized = await client.request(method, path, headers=bearer)
+                assert public.status_code == 401 and authorized.status_code == 404
+                assert authorized.headers["content-type"].startswith("application/json")
+        assert (await client.get("/ui/bootstrap")).status_code == 401
+        assert (await client.get("/sessions")).status_code == 401
 
 
 async def test_ticket_is_single_use_short_lived_and_never_contains_runtime_token(tmp_path):
@@ -231,93 +216,3 @@ def test_auth_memory_caps_do_not_revoke_another_active_login():
     assert authentication.authenticate(credential, ORIGIN)
     authentication.revoke(credential)
     assert authentication.redeem(next_ticket, ORIGIN)
-
-
-@pytest.mark.parametrize("no_browser,reused", [(True, False), (False, True)])
-def test_web_launcher_start_reuse_ticket_fragment_without_secret_output(tmp_path, monkeypatch, capsys, no_browser, reused):
-    status = {"host": "127.0.0.1", "port": 8799, "instance_id": "fixture-instance", "already_running": reused}
-    started, requests, opened = [], [], []
-    ticket = "one-time-login-ticket-" + "x" * 32
-    def start(data_dir, argv, **kwargs):
-        started.append((data_dir, argv, kwargs))
-        return status
-    def handle(request):
-        requests.append(request)
-        if request.url.path == "/health":
-            return httpx.Response(200, json={"status": "ok", "instance_id": "fixture-instance"})
-        if request.url.path == "/":
-            return httpx.Response(200, text="<html>built app</html>")
-        assert request.url.path == "/ui/tickets"
-        assert request.headers["authorization"] == "Bearer " + TOKEN
-        assert json.loads(request.content)["cwd"] == str(tmp_path.resolve())
-        return httpx.Response(201, json={"ticket": ticket, "expires_in": 60})
-    client = httpx.Client
-    monkeypatch.setattr("aster.maintenance.start_service", start)
-    monkeypatch.setattr("aster.cli.load_api_token", lambda _: TOKEN)
-    monkeypatch.setattr("aster.cli.httpx.Client", lambda **kwargs: client(transport=httpx.MockTransport(handle), **kwargs))
-    monkeypatch.setattr("aster.cli.webbrowser.open", lambda url, **kwargs: opened.append(url) or True)
-    argv = ["--data-dir", str(tmp_path / "data"), "web", "--cwd", str(tmp_path), "--port", "8799"]
-    assert main(argv + (["--no-browser"] if no_browser else [])) == 0
-    output = capsys.readouterr()
-    result = json.loads(output.out)
-    assert result["started"] == (not reused) and result["reused"] == reused
-    assert result["browser_opened"] == (not no_browser)
-    assert "#" not in result["url"] and TOKEN not in output.out + output.err and ticket not in output.out + output.err
-    assert len(requests) == (2 if no_browser else 3)
-    assert opened == ([] if no_browser else ["http://127.0.0.1:8799/#ticket=" + ticket])
-    assert "daemon" in started[0][1] and "serve" in started[0][1]
-    assert not (tmp_path / "data" / "runtime.db").exists()
-
-
-def test_web_launcher_refuses_wrong_health_instance_before_reading_credentials(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr("aster.maintenance.start_service", lambda *args, **kwargs: {
-        "host": "127.0.0.1", "port": 8799, "instance_id": "owned", "already_running": True})
-    def no_token(*args):
-        raise AssertionError("must not read credentials for a different service")
-    monkeypatch.setattr("aster.cli.load_api_token", no_token)
-    client = httpx.Client
-    monkeypatch.setattr("aster.cli.httpx.Client", lambda **kwargs: client(
-        transport=httpx.MockTransport(lambda _: httpx.Response(200, json={"instance_id": "other"})), **kwargs))
-    assert main(["--data-dir", str(tmp_path), "web", "--cwd", str(tmp_path)]) == 2
-    assert "does not match" in capsys.readouterr().err
-
-
-@pytest.mark.windows
-@pytest.mark.skipif(os.name != "nt", reason="Windows wrapper and actual daemon integration")
-def test_windows_web_wrapper_starts_reuses_real_daemon_without_browser(tmp_path):
-    from aster.maintenance import service_status, stop_service
-
-    root = Path(__file__).resolve().parents[1]
-    powershell = shutil.which("pwsh") or shutil.which("powershell")
-    if not powershell:
-        pytest.skip("PowerShell is not installed")
-    assert (root / "src/aster/web/static/index.html").is_file(), "Build the bundled frontend before integration tests"
-    data, workspace = tmp_path / "网页 数据", tmp_path / "工作 空间"
-    workspace.mkdir()
-    with socket.socket() as sock:
-        sock.bind(("127.0.0.1", 0))
-        port = sock.getsockname()[1]
-    command = [powershell, "-NoProfile", "-NonInteractive", "-File", str(root / "scripts/Open-Aster.ps1"),
-        "-DataDir", str(data), "-PythonExe", sys.executable, "-Cwd", str(workspace), "-Port", str(port), "-NoBrowser"]
-    try:
-        for reused in (False, True):
-            process = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=35,
-                                     creationflags=0x08000000, check=False)
-            assert process.returncode == 0, process.stderr
-            result = json.loads(process.stdout)
-            assert result["reused"] is reused and result["started"] is not reused
-            assert result["browser_opened"] is False and "#" not in result["url"]
-            assert result["cwd"] == str(workspace.resolve())
-        response = httpx.get(f"http://127.0.0.1:{port}/", trust_env=False)
-        assert response.status_code == 200 and "text/html" in response.headers["content-type"]
-        assert "no-store" in response.headers["cache-control"]
-        local_token = load_api_token(data)
-        sessions = httpx.get(f"http://127.0.0.1:{port}/sessions", trust_env=False,
-                            headers={"Authorization": "Bearer " + local_token})
-        assert sessions.status_code == 200 and sessions.json()["sessions"] == []
-        for filename in ("service.stdout.log", "service.stderr.log"):
-            contents = (data / filename).read_text(encoding="utf-8")
-            assert "#ticket=" not in contents and local_token not in contents
-    finally:
-        if service_status(data)["running"]:
-            assert stop_service(data, timeout=10)["stopped"]

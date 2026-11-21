@@ -10,6 +10,7 @@ import pytest
 from aster.customization.credentials import CredentialStore
 from aster.domain import ModelTurn, Usage
 from aster.engine import FakeModel
+from aster.feishu.transport import FeishuTransportError
 from aster.service import RunCoordinator
 from aster.state.store import SessionBusy, StateError
 
@@ -147,6 +148,34 @@ async def test_sources_start_disabled_and_enable_requires_exact_joined_group_and
         with pytest.raises(StateError, match="identity changed"):
             await service.update_source(source["id"], source["revision"], enabled=True, allowed_senders=["ou_alice"])
         assert service.get_source(source["id"])["enabled"] is False
+    finally:
+        await coordinator.close()
+
+
+@pytest.mark.parametrize("reason", ["windows_credentials_empty", "untrusted-runner-output"])
+async def test_listener_exposes_only_known_setup_hints(tmp_path, monkeypatch, reason):
+    transport = EventTransport()
+    coordinator = make_runtime(tmp_path, transport)
+    service = coordinator.feishu
+    try:
+        session = coordinator.create_session(tmp_path / "work")
+        source = await service.create_source(session["id"], "oc_team", allowed_senders=["ou_alice"])
+        await service.update_source(source["id"], source["revision"], enabled=True)
+
+        async def rejected():
+            raise FeishuTransportError("private diagnostic", code=reason)
+
+        monkeypatch.setattr(transport, "discover", rejected)
+        await service.start()
+        await wait_for(lambda: service.get_source(source["id"])["health"] == "setup_required")
+        status = service.get_source(source["id"])
+        if reason == "windows_credentials_empty":
+            assert status["error"] == reason and "Windows 用户" in status["error_detail"]
+            assert "订阅" not in status["error_detail"]
+        else:
+            assert status["error"] == "setup_required" and "error_detail" not in status
+        assert "private diagnostic" not in str(status)
+        assert "untrusted-runner-output" not in str(status)
     finally:
         await coordinator.close()
 

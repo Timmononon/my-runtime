@@ -15,7 +15,7 @@ import pytest
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows launch scripts")
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ("Open-Aster.ps1", "Start-Aster.ps1", "Stop-Aster.ps1", "Doctor-Aster.ps1")
+SCRIPTS = ("Start-Aster.ps1", "Stop-Aster.ps1", "Doctor-Aster.ps1")
 
 
 @pytest.fixture(params=("powershell.exe", "pwsh.exe"))
@@ -101,7 +101,7 @@ def test_launcher_directory_precedence_and_body_python_default(shell, launcher, 
     home = working / "legacy home"
     data = working / "data override"
     explicit = working / "explicit isolated"
-    arguments = ["-NoBrowser"] if name == "Open-Aster.ps1" else []
+    arguments = []
     expected = profile / ".aster"
     if priority in ("home", "data", "explicit"):
         environment["ASTER_HOME"] = str(home)
@@ -117,9 +117,6 @@ def test_launcher_directory_precedence_and_body_python_default(shell, launcher, 
     assert Path(executable) == project / ".venv" / "Scripts" / "python.exe"
     assert argv[argv.index("--data-dir") + 1] == str(expected)
     assert argv[argv.index("-m") + 1] == "aster"
-    if name == "Open-Aster.ps1":
-        assert argv[argv.index("--cwd") + 1] == str(working)
-        assert "--no-browser" in argv
     assert not any(path.exists() for path in (profile / ".aster", local / "Aster", home, data, explicit))
 
 

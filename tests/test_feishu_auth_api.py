@@ -14,6 +14,7 @@ from aster.api import create_app
 from aster.api import feishu as feishu_api
 from aster.domain import ToolResult
 from aster.service import RunCoordinator
+from aster.tools import feishu as feishu_cli
 
 TOKEN = "offline-feishu-auth-api-token-with-over-thirty-two-characters"
 ORIGIN = "http://127.0.0.1:8765"
@@ -240,13 +241,13 @@ def test_windows_registry_uses_only_key_metadata_without_credential_reads(monkey
     fake = SimpleNamespace(HKEY_CURRENT_USER="test-current-user", KEY_QUERY_VALUE=1,
                            OpenKey=open_key, QueryInfoKey=lambda key: (0, 3, 0))
     monkeypatch.setitem(sys.modules, "winreg", fake)
-    monkeypatch.setattr(feishu_api, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(feishu_cli, "sys", SimpleNamespace(platform="win32"))
     assert feishu_api._windows_registry_metadata() == expected
     assert events == [("test-current-user", r"Software\LarkCli\keychain\lark-cli", 0, 1)]
 
 
 def test_registry_diagnostic_is_unsupported_without_import_or_reads_on_other_platforms(monkeypatch):
-    monkeypatch.setattr(feishu_api, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(feishu_cli, "sys", SimpleNamespace(platform="linux"))
     assert feishu_api._windows_registry_metadata() == {
         "supported": False, "key_exists": None, "value_count": None,
     }

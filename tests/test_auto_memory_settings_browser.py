@@ -1,6 +1,5 @@
 """Real browser save/reopen coverage with isolated file credentials and no paid calls."""
 import asyncio
-import os
 import socket
 from pathlib import Path
 
@@ -36,8 +35,7 @@ async def auto_memory_settings_server(tmp_path, monkeypatch):
     listener.bind(("127.0.0.1", 0))
     listener.listen(128)
     origin = f"http://127.0.0.1:{listener.getsockname()[1]}"
-    static = Path(os.environ["ASTER_WEB_STATIC_ROOT"]) if os.environ.get("ASTER_WEB_STATIC_ROOT") else None
-    app = create_app(coordinator, token=token, allowed_origins={origin}, static_root=static)
+    app = create_app(coordinator, token=token, allowed_origins={origin})
     server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False,
                                          proxy_headers=False, timeout_graceful_shutdown=2))
     task = asyncio.create_task(server.serve(sockets=[listener]))

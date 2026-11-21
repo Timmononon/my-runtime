@@ -241,6 +241,13 @@ def test_stop_service_accepts_exit_between_running_and_status(tmp_path, monkeypa
     assert result == {"stopped": True, "forced": False, "instance_id": "owned"}
 
 
+def test_stop_service_does_not_signal_a_replacement_instance(tmp_path):
+    with ServiceLease(tmp_path):
+        with pytest.raises(RuntimeError, match="Service identity changed"):
+            stop_service(tmp_path, expected_instance_id="previous-instance", timeout=0, force=False)
+        assert not (tmp_path / "service.stop.json").exists()
+
+
 def test_stop_service_accepts_exit_before_identity_check(tmp_path, monkeypatch):
     statuses = iter([{"running": True, "locked": True, "kind": "daemon", "instance_id": "owned"},
                      {"running": False, "locked": False}])

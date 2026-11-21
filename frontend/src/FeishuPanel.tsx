@@ -468,7 +468,7 @@ export default function FeishuPanel({
                 </div>
                 {current.source.error && (
                   <p className="github-error" role="status">
-                    {feishuSourceError(current.source.error)}
+                    {current.source.error_detail || feishuSourceError(current.source.error)}
                   </p>
                 )}
                 <div className="github-source-facts">
@@ -516,7 +516,7 @@ export default function FeishuPanel({
                     配置至少一位允许的发送人后，即可启用来源。
                   </p>
                 )}
-                {current.source.health === "setup_required" && (
+                {current.source.error === "event_precondition" && (
                   <FeishuSetupHint />
                 )}
                 <nav className="github-tabs" aria-label="飞书来源内容">
@@ -832,7 +832,7 @@ function FeishuSourceEditor({
               来源对话 · {context.workspace} · {context.agent} ·{" "}
               {context.conversation}
             </p>
-            <FeishuSetupHint />
+            {discovery && !discoveryError && <FeishuSetupHint />}
           </>
         )}
         <Button

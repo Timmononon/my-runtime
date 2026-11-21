@@ -1,6 +1,7 @@
 import json
 import os
 import socket
+import subprocess
 import sys
 from pathlib import Path
 
@@ -8,6 +9,13 @@ import httpx
 import pytest
 
 from aster.cli import main
+
+
+def test_cli_rejects_removed_browser_entrypoint(tmp_path):
+    with pytest.raises(SystemExit) as result:
+        main(["--data-dir", str(tmp_path / "state"), "web"])
+    assert result.value.code == 2
+    assert not (tmp_path / "state").exists()
 
 
 def test_configure_model_only_never_writes_key(tmp_path, capsys):
@@ -143,3 +151,71 @@ def test_windows_daemon_start_health_stop_owned_process(tmp_path):
     finally:
         if started and service_status(tmp_path)["running"]:
             stop_service(tmp_path, timeout=5)
+
+
+def test_desktop_launcher_verifies_daemon_identity_before_reading_credentials(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[1]))
+    from desktop import launch
+
+    monkeypatch.setattr(launch, "start_service", lambda *args, **kwargs: {
+        "host": "127.0.0.1", "port": 8799, "instance_id": "owned", "already_running": True})
+
+    def no_token(*args):
+        pytest.fail("Tried to read the API credential for another daemon")
+
+    def health(request):
+        assert request.url.path == "/health"
+        return httpx.Response(200, json={"status": "ok", "instance_id": "other"})
+
+    monkeypatch.setattr(launch, "load_api_token", no_token)
+    client = httpx.Client
+    monkeypatch.setattr(launch.httpx, "Client", lambda **kwargs: client(transport=httpx.MockTransport(health), **kwargs))
+    with pytest.raises(RuntimeError, match="does not match"):
+        launch.prepare_launch(tmp_path / "data", tmp_path, 8799)
+
+
+@pytest.mark.windows
+@pytest.mark.skipif(os.name != "nt", reason="Windows desktop launch pipe and daemon integration")
+def test_desktop_launcher_requires_pipe_and_issues_one_time_login(tmp_path):
+    import aster
+    from aster.maintenance import service_status, stop_service
+
+    root = Path(__file__).resolve().parents[1]
+    data, workspace = tmp_path / "运行 数据", tmp_path / "工作 空间"
+    workspace.mkdir()
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+    argv = [sys.executable, "-X", "utf8", str(root / "desktop/launch.py"),
+            "--data-dir", str(data), "--cwd", str(workspace), "--port", str(port)]
+
+    try:
+        output = tmp_path / "stdout.json"
+        with output.open("wb") as stream:
+            rejected = subprocess.run(argv, stdout=stream, stderr=subprocess.PIPE, timeout=55, check=False)
+        assert rejected.returncode != 0 and b"requires a stdout pipe" in rejected.stderr
+        assert not output.read_bytes() and not data.exists()
+
+        launched = subprocess.run(argv, capture_output=True, encoding="utf-8", timeout=55, check=True)
+        handoff = json.loads(launched.stdout)
+        assert set(handoff) == {"url", "ticket", "data_dir", "static_root"}
+        assert handoff["data_dir"] == str(data.resolve())
+        static = Path(handoff["static_root"])
+        assert static == Path(aster.__file__).resolve().parent / "web" / "static"
+        assert (static / "index.html").is_file()
+        asset = next((static / "assets").glob("*.js"))
+        assert handoff["url"] == f"http://127.0.0.1:{port}/"
+        headers = {"X-Aster-UI": "1", "Origin": handoff["url"].rstrip("/")}
+        with httpx.Client(base_url=handoff["url"], headers=headers, trust_env=False, timeout=5) as client:
+            assert client.get("/ui/bootstrap").status_code == 401
+            auth = client.post("/ui/auth", json={"ticket": handoff["ticket"]})
+            assert auth.status_code == 200 and "httponly" in auth.headers["set-cookie"].lower()
+            assert client.get("/ui/bootstrap").json()["cwd"] == str(workspace.resolve())
+            for path in ("/", "/assets/" + asset.name):
+                assert client.get(path).status_code == 404
+            assert client.post("/ui/auth", json={"ticket": handoff["ticket"]}).status_code == 401
+        for log in ("service.stdout.log", "service.stderr.log"):
+            assert handoff["ticket"] not in (data / log).read_text(encoding="utf-8")
+    finally:
+        if service_status(data)["running"]:
+            assert stop_service(data, timeout=10)["stopped"]

@@ -18,7 +18,7 @@ import psutil
 from aster.feishu.normalize import EVENT_TYPE, remote_id
 from aster.platform.processes import WindowsJob
 from aster.state import StateError
-from aster.tools.feishu import cli_environment
+from aster.tools.feishu import cli_environment, windows_registry_metadata
 
 _READY = f"[event] ready event_key={EVENT_TYPE}".encode("ascii")
 _VERSION = b"lark-cli version 1.0.100"
@@ -31,8 +31,22 @@ _STARTUP_TIMEOUT = 30
 _GENERATION_INTERVAL = 1
 _PAGE_SIZE = 100
 _PAGE_LIMIT = 10
-_SETUP = "Verify the managed Feishu CLI profile, bot permissions and event subscription."
-_PROFILE_CHANGED = "The managed Feishu CLI profile changed. Discover the bot and its groups again."
+SETUP_HINTS = {
+    "cli_unavailable": "当前 Aster 数据目录缺少可用的飞书 CLI。请运行 Install-FeishuCLI.ps1 后重试。",
+    "cli_version": "Aster 需要飞书 CLI 1.0.100。请使用 Install-FeishuCLI.ps1 安装该版本。",
+    "profile_invalid": "Aster 无法读取受管飞书应用配置。请核对当前数据目录中 feishu-cli/config.json 选用的应用。",
+    "profile_mismatch": "CLI 报告的应用或用户与受管飞书配置不一致。请核对所选应用与账号，再重新读取群聊。",
+    "authentication_failed": "飞书 CLI 身份验证失败。请用配置该应用的账号检查受管 CLI 的 auth status。",
+    "bot_credentials_unavailable": "飞书 CLI 无法使用当前应用的机器人凭据。请在配置该应用的账号下检查受管 CLI 的 auth status。",
+    "windows_credentials_empty": "Aster 后台在当前 Windows 用户环境中未读到飞书 CLI 凭据。"
+                                 "如果终端里机器人已就绪，请选择「Aster → 退出并停止后台」，"
+                                 "再从配置飞书的 Windows 用户桌面打开 Aster。",
+    "scope_missing": "飞书报告当前机器人缺少本次操作需要的权限。请在飞书开放平台为该应用开通所需权限并发布。",
+    "access_denied": "飞书拒绝了当前机器人的访问。请核对应用权限、访问范围和租户策略。",
+    "cli_precondition": "飞书 CLI 报告调用条件尚未满足。请先检查受管 CLI 的应用配置。",
+    "event_precondition": "飞书 CLI 未能启动消息监听。请确认当前应用已发布长连接事件配置，并检查是否已有监听进程。",
+}
+_PROFILE_CHANGED = "Aster 绑定的飞书配置已变更。请重新读取机器人及其所在群聊。"
 _DISCONNECTED = "The Feishu event stream disconnected."
 _STREAM_INTEGRITY = "The Feishu event stream lost data or returned an invalid record."
 _START_FAILED = "The managed Feishu CLI process could not start."
@@ -44,6 +58,10 @@ class FeishuTransportError(StateError):
         super().__init__(message)
         self.status = status
         self.code = code or status
+
+
+def _setup_error(code: str) -> FeishuTransportError:
+    return FeishuTransportError(SETUP_HINTS[code], code=code)
 
 
 @dataclass(frozen=True)
@@ -94,7 +112,7 @@ def _display_name(value: object) -> str:
     return value.strip()[:200]
 
 
-def _diagnostic_error(raw: bytes) -> FeishuTransportError | None:
+def _diagnostic_error(raw: bytes, *, event: bool = False) -> FeishuTransportError | None:
     # 1.0.100 puts a structured envelope after optional plain diagnostics.
     for start in (0, raw.rfind(b"\n{") + 1):
         try:
@@ -104,10 +122,17 @@ def _diagnostic_error(raw: bytes) -> FeishuTransportError | None:
         error = envelope.get("error")
         if envelope.get("ok") is not False or not isinstance(error, dict):
             continue
-        if error.get("type") in ("config", "authentication", "authorization", "policy") or error.get(
-            "subtype"
-        ) in ("failed_precondition", "missing_scope", "app_scope_not_applied", "already_exists"):
-            return FeishuTransportError(_SETUP)
+        category, subtype = error.get("type"), error.get("subtype")
+        if subtype in ("missing_scope", "app_scope_not_applied"):
+            return _setup_error("scope_missing")
+        if category == "authentication":
+            return _setup_error("authentication_failed")
+        if category in ("authorization", "policy"):
+            return _setup_error("access_denied")
+        if subtype in ("failed_precondition", "already_exists"):
+            return _setup_error("event_precondition" if event else "cli_precondition")
+        if category == "config":
+            return _setup_error("cli_precondition")
     return None
 
 
@@ -261,12 +286,15 @@ class FeishuEventTransport:
         executable = self.data_dir / "tools" / "feishu-cli" / ("lark-cli.exe" if os.name == "nt" else "lark-cli")
         config = self.data_dir / "feishu-cli" / "config.json"
         try:
-            if any(path.resolve(strict=True) != path for path in (executable, config)):
-                raise ValueError("Managed Feishu paths changed")
             executable_info = executable.stat()
+            if executable.resolve(strict=True) != executable or not stat.S_ISREG(executable_info.st_mode):
+                raise ValueError("Invalid managed executable")
+        except (OSError, RuntimeError, ValueError):
+            raise _setup_error("cli_unavailable") from None
+        try:
             config_info = config.stat()
-            if not stat.S_ISREG(executable_info.st_mode) or not stat.S_ISREG(config_info.st_mode):
-                raise ValueError("Invalid managed Feishu files")
+            if config.resolve(strict=True) != config or not stat.S_ISREG(config_info.st_mode):
+                raise ValueError("Invalid managed configuration")
             with config.open("rb") as source:
                 raw = source.read(_CONFIG_BYTES + 1)
                 if len(raw) > _CONFIG_BYTES or _file_signature(os.fstat(source.fileno())) != _file_signature(
@@ -307,7 +335,7 @@ class FeishuEventTransport:
             generation = hashlib.sha256(json.dumps(identity).encode("utf-8")).hexdigest()
             return _Profile(executable, signature, app_id, brand, user_open_id, generation)
         except (OSError, TypeError, ValueError, RuntimeError):
-            raise FeishuTransportError(_SETUP) from None
+            raise _setup_error("profile_invalid") from None
 
     def current_generation(self) -> str:
         """Identify the current local profile without CLI or network calls."""
@@ -347,13 +375,14 @@ class FeishuEventTransport:
             raise FeishuTransportError(_DISCOVERY_FAILED, status="disconnected") from None
         self._require_generation(profile.generation)
         if code:
-            raise _diagnostic_error(diagnostics) or FeishuTransportError(_DISCOVERY_FAILED, status="disconnected")
+            raise (_diagnostic_error(diagnostics) or _diagnostic_error(output)
+                   or FeishuTransportError(_DISCOVERY_FAILED, status="disconnected"))
         return output
 
     async def _verify_version(self, profile: _Profile) -> None:
         if self._verified_executable != profile.executable_signature:
             if (await self._command(profile, "--version")).strip() != _VERSION:
-                raise FeishuTransportError("Install the pinned Feishu CLI 1.0.100 using the Aster installer.")
+                raise _setup_error("cli_version")
             self._verified_executable = profile.executable_signature
 
     async def _bot_get(self, profile: _Profile, path: str, *options: str) -> dict:
@@ -369,15 +398,21 @@ class FeishuEventTransport:
             auth = _json_object(await self._command(profile, "auth", "status"))
             identities = auth.get("identities")
             if (auth.get("appId") != profile.app_id or auth.get("brand") != profile.brand
-                    or auth.get("credentialSource") != "local" or not isinstance(identities, dict)):
-                raise FeishuTransportError(_SETUP)
+                    or auth.get("credentialSource") != "local"):
+                raise _setup_error("profile_mismatch")
+            if not isinstance(identities, dict):
+                raise TypeError("Invalid CLI identity status")
             bot = identities.get("bot")
             user = identities.get("user")
-            if not isinstance(bot, dict) or bot.get("available") is not True or not isinstance(user, dict):
-                raise FeishuTransportError(_SETUP)
+            if not isinstance(bot, dict) or type(bot.get("available")) is not bool or not isinstance(user, dict):
+                raise ValueError("Invalid CLI identity status")
+            if not bot["available"]:
+                if windows_registry_metadata()["value_count"] == 0:
+                    raise _setup_error("windows_credentials_empty")
+                raise _setup_error("bot_credentials_unavailable")
             user_open_id = user.get("openId") or None
             if user_open_id is not None and _identifier(user_open_id, "ou_") != profile.user_open_id:
-                raise FeishuTransportError(_SETUP)
+                raise _setup_error("profile_mismatch")
             info = await self._bot_get(profile, "/open-apis/bot/v3/info")
             identity = {"app_id": profile.app_id, "bot_open_id": _identifier(info.get("open_id"), "ou_"),
                         "bot_name": _display_name(info.get("app_name")), "generation": profile.generation,
@@ -458,7 +493,7 @@ class FeishuEventTransport:
                 finally:
                     await _cancel_tasks(monitor)
         except FeishuTransportError as error:
-            status(error.status, str(error))
+            status(error.status, error.code)
             raise
         except (OSError, TypeError, ValueError, RecursionError):
             status("disconnected", _STREAM_INTEGRITY)
@@ -483,7 +518,7 @@ class FeishuEventTransport:
                 except TimeoutError:
                     continue
                 if not line:
-                    if error := _diagnostic_error(tail):
+                    if error := _diagnostic_error(tail, event=True):
                         raise error
                     if not ready.is_set():
                         raise FeishuTransportError(_DISCONNECTED, status="disconnected")

@@ -1,10 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, Button, Chip } from "@heroui/react";
 import { Icon, Star } from "./icons";
 import { Markdown, Popup } from "./ui";
 import { branchBoundaries, displayContent, groupConversation } from "./state";
 import type { MessageRecord } from "./types";
 import { toolErrorSummary } from "./toolErrors";
+
+declare global {
+  interface Window {
+    asterClipboard?: { writeText: (text: string) => Promise<void> };
+  }
+}
+
+function CopyAnswer({ text, report }: { text: string; report: (error: unknown) => void }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timeout = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [copied]);
+
+  async function copy() {
+    try {
+      const clipboard = window.asterClipboard ?? navigator.clipboard;
+      await clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      report(new Error("复制失败，请选中回答文字后按 Ctrl+C 复制。"));
+    }
+  }
+
+  const label = copied ? "已复制回答" : "复制回答";
+  return (
+    <Button isIconOnly size="sm" variant="ghost" aria-label={label} onPress={copy}>
+      <Icon name={copied ? "check" : "copy"} size={14} />
+    </Button>
+  );
+}
 
 function AssistantAvatar() {
   return (
@@ -194,21 +227,7 @@ export default function Conversation({
               )}
               {!live && (
                 <div className="message-actions">
-                  {finalText && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="ghost"
-                      aria-label="复制回答"
-                      onPress={() =>
-                        void navigator.clipboard
-                          .writeText(finalText)
-                          .catch(report)
-                      }
-                    >
-                      <Icon name="copy" size={14} />
-                    </Button>
-                  )}
+                  {finalText && <CopyAnswer text={finalText} report={report} />}
                   {!readOnly && onBranch && boundaries.has(group.boundary) && (
                     <Button
                       size="sm"

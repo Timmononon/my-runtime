@@ -31,13 +31,13 @@ def lifecycle_server(tmp_path):
     """Pin imports and staged static assets; use only temporary offline state."""
     root = Path(__file__).resolve().parents[1]
     source = root / "src"
-    static = Path(os.environ.get("ASTER_WEB_STATIC_ROOT", root / "artifacts/validation/open-session-scroll-static")).resolve()
+    static = Path(os.environ.get("ASTER_WEB_STATIC_ROOT", source / "aster/web/static")).resolve()
     assert (source / "aster/__init__.py").is_file()
     assert static.is_relative_to(root), "Lifecycle browser tests require static assets in the staged checkout"
     assert (static / "index.html").is_file(), f"Build staged UI before browser tests: {static}"
     ready, stop, log = (tmp_path / name for name in ("ready.json", "stop", "fixture.log"))
     env = {key: value for key, value in os.environ.items() if key not in {"DEEPSEEK_API_KEY", "ASTER_API_TOKEN"}}
-    env.update(PYTHONPATH=str(source), PYTHONIOENCODING="utf-8", ASTER_WEB_STATIC_ROOT=str(static))
+    env.update(PYTHONPATH=str(source), PYTHONIOENCODING="utf-8")
     # Checking the imported package in the child prevents an editable install from
     # silently exercising the original checkout instead of the staged implementation.
     bootstrap = (
@@ -61,6 +61,7 @@ def lifecycle_server(tmp_path):
                 assert time.monotonic() < deadline, "Offline lifecycle fixture did not start"
                 time.sleep(0.05)
             value = json.loads(ready.read_text(encoding="utf-8"))
+            value["static_root"] = static
             yield value
         finally:
             stop.touch()
@@ -640,8 +641,9 @@ async def test_multiple_explicit_project_conversations_keep_project_and_cwd_afte
                 sidebar = page.locator(".sidebar")
                 await expect(sidebar.get_by_role("button", name="Skills", exact=True)).to_be_visible()
                 await expect(sidebar.get_by_text("能力", exact=True)).to_have_count(0)
-                assert (await sidebar.get_by_role("button", name="Skills", exact=True).locator("svg path").get_attribute("d")).startswith("m14 6 4 4")
-                assert (await sidebar.get_by_role("button", name="记忆", exact=True).locator("svg path").get_attribute("d")).startswith("M6 3h14v18H6")
+                for label, path_start in (("Skills", "M4 17.3 13.8 7.5"), ("记忆", "M8 3.75h10")):
+                    icon = sidebar.get_by_role("button", name=label, exact=True).locator("svg path")
+                    assert (await icon.get_attribute("d")).startswith(path_start)
                 await screenshot(page, "project-empty-reuse-projects-and-sidebar-icons.png")
                 await assert_basics(page)
                 assert not errors, errors

@@ -193,8 +193,7 @@ async def serve_fixture(ready_file: Path, stop_file: Path, *, port=0, lifetime=9
         listener.bind(("127.0.0.1", port))
         listener.listen(128)
         origin = f"http://127.0.0.1:{listener.getsockname()[1]}"
-        static_root = Path(os.environ["ASTER_WEB_STATIC_ROOT"]) if os.environ.get("ASTER_WEB_STATIC_ROOT") else None
-        app = create_app(coordinator, token=token, allowed_origins={origin}, static_root=static_root)
+        app = create_app(coordinator, token=token, allowed_origins={origin})
         @app.post("/fixture/automations/{job_id}/tick")
         async def audit_tick(job_id: str):
             # A synthetic clock advances the real scheduler; no business response

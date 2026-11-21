@@ -1,5 +1,11 @@
 # Aster service API
 
+## Electron desktop workbench
+
+The `desktop_workbench_v1` capability is advertised by `GET /health` and `GET /capabilities`. Electron loads the HTML and compiled frontend from its installed resources. The Runtime serves the authenticated loopback API. Its root and `/assets/` paths do not serve the workbench.
+
+The local launcher requests a one-time ticket with bearer authentication at `POST /ui/tickets`. The Electron main process redeems it at `POST /ui/auth` in its own session before loading the workbench. The renderer uses an HttpOnly session cookie and `X-Aster-UI: 1`. Mutating cookie requests require the exact local origin. `GET /ui/bootstrap` returns startup information and `POST /ui/logout` ends the session.
+
 This page documents Feishu CLI diagnostics and group task sources.
 
 ## Authentication

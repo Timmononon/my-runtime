@@ -16,7 +16,6 @@ import pytest
 
 from aster.feishu import transport as module
 from aster.feishu.transport import FeishuEventTransport, FeishuTransportError
-from aster.state import StateError
 
 _EVENT = {
     "type": "im.message.receive_v1",
@@ -62,7 +61,7 @@ if argv == ['--version']:
 elif argv[:2] == ['auth', 'status']:
     emit({'appId': 'cli_wrong' if mode == 'wrong_app' else 'cli_current', 'brand': 'feishu',
           'credentialSource': 'env' if mode == 'override' else 'local',
-          'identities': {'bot': {'available': True},
+          'identities': {'bot': {'available': mode != 'no_bot'},
                          'user': {} if mode == 'bot_only' else {'openId': 'ou_operator'}},
           'access_token': 'raw-token-must-not-escape'})
 elif argv[:3] == ['api', 'GET', '/open-apis/bot/v3/info']:
@@ -70,6 +69,10 @@ elif argv[:3] == ['api', 'GET', '/open-apis/bot/v3/info']:
              'user' if mode == 'wrong_bot_identity' else 'bot')
 elif argv[:3] == ['api', 'GET', '/open-apis/im/v1/chats']:
     opts = json.loads(argv[argv.index('--params') + 1])
+    if mode == 'group_scope_missing':
+        emit({'ok': False, 'error': {'type': 'authorization', 'subtype': 'missing_scope',
+                                     'message': 'secret-marker'}}, sys.stderr)
+        sys.exit(3)
     if mode == 'oversized_response':
         sys.stdout.buffer.write(b'x' * (513 * 1024))
     elif opts.get('page_token') and mode != 'cursor_loop':
@@ -184,8 +187,40 @@ def test_generation_is_offline_scoped_and_invalidates_on_managed_profile_change(
     assert fixture.transport.current_generation() != first
     fixture.profile["currentApp"] = "nonexistent"
     fixture.config.write_text(json.dumps(fixture.profile), encoding="utf-8")
-    with pytest.raises(StateError, match="managed Feishu CLI profile"):
+    with pytest.raises(FeishuTransportError) as failure:
         fixture.transport.current_generation()
+    assert failure.value.code == "profile_invalid"
+
+
+def test_missing_cli_and_missing_app_config_have_different_actions(tmp_path):
+    transport = FeishuEventTransport(tmp_path)
+    with pytest.raises(FeishuTransportError) as no_cli:
+        transport.current_generation()
+    assert no_cli.value.code == "cli_unavailable"
+    assert "Install-FeishuCLI.ps1" in str(no_cli.value)
+    executable = tmp_path / "tools" / "feishu-cli" / ("lark-cli.exe" if os.name == "nt" else "lark-cli")
+    executable.parent.mkdir(parents=True)
+    executable.touch()
+    with pytest.raises(FeishuTransportError) as no_config:
+        transport.current_generation()
+    assert no_config.value.code == "profile_invalid"
+    assert "config.json" in str(no_config.value)
+
+
+@pytest.mark.parametrize(("entry_count", "reason"), [(0, "windows_credentials_empty"),
+                         (4, "bot_credentials_unavailable"), (None, "bot_credentials_unavailable")])
+async def test_unavailable_bot_is_reported_before_any_group_or_subscription_call(fixture_cli, monkeypatch,
+                                                                                  entry_count, reason):
+    monkeypatch.setenv("ASTER_TEST_FEISHU_MODE", "no_bot")
+    monkeypatch.setattr(module, "windows_registry_metadata", lambda: {"value_count": entry_count})
+    with pytest.raises(FeishuTransportError) as failure:
+        await fixture_cli.transport.discover()
+    assert failure.value.code == reason and failure.value.status == "setup_required"
+    assert "凭据" in str(failure.value) and "订阅" not in str(failure.value)
+    assert "raw-token" not in str(failure.value)
+    assert [args[0] for args in fixture_cli.calls] == ["--version", "auth"]
+    if entry_count == 0:
+        assert "Windows 用户" in str(failure.value) and "退出并停止后台" in str(failure.value)
 
 
 @pytest.mark.parametrize("mode", ["normal", "bot_only"])
@@ -218,6 +253,7 @@ async def test_discovery_pins_current_bot_and_projects_verified_joined_groups(fi
 @pytest.mark.parametrize(("mode", "status", "calls"), [
     ("wrong_version", "setup_required", 1), ("wrong_app", "setup_required", 2),
     ("override", "setup_required", 2), ("wrong_bot_identity", "disconnected", 3),
+    ("group_scope_missing", "setup_required", 4),
     ("cursor_loop", "disconnected", 5), ("oversized_response", "disconnected", 4),
 ])
 async def test_discovery_fails_closed_with_bounded_reads(fixture_cli, monkeypatch, mode, status, calls):
@@ -226,6 +262,11 @@ async def test_discovery_fails_closed_with_bounded_reads(fixture_cli, monkeypatc
         await fixture_cli.transport.discover()
     assert failure.value.status == status
     assert "raw-token" not in str(failure.value)
+    if mode == "group_scope_missing":
+        assert failure.value.code == "scope_missing" and "权限" in str(failure.value)
+        assert "订阅" not in str(failure.value) and "secret-marker" not in str(failure.value)
+    elif mode in ("wrong_app", "override"):
+        assert failure.value.code == "profile_mismatch"
     assert len(fixture_cli.calls) == calls
 
 
@@ -264,6 +305,8 @@ async def test_stream_errors_are_bounded_and_do_not_expose_cli_output(fixture_cl
     assert "secret-marker" not in str(failure.value) + str(states) + caplog.text
     if mode in {"setup_error", "no_ready"}:
         assert "listening" not in [state[0] for state in states]
+    if mode == "setup_error":
+        assert failure.value.code == "scope_missing" and states[-1][1] == "scope_missing"
     assert all(not psutil.pid_exists(pid) for pid in fixture_cli.pids)
 
 

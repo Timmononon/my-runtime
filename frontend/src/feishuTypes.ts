@@ -24,6 +24,7 @@ export interface FeishuSource {
   health: FeishuHealth;
   last_event_at: number | null;
   error: string | null;
+  error_detail?: string;
 }
 
 export interface FeishuDiscovery {
@@ -104,7 +105,7 @@ const healthLabels: Record<string, string> = {
   disabled: "已暂停",
   connecting: "正在连接",
   listening: "正在接收",
-  setup_required: "待完成长连接配置",
+  setup_required: "待检查飞书配置",
   disconnected: "连接已断开",
   identity_changed: "机器人身份已变更",
   group_unavailable: "机器人已无法访问该群",
@@ -149,7 +150,7 @@ export const feishuEventReason = (reason: string) =>
 const sourceErrors: Record<string, string> = {
   identity_changed: "请核对本地飞书 CLI 的应用与机器人身份，再重新启用来源。",
   group_unavailable: "请确认机器人已加入来源群聊，再重新启用来源。",
-  setup_required: "请检查机器人权限和飞书开放平台的长连接订阅。",
+  setup_required: "请重新读取机器人所在群聊，查看当前连接详情。",
   disconnected: "长连接暂时断开，服务将重连。",
   listener_stopped: "接收进程已停止，服务将重连。",
   listener_unavailable: "接收进程暂时不可用。",

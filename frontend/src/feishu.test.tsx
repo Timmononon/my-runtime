@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { FeishuEventCard } from "./FeishuPanel";
-import { feishuHealthLabel, feishuSourceFields } from "./feishuTypes";
+import { feishuHealthLabel, feishuSourceError, feishuSourceFields } from "./feishuTypes";
 import type { FeishuEvent } from "./feishuTypes";
 
 const fields = { name: "", allowed_senders: "", required_keywords: "" };
@@ -50,7 +50,8 @@ describe("Feishu source controls", () => {
   });
 
   it("shows a distinct setup, disconnected, and listening state", () => {
-    expect(feishuHealthLabel("setup_required")).toBe("待完成长连接配置");
+    expect(feishuHealthLabel("setup_required")).toBe("待检查飞书配置");
+    expect(feishuSourceError("setup_required")).not.toContain("订阅");
     expect(feishuHealthLabel("disconnected")).toBe("连接已断开");
     expect(feishuHealthLabel("listening")).toBe("正在接收");
   });

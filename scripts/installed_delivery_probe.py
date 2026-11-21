@@ -102,16 +102,17 @@ def check():
         assert resolve_data_dir(home) == home.resolve()
         app = create_app(second, token=token)
         with TestClient(app, base_url="http://127.0.0.1:8765") as client:
-            page = client.get("/")
-            assert page.status_code == 200
             static = target / "aster/web/static"
-            assets = sorted(path for path in (static / "assets").iterdir() if path.is_file())
-            for asset in assets:
-                response = client.get("/assets/" + asset.name)
-                assert response.status_code == 200 and response.content == asset.read_bytes()
+            assert (static / "index.html").is_file()
+            assets = [path for path in (static / "assets").rglob("*") if path.is_file()]
+            assert assets
+            for url in ["/", *("/" + path.relative_to(static).as_posix() for path in assets)]:
+                assert client.get(url).status_code in {401, 404}
+                assert client.get(url, headers=headers).status_code == 404
             assert client.get("/sessions").status_code == 401
             assert client.get("/health").json()["provider_configured"] is False
             capabilities = client.get("/capabilities", headers=headers).json()["capabilities"]
+            assert "desktop_workbench_v1" in capabilities and "web_workbench_v1" not in capabilities
             assert "local_tasks_v1" in capabilities
             assert "github_sources_v1" in capabilities
             assert "task_triage_v1" in capabilities
@@ -184,7 +185,7 @@ def check():
         with closing(sqlite3.connect(home / "runtime.db")) as db:
             assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
             assert [tuple(row) for row in db.execute("SELECT * FROM messages WHERE id='msg_installed'")] == original
-    print(json.dumps({"installed_static_http": "passed", "all_lazy_asset_http": len(assets),
+    print(json.dumps({"runtime_http_api_only": "passed", "installed_renderer_assets": len(assets),
         "missing_provider_not_faked": True, "installed_management_memory_browser_routes": "passed",
         "installed_legacy_schema_upgrade": "passed", "raw_upgrade_history_preserved": True,
         "installed_project_instructions": "passed", "synthetic_file_credentials_write_only": "passed",

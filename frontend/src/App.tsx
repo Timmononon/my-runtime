@@ -100,16 +100,21 @@ const navigationGroups: {
   {
     label: "工作台",
     entries: [
-      { id: "chat", label: "对话", icon: "chat" },
-      { id: "skills", label: "Skills", icon: "skills" },
-      { id: "memory", label: "记忆", icon: "memory" },
+      { id: "chat", label: "对话", icon: "nav-chat" },
+      { id: "skills", label: "Skills", icon: "nav-skills" },
+      { id: "memory", label: "记忆", icon: "nav-memory" },
     ],
   },
   {
     label: "自动化与接入",
     entries: [
-      { id: "tasks", label: "任务", icon: "grid", capability: "local_tasks_v1" },
-      { id: "automations", label: "自动化", icon: "clock" },
+      {
+        id: "tasks",
+        label: "任务",
+        icon: "nav-tasks",
+        capability: "local_tasks_v1",
+      },
+      { id: "automations", label: "自动化", icon: "nav-automation" },
       {
         id: "github",
         label: "GitHub",
@@ -1640,36 +1645,14 @@ export default function App() {
           <span>Aster</span>
         </div>
         <div className="connect-content">
-          <span className="eyebrow">你的本地 AGENT 工作台</span>
-          <h1>让想法，在这里开始。</h1>
-          <p>连接本机 Runtime，继续你的对话和工作。</p>
           {connecting ? (
-            <div className="connection-loading">
+            <div className="connection-loading" role="status">
               <Spinner />
-              正在建立安全连接
+              正在连接本机后台
             </div>
           ) : (
             <>
-              <div className="connect-command">
-                <Icon name="shield" />
-                <code>aster web</code>
-                <button
-                  className="icon-button"
-                  aria-label="复制连接命令"
-                  onClick={() =>
-                    void navigator.clipboard
-                      .writeText("aster web")
-                      .catch(() => setConnectError("请手动复制命令 aster web"))
-                  }
-                >
-                  <Icon name="copy" size={16} />
-                </button>
-              </div>
-              <p className="connect-hint">
-                在终端运行命令，使用新打开的页面进入。
-                <br />
-                连接凭证只用于本机，不需要在网页输入模型密钥。
-              </p>
+              <h1>工作台连接失败</h1>
               {connectError && (
                 <p className="inline-error" role="alert">
                   {connectError}
@@ -1685,7 +1668,6 @@ export default function App() {
             </>
           )}
         </div>
-        <div className="connect-footer">本地运行 · 由你掌控</div>
       </div>
     );
 
@@ -1742,7 +1724,7 @@ export default function App() {
             <Icon name="search" size={16} />
             <span>查找对话</span>
             <Kbd aria-hidden="true">
-              <Kbd.Content>Ctrl K</Kbd.Content>
+              <Kbd.Content>Ctrl+K</Kbd.Content>
             </Kbd>
           </Button>
         </div>
@@ -2221,9 +2203,18 @@ export default function App() {
                         </div>
                         <h1>有什么可以帮你？</h1>
                         <p className="welcome-description">
-                          {currentProject
-                            ? `在「${currentProject.name}」中开始一个任务。`
-                            : "开启对话，或选择左侧项目继续工作。"}
+                          {providers.length > 0 && !providers.some((p) => p.configured) ? (
+                            <>
+                              开始对话前，请先
+                              <button type="button" className="welcome-setup" onClick={() => setSettings(true)}>
+                                配置模型密钥
+                              </button>。
+                            </>
+                          ) : currentProject ? (
+                            `在「${currentProject.name}」中开始一个任务。`
+                          ) : (
+                            "开启对话，或选择左侧项目继续工作。"
+                          )}
                         </p>
                         <div
                           className="suggestions"

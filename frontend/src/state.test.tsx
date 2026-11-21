@@ -467,26 +467,16 @@ describe("durable workbench interactions", () => {
     expect(seen).toEqual([event]);
     expect(fetch.mock.calls[0]?.[0]).toContain("after=6");
   });
-  it("clears a one-use fragment before making the exchange request", async () => {
-    const replaceState = vi.fn();
-    vi.stubGlobal("window", {
-      location: { hash: "#ticket=one-use-value", pathname: "/", search: "" },
-      history: { replaceState },
-    });
-    const fetch = vi.fn(async (path: string) => {
-      expect(replaceState).toHaveBeenCalledWith(null, "", "/");
-      return new Response(
-        JSON.stringify(
-          path === "/ui/auth"
-            ? { authenticated: true }
-            : { provider_configured: false },
-        ),
-      );
+  it("opens the workbench with the desktop session cookie", async () => {
+    const fetch = vi.fn(async (path: string, options: RequestInit) => {
+      expect(path).toBe("/ui/bootstrap");
+      expect(options.credentials).toBe("same-origin");
+      expect(new Headers(options.headers).get("X-Aster-UI")).toBe("1");
+      return Response.json({ provider_configured: false });
     });
     vi.stubGlobal("fetch", fetch);
-    await connect();
-    expect(fetch.mock.calls[0][0]).toBe("/ui/auth");
-    expect(fetch.mock.calls[1][0]).toBe("/ui/bootstrap");
+    expect(await connect()).toEqual({ provider_configured: false });
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
   it("renders markdown without raw HTML, active links or automatic remote image requests", () => {
     const html = renderToStaticMarkup(

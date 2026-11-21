@@ -21,8 +21,7 @@ from aster.api.web import (
     UI_CSP,
     UI_HEADER,
     UIAuth,
-    create_web_router,
-    public_web_request,
+    create_ui_router,
     request_origin,
 )
 from aster.domain import ToolResult, to_dict
@@ -34,7 +33,8 @@ MANAGEMENT_CAPABILITIES = ("management_v1", "mcp_health_v1", "automation_selecti
                            "context_compaction_v2", "semantic_compaction_action_v1", "context_usage_v1", "local_embedding_v1",
                            "memory_auto_capture_v1", "local_tasks_v1", "github_sources_v1", "task_triage_v1",
                            "task_triage_binary_v1", "github_tool_sources_v1", "task_worker_interactions_v1",
-                           "feishu_cli_status_v1", "feishu_task_sources_v1", "execution_reconciliation_status_v1")
+                           "feishu_cli_status_v1", "feishu_task_sources_v1", "execution_reconciliation_status_v1",
+                           "desktop_workbench_v1")
 
 
 def load_api_token(data_dir: Path) -> str:
@@ -124,12 +124,12 @@ class AutomationPatch(Body):
 
 def create_app(coordinator: RunCoordinator, *, token: str | None = None,
                allowed_origins: set[str] | None = None, manage_lifecycle=True,
-               static_root: Path | None = None, ui_auth: UIAuth | None = None) -> FastAPI:
+               ui_auth: UIAuth | None = None) -> FastAPI:
     token = token or load_api_token(coordinator.data_dir)
     origins = allowed_origins or {"http://127.0.0.1:8765", "http://localhost:8765"}
     if coordinator.factory and coordinator.factory.browser:
         coordinator.factory.browser.protect_ui_origins(origins)
-    browser_auth = ui_auth or UIAuth()
+    authentication = ui_auth or UIAuth()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -138,14 +138,14 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         try:
             yield
         finally:
-            browser_auth.clear()
+            authentication.clear()
             if manage_lifecycle:
                 await coordinator.close()
 
     app = FastAPI(title="Aster Runtime", version=__version__, docs_url=None, redoc_url=None,
                   openapi_url=None, lifespan=lifespan)
     app.state.coordinator = coordinator
-    app.state.ui_auth = browser_auth
+    app.state.ui_auth = authentication
     from aster.api.browser_control import create_browser_control_router
     from aster.api.content import create_content_router
     from aster.api.customization import create_customization_router
@@ -168,7 +168,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
     app.include_router(create_feishu_tasks_router(coordinator))
     app.include_router(create_provider_router(coordinator))
     app.include_router(create_workbench_router(coordinator))
-    app.include_router(create_web_router(coordinator, browser_auth, static_root))
+    app.include_router(create_ui_router(coordinator, authentication))
 
     @app.middleware("http")
     async def authorize(request: Request, call_next):
@@ -186,7 +186,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         exchange = request.method == "POST" and request.url.path == "/ui/auth"
         if exchange and (request.headers.get(UI_HEADER) != "1" or origin != own_origin):
             return reject("csrf_rejected", 403)
-        public = (request.url.path == "/health" and request.method in {"GET", "HEAD"}) or public_web_request(request)
+        public = (request.url.path == "/health" and request.method in {"GET", "HEAD"}) or exchange
         request.state.auth_method = None
         if not public:
             # An explicit Authorization header selects the bearer authentication path.
@@ -197,7 +197,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
                     return reject("unauthorized", 401)
                 request.state.auth_method = "bearer"
             else:
-                grant = browser_auth.authenticate(request.cookies.get(COOKIE_NAME), own_origin)
+                grant = authentication.authenticate(request.cookies.get(COOKIE_NAME), own_origin)
                 if grant is None:
                     return reject("unauthorized", 401)
                 if (request.headers.get(UI_HEADER) != "1" or (origin is not None and origin != own_origin)
@@ -207,8 +207,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
                 request.state.auth_method = "cookie"
                 request.state.ui_grant = grant
         response = await call_next(request)
-        if not (request.method in {"GET", "HEAD"} and request.url.path.startswith("/assets/") and response.status_code == 200):
-            response.headers["Cache-Control"] = "no-store"
+        response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = UI_CSP
@@ -296,7 +295,7 @@ def create_app(coordinator: RunCoordinator, *, token: str | None = None,
         return {"schema_version": 1, "capabilities": ["runs_v1", "queue_v1", "events_cursor_v1", "approval_v1",
                 "questions_v1", "artifacts_v1", "manual_recovery_v1", "session_lineage_v1", "attachments_v1",
                 "mailbox_retract_v1", "steering_v1", "performance_v1", "structured_memory_v1", "skill_packages_v1",
-                "deliverable_preview_v1", "automation_sessions_v1", "web_workbench_v1", "provider_profiles_v1",
+                "deliverable_preview_v1", "automation_sessions_v1", "provider_profiles_v1",
                 "session_model_selection_v1", "workbench_projects_v1", "manual_compaction_v1",
                 *MANAGEMENT_CAPABILITIES,
                 *PERMANENT_DELETE_CAPABILITIES], "desktop_control": False}

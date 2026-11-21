@@ -9,12 +9,12 @@ npm --prefix frontend test
 npm --prefix frontend run format
 ```
 
-构建输出为 `src/aster/web/static/index.html` 和 `assets/`，由真实 Runtime 同源提供。运行 `aster web` 打开工作台。开发使用 `npm --prefix frontend run dev`（即 `vite build --watch`），然后刷新已打开的 daemon 页面；不要单独打开 Vite 开发端口，也不要放宽生产 Origin 检查来做代理。
+Vite 将 HTML、脚本与样式构建到 `src/aster/web/static`。这些文件随 Python 包分发，由 Electron 从本机读取。开发时可用 `npm --prefix frontend run dev` 持续构建，再重新打开桌面窗口查看修改。
 
-CLI 签发的一次性 ticket 通过 URL fragment 到达页面，读取后立即清除，再交换 HttpOnly 会话 cookie。所有 API 请求使用同源 cookie 与 `X-Aster-UI: 1`。前端不持久保存 ticket、API token 或供应商凭证。登录过期时重新执行 `aster web`。
+桌面启动器向本机 Runtime 申请一次性票据，Electron 主进程在加载界面前将其兑换为 HttpOnly 会话 cookie。工作台使用同源请求和 `X-Aster-UI: 1` 访问 API。登录过期后关闭窗口，再打开 Aster 即可重新登录。
 
 页面直接读取 Runtime 的消息 record、执行状态、审批与问答。SSE 使用 fetch 流和 event_id 游标；不显示内部推理。Markdown 禁止原始 HTML，外部图片不会自动请求。成果下载经鉴权 fetch 后生成临时 blob URL；静态预览在新标签页打开可信预览外壳，不嵌入 iframe。
 
 管理页支持本地 Skills 的预览/安装/卸载、范围内的记忆记录/查询/更新/撤回/历史，以及定时、文件观察、变化检查自动化。编辑自动化保留未暴露的已有策略。默认不提供交互脚本预览授权入口；此页只签发静态预览。
 
-单元测试验证不确定提交的 request_id 复用、运行优先级、流缓存去重、完整原始消息分支边界、逐字节 SSE/CRLF 解码、票据即时清除及安全 Markdown。真实浏览器验收由项目的本机 fixture 和 Playwright 测试承担，fixture 不进入生产 bundle。
+单元测试覆盖请求去重、运行优先级、历史分支、SSE 解码、桌面会话登录和 Markdown 渲染。Chromium 验收从磁盘读取同一份界面资源，并使用真实 Runtime API。桌面启动、登录和退出通过 `npm --prefix desktop test` 验证。

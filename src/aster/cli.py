@@ -5,10 +5,8 @@ import argparse
 import asyncio
 import getpass
 import json
-import re
 import sys
 import warnings
-import webbrowser
 from pathlib import Path
 
 import httpx
@@ -82,11 +80,6 @@ def parser():
     retract.add_argument("session_id")
     retract.add_argument("message_id")
     commands.add_parser("performance", help="Inspect phases, timings and execution batches").add_argument("run_id")
-    web = commands.add_parser("web", help="Start/reuse the local daemon and open the authenticated workbench")
-    web.add_argument("--host", default="127.0.0.1", choices=["127.0.0.1", "localhost", "::1"])
-    web.add_argument("--port", type=int, default=8765)
-    web.add_argument("--cwd", type=Path, help="Initial workbench workspace; defaults to the invoking directory")
-    web.add_argument("--no-browser", action="store_true", help="Start/reuse only; print the base URL without a login ticket")
     daemon = commands.add_parser("daemon")
     daemon_commands = daemon.add_subparsers(dest="action", required=True)
     for name in ("serve", "start"):
@@ -388,47 +381,6 @@ async def _serve(args):
     return 0
 
 
-def _launch_web(args):
-    from aster.maintenance import start_service
-
-    if not 1 <= args.port <= 65535:
-        raise ValueError("--port must be between 1 and 65535")
-    cwd = (args.cwd or Path.cwd()).expanduser().resolve(strict=True)
-    if not cwd.is_dir():
-        raise ValueError("--cwd must be an existing directory")
-    argv = [sys.executable, "-m", "aster", "--data-dir", str(args.data_dir), "daemon", "serve",
-            "--host", args.host, "--port", str(args.port)]
-    status = start_service(args.data_dir, argv, host=args.host, port=args.port)
-    host, port = status.get("host"), status.get("port")
-    if host not in {"127.0.0.1", "localhost", "::1"} or not isinstance(port, int) or not 1 <= port <= 65535:
-        raise RuntimeError("Existing service has an invalid loopback address")
-    base = f"http://{'[' + host + ']' if ':' in host else host}:{port}"
-    with httpx.Client(base_url=base, timeout=10, trust_env=False, follow_redirects=False) as client:
-        health = client.get("/health")
-        health.raise_for_status()
-        if health.json().get("instance_id") != status.get("instance_id"):
-            raise RuntimeError("The listening server does not match this data directory's daemon")
-        available = client.get("/")
-        if available.status_code != 200:
-            raise RuntimeError("Workbench is unavailable; install the built web assets and restart the daemon")
-        opened = False
-        if not args.no_browser:
-            response = client.post("/ui/tickets", headers={"Authorization": "Bearer " + load_api_token(args.data_dir)},
-                                   json={"cwd": str(cwd)})
-            response.raise_for_status()
-            ticket = response.json().get("ticket", "")
-            if not isinstance(ticket, str) or not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", ticket):
-                raise RuntimeError("The daemon returned an invalid workbench login ticket")
-            # Fragment never reaches HTTP logs; never print it or the API token.
-            opened = webbrowser.open(base + "/#ticket=" + ticket, new=2)
-            if not opened:
-                raise RuntimeError("Browser could not be opened; run aster web again after configuring a browser")
-    _print({"url": base + "/", "started": not status.get("already_running", False),
-            "reused": bool(status.get("already_running", False)), "browser_opened": opened,
-            "instance_id": status["instance_id"], "cwd": str(cwd)})
-    return 0
-
-
 async def _foreground(args):
     from aster.maintenance import ServiceLease, service_status
     status = service_status(args.data_dir)
@@ -548,8 +500,6 @@ def main(argv=None):
             else:
                 _print(maintenance.service_status(args.data_dir))
             return 0
-        if args.command == "web":
-            return _launch_web(args)
         if args.command == "backup":
             fn = maintenance.backup_database if args.database_only else maintenance.backup_bundle
             _print({"backup": str(fn(args.data_dir, args.destination))})

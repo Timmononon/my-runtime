@@ -27,7 +27,8 @@ def forbidden(name):
     parts = PurePosixPath(name).parts
     return ("\\" in name or ".." in parts or name.startswith("/") or
             any(part in {".aster", "node_modules", "tests", "__pycache__", "browser_profiles", "backups"} for part in parts)
-            or PurePosixPath(name).name in {"credentials.yaml", ".api-token", ".env", "runtime.db", "web_fixture.py"}
+            or PurePosixPath(name).name in {
+                "credentials.yaml", ".api-token", ".env", "runtime.db", "web_fixture.py", "renderer_fixture.py"}
             or name.endswith((".pyc", ".pyo", ".map", ".db", ".db-wal", ".db-shm", ".log")))
 
 
@@ -117,18 +118,26 @@ def verify(wheel: Path, report: Path, *, root=None, static_root=None, install_py
         result = subprocess.run([interpreter, "-m", "pip", "install", "--no-deps", "--no-compile",
             "--disable-pip-version-check", "--target", str(target), str(wheel)], capture_output=True, text=True, encoding="utf-8",errors="replace",check=False)
         _require(result.returncode == 0, "Disposable wheel installation failed")
+        with zipfile.ZipFile(wheel) as archive:
+            for name in archive.namelist():
+                if name.startswith("aster/web/static/") and not name.endswith("/"):
+                    _require((target / name).read_bytes() == archive.read(name),
+                             "Installed renderer files differ from the verified wheel")
         env = isolated_environment(target, temporary)
         probe = Path(__file__).with_name("installed_delivery_probe.py")
         result = subprocess.run([interpreter, str(probe), str(target), findings["version"]], cwd=temporary,
                                 env=env, capture_output=True, text=True, encoding="utf-8",errors="replace",check=False)
         _require(result.returncode == 0, "Installed Runtime scenario probe failed")
         findings.update(json.loads(result.stdout))
-        cli = subprocess.run([interpreter, "-m", "aster", "--help"], cwd=temporary, env=env,
+        cli = subprocess.run([interpreter, "-m", "aster", "daemon", "--help"], cwd=temporary, env=env,
                              capture_output=True, text=True, encoding="utf-8",errors="replace",check=False)
-        _require(cli.returncode == 0 and "web" in cli.stdout, "Installed CLI entrypoint failed")
+        _require(cli.returncode == 0 and "serve" in cli.stdout, "Installed daemon entrypoint failed")
+        retired = subprocess.run([interpreter, "-m", "aster", "web", "--help"], cwd=temporary, env=env,
+                                 capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        _require(retired.returncode == 2, "Installed CLI still accepts the standalone browser command")
     findings.update(wheel=wheel.name, size_bytes=wheel.stat().st_size, sha256=hashlib.sha256(wheel.read_bytes()).hexdigest(),
                     source_assets_match=True, all_package_sources_match=True, fixture_not_packaged=True,
-                    installed_cli_web=True, final_readme_metadata_matches=True,
+                    installed_cli_daemon=True, final_readme_metadata_matches=True,
                     readme_sha256=hashlib.sha256((root / "README.md").read_bytes()).hexdigest(),
                     probe_interpreter=interpreter, explicit_install_interpreter=bool(install_python), paid_calls=0)
     report.parent.mkdir(parents=True, exist_ok=True)

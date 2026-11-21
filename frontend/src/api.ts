@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 export function readableError(error: unknown) {
   if (error instanceof ApiError && error.status === 401)
-    return "连接已过期，请在终端运行 aster web 重新连接。";
+    return "登录已过期。请关闭工作台窗口，再重新打开 Aster。";
   if (error instanceof ApiError && error.status === 403)
     return "当前操作没有获得授权，或文件超出了会话范围。";
   return error instanceof Error ? error.message : "操作未完成，请稍后重试。";
@@ -70,17 +70,7 @@ export async function request<T>(
 }
 export const post = <T>(path: string, body: unknown = {}) =>
   request<T>(path, { method: "POST", body: JSON.stringify(body) });
-export async function connect(): Promise<Bootstrap> {
-  const params = new URLSearchParams(window.location.hash.slice(1));
-  const ticket = params.get("ticket");
-  if (ticket) {
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search,
-    );
-    await post("/ui/auth", { ticket });
-  }
+export function connect(): Promise<Bootstrap> {
   return request<Bootstrap>("/ui/bootstrap");
 }
 export function parseSSE(frame: string): RuntimeEvent | null {

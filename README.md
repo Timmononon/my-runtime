@@ -1,6 +1,6 @@
 # Aster
 
-Aster 是面向 Windows 的本地 AI 助手，使用 Python 构建，支持 DeepSeek 和 OpenAI 兼容模型。可通过浏览器工作台或命令行使用。
+Aster 是面向 Windows 的本地 AI 助手，支持 DeepSeek 和 OpenAI 兼容模型。可通过 Electron 桌面工作台或 Python 命令行使用。
 
 ## 主要功能
 
@@ -14,19 +14,29 @@ Aster 是面向 Windows 的本地 AI 助手，使用 Python 构建，支持 Deep
 
 ## 快速开始
 
-需要 Windows、Python 3.12+ 和 PowerShell。在项目根目录运行：
+在 Windows 10 或 11 x64 上双击安装包，跟随向导安装，再从开始菜单打开 **Aster**。安装包内置 Electron、Python 和工作台，支持离线安装。[下载 Windows x64 安装包](https://github.com/Timmononon/my-runtime/releases/download/0.1.21/Aster-Setup-0.1.21-win-x64.exe) · [所有版本](https://github.com/Timmononon/my-runtime/releases)
+
+首次启动会自动登录本机工作台。点击首页的「配置模型密钥」，在 DeepSeek 的「API Key」中填入自己的密钥，点「保存提供商」即可开始对话。其他兼容服务可以在同一页添加。之后可从「我的工作空间 → 设置 → 模型提供商」修改。飞书和 GitHub 按需连接到使用者自己的账号。
+
+关窗后后台可继续执行任务。要完全退出，在窗口顶部选择「Aster → 退出并停止后台」。[Windows 安装与维护](docs/windows-operations.md)
+
+### 从源代码运行
+
+开发环境需要 Windows、Python 3.12+、PowerShell 和 Node.js 22.12+。在项目根目录运行以下命令。
 
 ```powershell
-.\scripts\Install-Aster.ps1 -PythonExe python -InstallBrowser
+.\scripts\Install-Aster.ps1 -PythonExe python
 $asterPython = (Resolve-Path '.\.venv\Scripts\python.exe').Path
 
 & $asterPython -m aster configure --model deepseek-flash
-& $asterPython -m aster web --cwd (Get-Location).Path
+.\scripts\Install-AsterDesktop.ps1
 ```
 
-按提示输入 API 密钥，随后会打开本地工作台。也可在“我的工作空间 → 设置”中管理模型、助手和权限。安装包自带前端，日常运行不需要 Node.js。
+双击开发环境创建的 Aster 快捷方式即可打开工作台。[开发版启动选项](docs/windows-operations.md#本机桌面版)
 
-使用命令行执行任务：
+需要使用网页自动化工具时，可给 Runtime 安装脚本加上 `-InstallBrowser` 以安装 Playwright 使用的 Chromium。
+
+在命令行执行任务的示例。
 
 ```powershell
 & $asterPython -m aster run --cwd (Get-Location).Path '列出当前目录，说明主要文件用途'

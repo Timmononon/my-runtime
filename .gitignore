@@ -24,6 +24,7 @@ frontend/node_modules/
 frontend/*.tsbuildinfo
 frontend/.vite/
 frontend/coverage/
+desktop/node_modules/
 
 # Local design, audit and handoff records are excluded from publication.
 /docs/*
@@ -31,6 +32,7 @@ frontend/coverage/
 !/docs/service-api.md
 !/docs/feishu-task-sources.md
 !/docs/task-triage.md
+!/docs/windows-operations.md
 /AGENTS.md
 /HANDOFF.md
 /STATUS.md

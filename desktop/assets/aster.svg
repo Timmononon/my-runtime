@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>Aster</title>
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="#FFFFFF"/>
+  <path
+    fill="#000000"
+    d="M59 83L145 51Q148 50 151 53L172 73L88 107V195
+       L56 163Q53 160 53 155V91Q53 85 59 83Z
+       M113 122L184 93L203 111Q206 114 206 119V156
+       Q206 163 200 165L113 202Z"
+  />
+</svg>

@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import secrets
 import socket
 import tempfile
@@ -152,8 +151,7 @@ async def serve(ready_file, stop_file, lifetime):
         listener.listen(128)
         origin = f"http://127.0.0.1:{listener.getsockname()[1]}"
         token = secrets.token_urlsafe(36)
-        static_root = Path(os.environ["ASTER_WEB_STATIC_ROOT"]) if os.environ.get("ASTER_WEB_STATIC_ROOT") else None
-        app = create_app(coordinator, token=token, allowed_origins={origin}, static_root=static_root)
+        app = create_app(coordinator, token=token, allowed_origins={origin})
 
         @app.get("/fixture/github/state")
         async def state():

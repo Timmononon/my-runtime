@@ -51,10 +51,14 @@ class ReadOnlyGithubTransport(GithubTransport):
         return await super().handle_async_request(request)
 
 
-async def browser_evidence(app, coordinator, workspace, worker_title, screenshot, port):
+async def browser_evidence(app, coordinator, workspace, worker_title, screenshot, port, static_root):
     """Render actual persisted tool messages; no history/API interception."""
     import uvicorn
     from playwright.async_api import async_playwright, expect
+    if __package__:
+        from .renderer_fixture import prepare_desktop_context
+    else:
+        from renderer_fixture import prepare_desktop_context
 
     base_url = f"http://127.0.0.1:{port}"
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error", access_log=False))
@@ -74,10 +78,11 @@ async def browser_evidence(app, coordinator, workspace, worker_title, screenshot
             browser = await playwright.chromium.launch(headless=True)
             context = await browser.new_context(viewport={"width": 1440, "height": 1400})
             try:
+                await prepare_desktop_context(context, base_url, launch_ticket, static_root)
                 page = await context.new_page()
                 errors = []
                 page.on("pageerror", lambda error: errors.append(type(error).__name__))
-                await page.goto(base_url + "/#ticket=" + launch_ticket)
+                await page.goto(base_url + "/")
                 await expect(page.get_by_role("textbox", name="输入消息")).to_be_visible()
                 await page.get_by_role("button", name=worker_title, exact=True).click()
                 await expect(page.get_by_text("已返回", exact=True)).to_have_count(4)
@@ -149,8 +154,7 @@ async def verify(repository, issue_number, report, *, static_root=None, screensh
                     listener.bind(("127.0.0.1", 0))
                     browser_port = listener.getsockname()[1]
             origins = {f"http://127.0.0.1:{browser_port}"} if browser_port else None
-            app = create_app(coordinator, token=token, manage_lifecycle=False, static_root=static_root,
-                             allowed_origins=origins)
+            app = create_app(coordinator, token=token, manage_lifecycle=False, allowed_origins=origins)
             app.state.verifier_token = token
             action = None
             try:
@@ -231,7 +235,8 @@ async def verify(repository, issue_number, report, *, static_root=None, screensh
                     issue_read_verified=True, source_id_omitted_and_resolved=True)
                 if screenshot:
                     stage = "actual_history_browser_screenshot"
-                    findings["browser"] = await browser_evidence(app, coordinator, workspace, worker_title, screenshot, browser_port)
+                    findings["browser"] = await browser_evidence(app, coordinator, workspace, worker_title,
+                                                                 screenshot, browser_port, static_root)
                 findings["passed"] = True
                 findings["stage"] = "complete"
             finally:

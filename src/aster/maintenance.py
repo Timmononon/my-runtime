@@ -200,11 +200,13 @@ def start_service(data_dir: Path, argv: list[str], *, host="127.0.0.1", port=876
             raise
 
 
-def stop_service(data_dir: Path, *, timeout=15, force=True) -> dict:
+def stop_service(data_dir: Path, *, timeout=15, force=True, expected_instance_id: str | None = None) -> dict:
     data_dir = Path(data_dir).resolve()
     status = service_status(data_dir)
     if not status["running"]:
         return {"stopped": not status["locked"], "already_stopped": True}
+    if expected_instance_id is not None and status.get("instance_id") != expected_instance_id:
+        raise RuntimeError("Service identity changed; refusing to signal it")
     if status.get("kind") != "daemon":
         raise RuntimeError("A foreground runtime owns this directory; cancel it in its terminal")
     process = _same_process(status)

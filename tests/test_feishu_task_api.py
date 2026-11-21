@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import secrets
 import socket
 import time
@@ -21,6 +20,7 @@ from aster.api import create_app
 from aster.customization.credentials import CredentialStore
 from aster.domain import ModelTurn
 from aster.engine import FakeModel
+from aster.feishu.transport import SETUP_HINTS, FeishuTransportError
 from aster.service import RunCoordinator
 
 CHAT = "oc_" + "a" * 32
@@ -169,9 +169,7 @@ async def feishu_browser_server(tmp_path):
             listener.bind(("127.0.0.1", 0))
             listener.listen(64)
             origin = f"http://127.0.0.1:{listener.getsockname()[1]}"
-            static = os.environ.get("ASTER_WEB_STATIC_ROOT")
-            app = create_app(runtime, token=token, allowed_origins={origin},
-                             static_root=Path(static) if static else None)
+            app = create_app(runtime, token=token, allowed_origins={origin})
             server = uvicorn.Server(uvicorn.Config(app, log_level="warning", access_log=False, proxy_headers=False))
             serving = asyncio.create_task(server.serve(sockets=[listener]))
             try:
@@ -188,7 +186,7 @@ async def feishu_browser_server(tmp_path):
 
 
 @pytest.mark.browser
-async def test_feishu_workbench_group_to_ticket(tmp_path):
+async def test_feishu_workbench_group_to_ticket(tmp_path, monkeypatch):
     async with feishu_browser_server(tmp_path) as (server, feed), async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         try:
@@ -198,7 +196,16 @@ async def test_feishu_workbench_group_to_ticket(tmp_path):
                 await expect(page.get_by_role("heading", name="飞书", exact=True)).to_be_visible()
                 await page.get_by_role("button", name="添加飞书来源", exact=True).click()
                 dialog = page.get_by_role("dialog", name="添加飞书来源")
-                await dialog.get_by_role("button", name="读取机器人所在群聊", exact=True).click()
+                discover = dialog.get_by_role("button", name="读取机器人所在群聊", exact=True)
+                with monkeypatch.context() as patch:
+                    async def missing_bot_credentials():
+                        raise FeishuTransportError(SETUP_HINTS["windows_credentials_empty"], code="windows_credentials_empty")
+
+                    patch.setattr(feed, "discover", missing_bot_credentials)
+                    await discover.click()
+                    await expect(dialog.get_by_role("alert")).to_contain_text("Windows 用户环境")
+                    await expect(dialog.get_by_text("im.message.receive_v1", exact=False)).to_have_count(0)
+                await discover.click()
                 await dialog.get_by_role("combobox", name="飞书群聊").select_option(CHAT)
                 await dialog.get_by_role("button", name="添加当前用户", exact=True).click()
                 await dialog.get_by_role("button", name="保存来源", exact=True).click()

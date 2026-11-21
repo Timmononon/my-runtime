@@ -21,13 +21,21 @@ Aster 通过 `feishu_cli` 工具直接调用[官方飞书 CLI](https://github.co
 $asterData = 'D:\AsterData'
 .\scripts\Install-FeishuCLI.ps1 -DataDir $asterData
 $asterPython = (Resolve-Path '.\.venv\Scripts\python.exe').Path
-& $asterPython -m aster --data-dir $asterData web --cwd (Get-Location).Path
+.\scripts\Install-AsterDesktop.ps1 -PythonExe $asterPython -DataDir $asterData -Cwd (Get-Location).Path
 ```
 
 安装脚本固定版本，仅安装官方 npm 包及其 native binary。
 可执行文件位于 `<data_dir>/tools/feishu-cli/lark-cli.exe`，npm 依赖和锁文件保留在
 同目录的 `npm-package/` 下。不改系统 PATH，不运行账号设置向导，也不向其他
 Agent 安装官方附带的26个 Skills。安装失败不代表已完成接入；未安装时工具会返回配置错误。
+
+已安装桌面版时，也可以运行安装目录中的 `resources\tools\Install-FeishuCLI.ps1`。群任务来源的事件订阅由另一个受管监听进程负责。[飞书群任务来源](feishu-task-sources.md)
+
+## 已有应用重新连接
+
+如果终端能用飞书、桌面却找不到机器人凭据，请在平时使用的 Aster 窗口选择「Aster → 连接飞书…」。按窗口提示打开原应用的「凭证与基础信息」，将该应用的 App Secret 输入本机隐藏输入框。工具保留当前应用和已绑定的群，并通过读取机器人所在群验证连接。个人身份的授权通过飞书自己的确认页面完成。
+
+群发现成功表示机器人可以读取所在群。启用群内 @ 任务后，飞书管理页还会显示事件连接状态。可从已发布的应用版本核对群 @ 权限和接收消息事件。
 
 ## 人工配置与授权
 

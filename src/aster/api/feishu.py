@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-import sys
 import uuid
 
 from fastapi import APIRouter, Request
@@ -11,31 +10,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from aster.domain import ToolContext, ToolResult
+from aster.tools.feishu import windows_registry_metadata as _windows_registry_metadata
 
 
 class CheckRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     verify_business: bool = Field(default=False, strict=True)
-
-
-def _windows_registry_metadata():
-    result = {"supported": sys.platform == "win32", "key_exists": None, "value_count": None}
-    if not result["supported"]:
-        return result
-    try:
-        import winreg
-
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\LarkCli\keychain\lark-cli", 0,
-                            winreg.KEY_QUERY_VALUE) as key:
-            # Only key metadata. Never enumerate value names or read/decrypt a
-            # credential, even when checking a different daemon user context.
-            count = winreg.QueryInfoKey(key)[1]
-            result.update(key_exists=True, value_count=count)
-    except FileNotFoundError:
-        result.update(key_exists=False, value_count=0)
-    except OSError:
-        pass
-    return result
 
 
 def _status_payload(result):

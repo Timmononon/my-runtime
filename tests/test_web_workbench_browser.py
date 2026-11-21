@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 import pytest
 from PIL import Image
 from playwright.async_api import async_playwright, expect
+from renderer_fixture import prepare_desktop_context
 from test_web_workbench import client_for, create_session, wait_run
 from test_web_workbench import workbench_server as workbench_server  # noqa: PLC0414 - pytest fixture re-export
 
@@ -22,6 +23,7 @@ async def open_workbench(browser, server, *, width=1440, height=1000, has_touch=
         assert issued.status_code == 201
     context = await browser.new_context(viewport={"width": width, "height": height}, accept_downloads=True,
                                         has_touch=has_touch, is_mobile=has_touch)
+    await prepare_desktop_context(context, server["base_url"], issued.json()["ticket"], server.get("static_root"))
     page = await context.new_page()
     errors = []
     page.qa_network = {"responses": [], "failed": [], "console": []}
@@ -29,9 +31,9 @@ async def open_workbench(browser, server, *, width=1440, height=1000, has_touch=
     page.on("response", lambda response: page.qa_network["responses"].append((response.status, response.url)) if response.status >= 400 else None)
     page.on("requestfailed", lambda request: page.qa_network["failed"].append((request.failure, request.url)))
     page.on("console", lambda message: page.qa_network["console"].append(message.text) if message.type == "error" else None)
-    await page.goto(server["base_url"] + "/#ticket=" + issued.json()["ticket"])
+    await page.goto(server["base_url"] + "/")
     await expect(page.get_by_role("textbox", name="输入消息")).to_be_visible()
-    assert "ticket=" not in page.url
+    assert page.url == server["base_url"] + "/"
     assert "aster_ui=" not in await page.evaluate("document.cookie")
     return context, page, errors
 

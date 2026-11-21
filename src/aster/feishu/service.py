@@ -7,7 +7,7 @@ import json
 import time
 
 from aster.feishu.normalize import assess, group_message, remote_id, valid_text
-from aster.feishu.transport import FeishuEventTransport, FeishuTransportError
+from aster.feishu.transport import SETUP_HINTS, FeishuEventTransport, FeishuTransportError
 from aster.state.store import SessionBusy, StateError, dumps, identifier
 
 # Keep a slow evaluation from accumulating unbounded work during a burst. A
@@ -128,6 +128,8 @@ class FeishuTaskService:
     def _public_source(row):
         result = {key: row[key] for key in ("id", "revision", "source_session_id", "chat_id", "name",
                   "app_id", "bot_open_id", "bot_name", "health", "last_event_at", "error")}
+        if result["error"] in SETUP_HINTS:
+            result["error_detail"] = SETUP_HINTS[result["error"]]
         return {**result, "enabled": bool(row["enabled"]), "allowed_senders": json.loads(row["allowed_senders"]),
                 "required_keywords": json.loads(row["required_keywords"])}
 
@@ -354,7 +356,7 @@ class FeishuTaskService:
             # The transport callback can supply a human diagnostic. Retain
             # only bounded state codes in source records.
             codes = {"listener_stopped", "listener_unavailable", "invalid_discovery"}
-            code = error if isinstance(error, str) and error in codes else None
+            code = error if isinstance(error, str) and (error in codes or error in SETUP_HINTS) else None
             self._set_health(listening_rows, health,
                              code or health if health in {"disconnected", "setup_required"} else None)
 
@@ -396,7 +398,7 @@ class FeishuTaskService:
             if getattr(error, "code", None) == "identity_changed":
                 self._set_health(listening_rows, "identity_changed", "identity_changed", binding_verified=0)
             else:
-                status(error.status)
+                status(error.status, error.code)
         except FeishuTaskError as error:
             if error.code == "identity_changed":
                 self._set_health(listening_rows, "identity_changed", error.code, binding_verified=0)

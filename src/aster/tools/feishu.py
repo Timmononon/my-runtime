@@ -7,6 +7,7 @@ import html
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -201,6 +202,24 @@ def _reject_implicit_local_media(command, flag, value):
                     pending.append(entry)
             elif isinstance(item, list):
                 pending.extend(item)
+
+
+def windows_registry_metadata():
+    result = {"supported": sys.platform == "win32", "key_exists": None, "value_count": None}
+    if not result["supported"]:
+        return result
+    try:
+        import winreg
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\LarkCli\keychain\lark-cli", 0,
+                            winreg.KEY_QUERY_VALUE) as key:
+            # Count entries without enumerating, reading or decrypting credentials.
+            result.update(key_exists=True, value_count=winreg.QueryInfoKey(key)[1])
+    except FileNotFoundError:
+        result.update(key_exists=False, value_count=0)
+    except OSError:
+        pass
+    return result
 
 
 def cli_environment(data_dir: Path) -> dict[str, str]:
