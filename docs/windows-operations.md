@@ -26,11 +26,13 @@ $resources = Join-Path $env:LOCALAPPDATA 'Programs\Aster\resources'
 
 ## 构建可分发的安装包
 
-在 64 位 Windows 开发机上使用 64 位 Python 3.12 和 Node.js 22.12 或更高版本。从仓库根目录执行以下命令。开头创建的构建目录供本次打包和验收使用。
+在 64 位 Windows 开发机上使用 64 位 Python 3.12 和 Node.js 22.12 或更高版本。从仓库根目录执行以下命令。示例在用户临时目录中新建一个随机短目录，为 Python 编译深层模块时生成的文件名留出空间。若 `%TEMP%` 或仓库路径很深，可将 `$stageRoot` 改为已有且可写的短目录，例如 `D:\tmp`。若 `%TEMP%` 本身很深，也请在当前 PowerShell 窗口中将 `$env:TEMP` 和 `$env:TMP` 设为同一短目录。
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$stage = New-Item -ItemType Directory -Path (Join-Path $PWD ("artifacts\desktop-build-" + [guid]::NewGuid())) -Force
+$stageRoot = [IO.Path]::GetTempPath()
+$stageName = [IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetRandomFileName())
+$stage = (New-Item -ItemType Directory -Path (Join-Path $stageRoot $stageName) -ErrorAction Stop).FullName
 $python = (Resolve-Path '.venv\Scripts\python.exe').Path
 & $python -m venv "$stage\build-venv"
 if ($LASTEXITCODE) { throw '创建构建环境失败' }
