@@ -2,7 +2,7 @@
 
 ## 安装和首次使用
 
-1. 从 [Releases](https://github.com/Timmononon/my-runtime/releases) 下载适用于 Windows x64 的 `Aster-Setup-0.1.21-win-x64.exe`，双击后按向导为当前用户安装。
+1. 从 [Releases](https://github.com/Timmononon/my-runtime/releases) 下载适用于 Windows x64 的 `Aster-Setup-0.1.22-win-x64.exe`，双击后按向导为当前用户安装。
 2. 从开始菜单打开 **Aster**。首次打开会自动登录本机工作台。点击首页「配置模型密钥」，选择 DeepSeek 或自己的兼容提供商，输入 API Key 并保存。
 3. 关闭窗口可以让后台继续工作。若要同时停服，选择菜单「Aster → 退出并停止后台」。
 

@@ -12,7 +12,13 @@ from aster.engine import FakeModel
 from aster.providers.deepseek import DeepSeekResponsesClient, ProviderError
 from aster.service import RunCoordinator
 from aster.state.store import StateError
-from aster.tasks.triage import DEFAULTS, TaskTriageService, parse_decision
+from aster.tasks.triage import (
+    DEFAULTS,
+    FEISHU_INSTRUCTIONS,
+    GITHUB_INSTRUCTIONS,
+    TaskTriageService,
+    parse_decision,
+)
 
 KEY = "offline-triage-provider-credential"
 EVENT = {"source_id": "github-source", "id": "issue-7", "repository": "sample/repo", "kind": "issue",
@@ -67,8 +73,9 @@ async def runtime(tmp_path, turn=None):
         await coordinator.close()
 
 
-async def evaluate(service, session_id, request_id="event-1", event=None, **kwargs):
-    return await service.evaluate(session_id, event or EVENT, request_id=request_id, guard=lambda: None, **kwargs)
+async def evaluate(service, session_id, request_id="event-1", event=None, *, source_kind="github", **kwargs):
+    return await service.evaluate(session_id, event or EVENT, source_kind=source_kind,
+                                  request_id=request_id, guard=lambda: None, **kwargs)
 
 
 async def test_defaults_management_reads_and_revision_writes_are_model_free(tmp_path):
@@ -104,6 +111,23 @@ async def test_binary_decisions_use_short_independent_context_and_no_tools(tmp_p
             service.guard_decision(item["id"])
             with coordinator.store.transaction() as db:
                 service.guard_decision(item["id"], db=db)
+
+
+async def test_trusted_source_selects_distinct_triage_prompts(tmp_path):
+    async with runtime(tmp_path) as (_, service, sid, models):
+        service.update_settings(0, processing_scope="Help this team with its work")
+        event = {"source": "github", "kind": "group_message", "text": "把会议纪要整理成待办"}
+        for source_kind in ("github", "feishu"):
+            result = await evaluate(service, sid, source_kind + ":event", event, source_kind=source_kind, explicit=True)
+            assert result["status"] == "completed"
+        calls = [model.calls[0] for _, _, model in models]
+        assert [call["system"] for call in calls] == [GITHUB_INSTRUCTIONS, FEISHU_INSTRUCTIONS]
+        assert calls[0]["system"] != calls[1]["system"]
+        assert "everyday non-coding" in calls[1]["system"]
+        for call in calls:
+            assert call["tools"] == [] and "UNTRUSTED DATA" in call["system"]
+            state = json.loads(call["messages"][0].content)
+            assert state["event"] == event and state["operator_processing_scope"] == "Help this team with its work"
 
 
 async def test_receipt_is_idempotent_usage_is_preserved_and_input_mismatch_rejected(tmp_path):
@@ -218,7 +242,7 @@ async def test_authority_changes_during_model_or_cleanup_invalidate_decision(tmp
             return model
 
         coordinator.task_triage_model_factory = factory
-        item = await service.evaluate(sid, EVENT, request_id="change", guard=guard)
+        item = await service.evaluate(sid, EVENT, source_kind="github", request_id="change", guard=guard)
         assert item["status"] == "failed" and item["decision"] is None
         assert item["error_category"] == "state_changed" and len(models) == 1
 

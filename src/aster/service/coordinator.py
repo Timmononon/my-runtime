@@ -570,7 +570,7 @@ class RunCoordinator:
             # or grant permission; the human still approves each pending action.
             services["task_interaction_guard"] = partial(self.tasks.interaction_guard, run["session_id"], run["id"])
             services["questions"] = self.questions
-            services["task_runtime_context"] = self.tasks.runtime_context(run["session_id"])
+            services["task_runtime_context"] = self.tasks.runtime_context(run["session_id"], request_id=run["request_id"])
         services["http_credential_origins"] = trusted_extensions.get("http_credential_origins", {})
         from aster.service.artifact_access import read_registered_artifact
         services["artifact_read_resolver"] = partial(read_registered_artifact, self.store, self.data_dir)

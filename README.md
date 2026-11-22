@@ -14,7 +14,7 @@ Aster 是面向 Windows 的本地 AI 助手，支持 DeepSeek 和 OpenAI 兼容�
 
 ## 快速开始
 
-在 Windows 10 或 11 x64 上双击安装包，跟随向导安装，再从开始菜单打开 **Aster**。安装包内置 Electron、Python 和工作台，支持离线安装。[下载 Windows x64 安装包](https://github.com/Timmononon/my-runtime/releases/download/0.1.21/Aster-Setup-0.1.21-win-x64.exe) · [所有版本](https://github.com/Timmononon/my-runtime/releases)
+在 Windows 10 或 11 x64 上双击安装包，跟随向导安装，再从开始菜单打开 **Aster**。安装包内置 Electron、Python 和工作台，支持离线安装。[下载 Windows x64 安装包](https://github.com/Timmononon/my-runtime/releases/download/0.1.22/Aster-Setup-0.1.22-win-x64.exe) · [所有版本](https://github.com/Timmononon/my-runtime/releases)
 
 首次启动会自动登录本机工作台。点击首页的「配置模型密钥」，在 DeepSeek 的「API Key」中填入自己的密钥，点「保存提供商」即可开始对话。其他兼容服务可以在同一页添加。之后可从「我的工作空间 → 设置 → 模型提供商」修改。飞书和 GitHub 按需连接到使用者自己的账号。
 

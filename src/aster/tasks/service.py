@@ -26,6 +26,10 @@ def _text(value, name, limit):
     return value.strip()
 
 
+def _worker_request_id(worker_id, attempt):
+    return f"local-task:{worker_id}:{attempt}"
+
+
 def _narrow_permissions(parent, target):
     result = {}
     left, right = parent.get("allowed_tools"), target.get("allowed_tools")
@@ -404,7 +408,7 @@ class TaskService:
             raise StateError("A task interaction channel requires a durable Worker binding")
         return binding
 
-    def runtime_context(self, session_id):
+    def runtime_context(self, session_id, *, request_id=None):
         """Return current trusted routing metadata, never quoted event authority."""
         binding = self.worker_guard(session_id)
         if binding is None:
@@ -426,6 +430,12 @@ class TaskService:
             metadata = github.worker_context(session_id)
             if metadata is not None:
                 value["github"] = metadata
+        # Only the original group request carries a default reply. Desktop
+        # follow-ups and retries can contain private material or earlier sends.
+        if binding["role"] == "worker" and request_id == _worker_request_id(binding["worker_id"], 0):
+            feishu = getattr(self.coordinator, "feishu", None)
+            if feishu is not None and (metadata := feishu.worker_reply_context(binding["ticket_id"])):
+                value["feishu"] = metadata
         # Large multi-source tasks fall back to explicit scoped discovery. This
         # limits prompt overhead without hiding or widening any source authority.
         if len(dumps(value)) > 16000:
@@ -738,7 +748,7 @@ class TaskService:
         """Recover delivery acknowledgement before doing any new admission work."""
         if worker["run_id"]:
             return worker
-        request = f"local-task:{worker['id']}:{worker['attempt']}"
+        request = _worker_request_id(worker["id"], worker["attempt"])
         run = next((old for old in self.store.list_runs(worker["session_id"]) if old["request_id"] == request), None)
         if run is None:
             return worker
@@ -782,7 +792,7 @@ class TaskService:
                             enabled = {rule["id"] for rule in policy["rules"] if rule["enabled"]}
                             if policy["mode"] != "auto" or policy["revision"] != ticket["policy_revision"] or not set(json.loads(ticket["matched_rules_json"])) <= enabled:
                                 raise StateError("Proactive task authorization changed before launch")
-                        request = f"local-task:{worker['id']}:{worker['attempt']}"
+                        request = _worker_request_id(worker["id"], worker["attempt"])
                         run = next((old for old in self.store.list_runs(worker["session_id"]) if old["request_id"] == request), None)
                         if run is None:
                             path = Path(worker["cwd"])

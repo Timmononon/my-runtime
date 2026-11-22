@@ -704,7 +704,7 @@ class GithubService:
 
         decision = await triage.evaluate(lease["source_session_id"],
             {**value, "source_id": lease["id"], "repository": self._config(lease)["repository"]},
-            request_id=request_id, guard=guard, explicit=explicit, max_event_chars=100000 - len(prefix))
+            source_kind="github", request_id=request_id, guard=guard, explicit=explicit, max_event_chars=100000 - len(prefix))
         with self.store.transaction() as db:
             db.execute("UPDATE github_events SET triage_id=? WHERE seq=?", (decision["id"], row["seq"]))
         guard()

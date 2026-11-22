@@ -275,6 +275,30 @@ class FeishuTaskService:
             return {**dict(row), "blocked": True, "attention": "飞书来源授权已变化，请核验来源后创建新的任务。"}
         return {**dict(row), "blocked": False, "attention": None}
 
+    def worker_reply_context(self, ticket_id):
+        source = self.task_projection(ticket_id)
+        if source is None or source["blocked"]:
+            return None
+        return {
+            "reply_tool": "feishu_cli",
+            "reply_arguments": {
+                "identity": "bot",
+                "argv": ["im", "+messages-reply", "--message-id", source["message_id"],
+                         "--idempotency-key", ticket_id, "--text", "<brief heading and result for the group>"],
+            },
+            "guidance": (
+                "When you finish the original Feishu group request, reply once before your final Aster answer, "
+                "unless the requester explicitly asks you to keep the result out of the group. "
+                "Discover feishu_cli with tool_search query select:feishu_cli if needed. Use reply_arguments as shown, "
+                "replacing only the --text value with a short heading and a concise result or blocker "
+                "in the requester's language. Share only the original request's result that is suitable for all "
+                "group members. Keep credentials, private files or logs, Workbench-only follow-up details, and "
+                "additional @ mentions out of the reply. Respect existing tool "
+                "policy. Report the actual delivery status in Aster. If the reply is denied, fails, or has an "
+                "uncertain outcome, do not resend or switch identity, destination, or tool."
+            ),
+        }
+
     def check_lifecycle(self, session_ids, action):
         ids = tuple(session_ids)
         if action == "unarchive" or not ids:
@@ -499,8 +523,8 @@ class FeishuTaskService:
             event = {"source": "feishu", "kind": "group_message", "source_id": source["id"],
                      "chat_id": source["chat_id"], "message_id": item["message_id"],
                      "sender_id": item["sender_id"], "text": item["text"]}
-            decision = await triage.evaluate(item["source_session_id"], event, request_id=item["request_id"],
-                                             guard=guard, explicit=True)
+            decision = await triage.evaluate(item["source_session_id"], event, source_kind="feishu",
+                                             request_id=item["request_id"], guard=guard, explicit=True)
             triage_id = decision["id"]
             guard()
             if decision["status"] == "completed" and decision["decision"] == "process":
